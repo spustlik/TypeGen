@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="TypeGen.TypescriptTypeBase" Collapsed="true">
+    <Position X="2.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\TypescriptType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.TypescriptTypeReference" Collapsed="true">
+    <Position X="4.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>Types\TypescriptType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.ArrayType" Collapsed="true">
+    <Position X="3.75" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\ArrayType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.DeclarationBaseType" Collapsed="true">
+    <Position X="7" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAQAAQIAAAAAAAAEAAAAAQA=</HashCode>
+      <FileName>Types\DeclarationBaseType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.GenericParameter" Collapsed="true">
+    <Position X="15.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationBaseType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.InterfaceType" Collapsed="true">
+    <Position X="8.25" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationBaseType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.ClassType" Collapsed="true">
+    <Position X="6" Y="12.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAABAAAAAEAAAAAQAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationBaseType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.DeclarationMember" Collapsed="true">
+    <Position X="9" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationMember.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.AccessibilityConverter" Collapsed="true">
+    <Position X="25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationMember.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.PropertyMember" Collapsed="true">
+    <Position X="9" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAgAAAAAAAEAAAAAAQAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationMember.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.FunctionDeclarationMember" Collapsed="true">
+    <Position X="11.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationMember.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.FunctionMember" Collapsed="true">
+    <Position X="6.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAABAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\DeclarationMember.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.EnumType" Collapsed="true">
+    <Position X="1.5" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAAEAAAAAAA=</HashCode>
+      <FileName>Types\EnumType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.EnumMember" Collapsed="true">
+    <Position X="13.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAACAAAAEAAAAAAQAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Types\EnumType.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.PrimitiveType" Collapsed="true">
+    <Position X="7" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\PrimitiveTypes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.AnyType" Collapsed="true">
+    <Position X="10.5" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\PrimitiveTypes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.BoolType" Collapsed="true">
+    <Position X="12.75" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\PrimitiveTypes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.StringType" Collapsed="true">
+    <Position X="14.75" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\PrimitiveTypes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.NumberType" Collapsed="true">
+    <Position X="3.75" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\PrimitiveTypes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.GuidType" Collapsed="true">
+    <Position X="6" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\PrimitiveTypes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.DateTimeType" Collapsed="true">
+    <Position X="8.25" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\PrimitiveTypes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.RawStatements" Collapsed="true">
+    <Position X="18" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\RawStatement.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.RawStatementBase" Collapsed="true">
+    <Position X="21.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>Types\RawStatement.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.RawStatement" Collapsed="true">
+    <Position X="20.25" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\RawStatement.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.RawStatementTypeReference" Collapsed="true">
+    <Position X="22.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\RawStatement.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.TsBase" Collapsed="true">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>Types\TSBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="TypeGen.MemberAccessibility" Collapsed="true">
+    <Position X="25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAEAAAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>Types\DeclarationMember.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
