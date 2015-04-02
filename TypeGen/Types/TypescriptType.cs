@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace TypeGen
 {
-    public abstract class TypescriptTypeBase : TsBase
+    public abstract class TypescriptTypeBase : TypeDomBase
     {
     }
 
 
     //TODO: generic instance
-    public class TypescriptTypeReference : TsBase
+    public class TypescriptTypeReference : TypeDomBase
     {
         public TypescriptTypeBase ReferencedType { get; private set; }
         public string TypeName { get; private set; }

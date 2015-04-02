@@ -19,6 +19,14 @@ namespace TypeGen
             return Name;
         }
 
+        public override bool Equals(object obj)
+        {
+            return obj.GetType() == GetType();
+        }
+        public override int GetHashCode()
+        {
+            return GetType().GetHashCode();
+        }
         public static readonly AnyType Any = new AnyType();
         public static readonly NumberType Number = new NumberType();
         public static readonly StringType String = new StringType();
@@ -69,7 +77,6 @@ namespace TypeGen
             get { return "string"; }
         }
     }
-
 
     public sealed class DateTimeType : PrimitiveType
     {

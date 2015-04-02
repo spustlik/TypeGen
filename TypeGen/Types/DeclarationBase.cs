@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TypeGen
 {
-    public class DeclarationBaseType : TypescriptTypeBase
+    public class DeclarationBase : TypescriptTypeBase
     {
         public string Name { get; set; }
         public List<TypescriptTypeReference> ExtendsTypes { get; private set; }
@@ -17,7 +17,7 @@ namespace TypeGen
 
         public List<DeclarationMember> Members { get; private set; }
 
-        public DeclarationBaseType()
+        public DeclarationBase()
         {
             ExtendsTypes = new List<TypescriptTypeReference>();
             GenericParameters = new List<GenericParameter>();
@@ -26,17 +26,15 @@ namespace TypeGen
 
     }
 
-    public sealed class GenericParameter : TsBase
+    public sealed class GenericParameter : TypeDomBase
     {
         public string Name { get; set; }
-        //public TypescriptTypeReference ParameterType { get; set; }
+        //TODO: constraints
     }
 
-
-    public sealed class InterfaceType : DeclarationBaseType
+    public sealed class InterfaceType : DeclarationBase
     {
         // interface xxx<T1,T2> extends ... { } 
-        //TODO: constraints
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -58,7 +56,7 @@ namespace TypeGen
         }
     }
 
-    public sealed class ClassType : DeclarationBaseType
+    public sealed class ClassType : DeclarationBase
     {
         // class xxx<T1,T2> extends ... implements yyy
         public List<TypescriptTypeReference> Implementations { get; private set; }

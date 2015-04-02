@@ -23,7 +23,7 @@ namespace TypeGen
         }
     }
 
-    public sealed class EnumMember : TsBase
+    public sealed class EnumMember : TypeDomBase
     {
         public string Name { get; set; }
         public int? Value { get; set; }

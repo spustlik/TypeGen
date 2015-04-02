@@ -33,14 +33,14 @@ line3
             cls.Members.Add(new PropertyMember()
             {
                 Name = "testProperty2",
-                Accessibility = MemberAccessibility.Private,
+                Accessibility = AccessibilityEnum.Private,
                 IsOptional = true,
                 MemberType = new TypescriptTypeReference(new NumberType())
             });
             cls.Members.Add(new PropertyMember()
             {
                 Name = "testProperty3",
-                Accessibility = MemberAccessibility.Public,
+                Accessibility = AccessibilityEnum.Public,
                 MemberType = new TypescriptTypeReference(new ArrayType() { ElementType = new TypescriptTypeReference(new BoolType()) } )
             });
             Assert.AreEqual(@"class testClass {
@@ -84,14 +84,14 @@ line3
             intf.Members.Add(new PropertyMember()
             {
                 Name = "testProperty2",
-                Accessibility = MemberAccessibility.Private,
+                Accessibility = AccessibilityEnum.Private,
                 IsOptional = true,
                 MemberType = new TypescriptTypeReference(new NumberType())
             });
             intf.Members.Add(new PropertyMember()
             {
                 Name = "testProperty3",
-                Accessibility = MemberAccessibility.Public,
+                Accessibility = AccessibilityEnum.Public,
                 MemberType = new TypescriptTypeReference(new BoolType())
             });
             Assert.AreEqual(@"interface testClass {

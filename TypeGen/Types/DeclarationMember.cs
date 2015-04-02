@@ -6,42 +6,16 @@ using System.Threading.Tasks;
 
 namespace TypeGen
 {
-    public abstract class DeclarationMember : TsBase
+    public abstract class DeclarationMember : TypeDomBase
     {
+        //according to spec: properties are public by default
+        public AccessibilityEnum? Accessibility { get; set; }
 
-    }
-
-    public enum MemberAccessibility
-    {
-        Public,
-        Private,
-        Protected,
-    }
-
-    public static class AccessibilityConverter
-    {
-        public static string ToStr(this MemberAccessibility a)
-        {
-            switch (a)
-            {
-                case MemberAccessibility.Public:
-                    return "public";
-                case MemberAccessibility.Private:
-                    return "private";
-                case MemberAccessibility.Protected:
-                    return "protected";
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
     }
 
     public sealed class PropertyMember : DeclarationMember
     {
         public string Name { get; set; }
-
-        //acc to spec: properties are public by default
-        public MemberAccessibility? Accessibility { get; set; }
 
         public TypescriptTypeReference MemberType { get; set; }
 
@@ -79,8 +53,7 @@ namespace TypeGen
     }
 
 
-    //method
     //indexer?
-    //accessor? (get method, set method)
-    //construct, index, call
+    //accessor? (get method, set method) ES5
+    //constructor, index, call
 }

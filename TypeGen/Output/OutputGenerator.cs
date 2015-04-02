@@ -40,7 +40,7 @@ namespace TypeGen
             }
         }
 
-        public void Generate(DeclarationBaseType decl)
+        public void Generate(DeclarationBase decl)
         {
             if (decl is ClassType)
             {
@@ -177,9 +177,9 @@ namespace TypeGen
             {
                 GenerateReference((EnumType)referencedType);
             }
-            else if (referencedType is DeclarationBaseType)
+            else if (referencedType is DeclarationBase)
             {
-                GenerateReference((DeclarationBaseType)referencedType);
+                GenerateReference((DeclarationBase)referencedType);
             }
             else
             {
@@ -187,7 +187,7 @@ namespace TypeGen
             }            
         }
 
-        private void GenerateReference(DeclarationBaseType type)
+        private void GenerateReference(DeclarationBase type)
         {
             //TODO: module
             Formatter.Write(type.Name);

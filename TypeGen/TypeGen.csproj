@@ -39,22 +39,29 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OutputGenerator.cs" />
+    <Compile Include="Output\OutputGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReflectionGenerator.cs" />
-    <Compile Include="ReflectionHelper.cs" />
-    <Compile Include="TextFormatter.cs" />
+    <Compile Include="Generators\ReflectionGenerator.cs" />
+    <Compile Include="Generators\ReflectionHelper.cs" />
+    <Compile Include="Output\TextFormatter.cs" />
+    <Compile Include="Types\Accessibility.cs" />
+    <Compile Include="Types\AmbientContainer.cs" />
     <Compile Include="Types\ArrayType.cs" />
-    <Compile Include="Types\DeclarationBaseType.cs" />
+    <Compile Include="Types\DeclarationBase.cs" />
     <Compile Include="Types\DeclarationMember.cs" />
     <Compile Include="Types\EnumType.cs" />
+    <Compile Include="Types\Module.cs" />
     <Compile Include="Types\PrimitiveTypes.cs" />
     <Compile Include="Types\RawStatement.cs" />
-    <Compile Include="Types\TSBase.cs" />
+    <Compile Include="Types\TypeDomBase.cs" />
     <Compile Include="Types\TypescriptType.cs" />
+    <Compile Include="Generators\WebApiReflectionGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Types\_diagram.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Types\_readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

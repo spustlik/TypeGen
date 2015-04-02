@@ -75,8 +75,53 @@ interface IPagedAminUser extends IPagedModel<IAdminUser> {
 
         }
 
+
+
+
+        [TestMethod]
+        public void TestGenerics2()
+        {
+            var rg = new ReflectionGenerator();
+            rg.GenerateInterface(typeof(Test1<int>));
+
+            var g = new OutputGenerator();
+            g.GenerateReflection(rg);
+            Assert.AreEqual(
+@"interface IGenTest<T> {
+    Value: T;
+}
+interface IGenList<TI> {
+    Values: IGenTest<TI>[];
+}
+interface ITest1<Int32> {
+    T1: IGenList<string>;
+    T2: IGenList<number>;
+    T3: IGenList<IGenList<boolean>>;
+    T4: IGenList<number[]>[];
+}
+
+".Trim(), g.Output.Trim());
+        }
+
     }
 
+
+    public class GenTest<T>
+    {
+        public T Value { get; set; }
+    }
+    public class GenList<TI>
+    {
+        public IEnumerable<GenTest<TI>> Values { get; set; }
+    }
+
+    public class Test1<T>
+    {
+        public GenList<string> T1 { get; set; }
+        public GenList<Nullable<int>> T2 { get; set; }
+        public GenList<GenList<bool>> T3 { get; set; }
+        public IEnumerable<GenList<IEnumerable<T>>> T4{ get; set; }
+    }
 
     public class PagedModel<T>
     {

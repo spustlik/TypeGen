@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TypeGen
 {
-    public sealed class RawStatements : TsBase
+    public sealed class RawStatements : TypeDomBase
     {
         public List<RawStatementBase> Statements { get; private set; }
         public RawStatements(IEnumerable<RawStatementBase> values = null)
@@ -36,7 +36,7 @@ namespace TypeGen
         }
     }
 
-    public abstract class RawStatementBase : TsBase
+    public abstract class RawStatementBase : TypeDomBase
     {
         public static RawStatements operator +(RawStatementBase left, string right)
         {

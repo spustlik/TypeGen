@@ -11,7 +11,7 @@ namespace TypeGen
     public class ReflectionGenerator
     {
         private Dictionary<Type, TypescriptTypeBase> _typeMap = new Dictionary<Type, TypescriptTypeBase>();
-        private List<DeclarationBaseType> _generatedDeclarations = new List<DeclarationBaseType>();
+        private List<DeclarationBase> _generatedDeclarations = new List<DeclarationBase>();
 
         private List<EnumType> _generatedEnums = new List<EnumType>();
         public const string SOURCETYPE_KEY = "SOURCE_TYPE";
@@ -20,7 +20,7 @@ namespace TypeGen
         public NamingStrategy NamingStrategy { get; set; }
         public ClassGenerationStrategy GenerationStrategy { get; set; }
 
-        public IEnumerable<DeclarationBaseType> Declarations { get { return _generatedDeclarations; } }
+        public IEnumerable<DeclarationBase> Declarations { get { return _generatedDeclarations; } }
         public IEnumerable<EnumType> Enums { get { return _generatedEnums; } }
 
         public ReflectionGenerator()
@@ -94,7 +94,7 @@ namespace TypeGen
         }
 
 
-        private DeclarationBaseType GenerateClassDeclaration(Type type)
+        private DeclarationBase GenerateClassDeclaration(Type type)
         {
             if (GenerationStrategy.ShouldGenerateClass(type))
             {
@@ -122,7 +122,7 @@ namespace TypeGen
             return result;
         }
 
-        private void GenerateDeclarationBase(DeclarationBaseType result, Type type)
+        private void GenerateDeclarationBase(DeclarationBase result, Type type)
         {
             result.ExtraData[SOURCETYPE_KEY] = type;
             _typeMap[type] = result;
@@ -213,24 +213,24 @@ namespace TypeGen
             return false;
         }
 
-        public virtual bool ShouldGenerateProperties(DeclarationBaseType decl, Type type)
+        public virtual bool ShouldGenerateProperties(DeclarationBase decl, Type type)
         {
             return true;
         }
 
-        public virtual bool ShouldGenerateProperty(DeclarationBaseType decl, PropertyInfo propertyInfo)
+        public virtual bool ShouldGenerateProperty(DeclarationBase decl, PropertyInfo propertyInfo)
         {
             if (propertyInfo.GetGetMethod().IsStatic)
                 return false;
             return true;
         }
 
-        public virtual bool ShouldGenerateBaseClass(DeclarationBaseType decl, Type type, Type baseType)
+        public virtual bool ShouldGenerateBaseClass(DeclarationBase decl, Type type, Type baseType)
         {
             return true;
         }
 
-        public virtual bool ShouldGenerateImplementedInterfaces(DeclarationBaseType decl, Type type)
+        public virtual bool ShouldGenerateImplementedInterfaces(DeclarationBase decl, Type type)
         {
             return true;
         }
