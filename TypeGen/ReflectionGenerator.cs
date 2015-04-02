@@ -81,20 +81,30 @@ namespace TypeGen
             }
             if (type.IsClass || type.IsInterface)
             {
-                if (GenerationStrategy.ShouldGenerateClass(type))
+                if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
-                    return GenerateClass(type);
+                    var tref = ConverType(type.GetGenericTypeDefinition());
+                    tref.GenericParameters.AddRange(type.GenericTypeArguments.Select(a => ConverType(a)));
+                    return tref;
                 }
-                else
-                {
-                    return GenerateInterface(type);
-                }
+                return GenerateClassDeclaration(type);
             }
 
             return new AnyType() { ExtraData = { { SOURCETYPE_KEY, type } } };
         }
 
 
+        private DeclarationBaseType GenerateClassDeclaration(Type type)
+        {
+            if (GenerationStrategy.ShouldGenerateClass(type))
+            {
+                return GenerateClass(type);
+            }
+            else
+            {
+                return GenerateInterface(type);
+            }
+        } 
         public InterfaceType GenerateInterface(Type type)
         {
             var result = new InterfaceType() { Name = NamingStrategy.GetInterfaceName(type) };
@@ -103,7 +113,7 @@ namespace TypeGen
             return result;
         }
 
-        private ClassType GenerateClass(Type type)
+        public ClassType GenerateClass(Type type)
         {
             var result = new ClassType() { Name = NamingStrategy.GetClassName(type)};
             GenerateDeclarationBase(result, type);

@@ -50,8 +50,11 @@ namespace TypeGen
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append(Accessibility?.ToStr());
-            sb.Append(" ");
+            if (Accessibility != null)
+            {
+                sb.Append(Accessibility.Value.ToStr());
+                sb.Append(" ");
+            }
             sb.Append(Name);
             if (IsOptional)
                 sb.Append("?");

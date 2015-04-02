@@ -149,10 +149,18 @@ namespace TypeGen
             if (!String.IsNullOrEmpty(obj.TypeName))
             {
                 Formatter.Write(obj.TypeName);
-                return;
             }
-            //TODO: module qualified names, generic instances
-            GenerateReference(obj.ReferencedType);
+            else
+            {
+                //TODO: module qualified names, generic instances
+                GenerateReference(obj.ReferencedType);
+            }
+            if (obj.GenericParameters.Count > 0)
+            {
+                Formatter.Write("<");
+                Formatter.WriteSeparated(", ", obj.GenericParameters, Generate);
+                Formatter.Write(">");
+            }
         }
 
         private void GenerateReference(TypescriptTypeBase referencedType)

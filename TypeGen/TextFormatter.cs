@@ -73,7 +73,7 @@ namespace TypeGen
                 {
                     Write(separator);
                 }
-                generate?.Invoke(item);
+                generate(item);
                 needSeparator = true;
             }
         }

@@ -16,11 +16,16 @@ namespace TypeGen
     {
         public TypescriptTypeBase ReferencedType { get; private set; }
         public string TypeName { get; private set; }
-        public TypescriptTypeReference(TypescriptTypeBase type)
+        public List<TypescriptTypeReference> GenericParameters { get; private set; }
+        private TypescriptTypeReference()
+        {
+            GenericParameters = new List<TypescriptTypeReference>();
+        }
+        public TypescriptTypeReference(TypescriptTypeBase type) : this()
         {
             ReferencedType = type;
         }
-        public TypescriptTypeReference(string typeName)
+        public TypescriptTypeReference(string typeName) : this()
         {
             TypeName = typeName;
         }
@@ -33,5 +38,6 @@ namespace TypeGen
         {
             return new TypescriptTypeReference(type);
         }
+
     }
 }

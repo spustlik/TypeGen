@@ -10,19 +10,19 @@ namespace TypeGen
     {
         public static IEnumerable<Type> NamespaceTypes(Type type)
         {
-            return type.Assembly.GetTypes().Where(t => t.Namespace == type.Namespace);
+            return type.Assembly.GetTypes().Where(t => t.Namespace == type.Namespace).OrderBy(t=>t.Name);
         }
 
         //TODO: remove
         public static OutputGenerator GenerateReflection(this OutputGenerator g, ReflectionGenerator rg)
         {
-            foreach (var item in rg.Enums.OrderBy(e=>e.Name))
+            foreach (var item in rg.Enums.Reverse())
             {
                 //TODO: accessibility, modules
                 g.Generate(item);
                 g.Formatter.WriteLine();
             }
-            foreach (var item in rg.Declarations.OrderBy(x=>x.Name))
+            foreach (var item in rg.Declarations.Reverse())
             {
                 //TODO: accessibility, modules
                 g.Generate(item);
