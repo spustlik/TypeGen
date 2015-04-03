@@ -6,33 +6,65 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TypeGen
-{    
+{
     [DebuggerDisplay("{Formatter.DebuggerOutput}")]
     public class OutputGenerator
     {
         public TextFormatter Formatter { get; set; }
         public string Output { get { return Formatter.Output.ToString(); } }
-        public OutputGenerator()
+        public INameResolver NameResolver { get; set; }
+        public OutputGenerator(INameResolver nameResolver = null)
         {
             Formatter = new TextFormatter();
+            if (nameResolver == null)
+                NameResolver = new DefaultNameResolver();
+            else
+                NameResolver = nameResolver;
         }
 
+        public void GenerateAmbient(TypescriptModule module)
+        {
+            Formatter.Write("declare ");
+            GenerateModule(module, CanGenerateInAmbientModule);
+        }
+        public void GenerateNonAmbient(TypescriptModule module)
+        {
+            GenerateModule(module, e=>!CanGenerateInAmbientModule(e));
+        }
         public void Generate(TypescriptModule m)
         {
+            GenerateModule(m);
+        }
+
+        private void GenerateModule(TypescriptModule module, Func<ModuleElement, bool> elementFilter = null)
+        {
             Formatter.Write("module ");
-            Formatter.Write(m.Name);
+            Formatter.Write(module.Name);
             Formatter.Write(" {");
             Formatter.WriteLine();
             Formatter.PushIndent();
-            GenerateModuleContent(m);
+            GenerateModuleContent(module, elementFilter);
             Formatter.PopIndent();
             Formatter.WriteEndOfLine();
             Formatter.Write("}");
         }
 
-        public void GenerateModuleContent(TypescriptModule m)
+        public void GenerateModuleContent(TypescriptModule module, Func<ModuleElement, bool> elementFilter)
         {
-            Formatter.WriteSeparated("\n", m.Members, Generate);
+            var members = module.Members.AsEnumerable();
+            if (elementFilter!=null)
+            {
+                members = members.Where(elementFilter);
+            }
+            Formatter.WriteSeparated("\n", members, Generate);
+        }
+
+        private bool CanGenerateInAmbientModule(ModuleElement moduleElement)
+        {
+            var de = moduleElement as DeclarationModuleElement;
+            if (de == null)
+                return true;
+            return de.EnumDeclaration == null;
         }
 
         private void Generate(ModuleElement element)
@@ -99,7 +131,8 @@ namespace TypeGen
             if (m.Value != null)
             {
                 Formatter.Write(" = ");
-                Formatter.Write(m.IsHexLiteral ? String.Format("0x{0:X}", m.Value.Value) : String.Format("{0}", m.Value.Value));
+                Generate(m.Value);
+                //Formatter.Write(m.IsHexLiteral ? String.Format("0x{0:X}", m.Value.Value) : String.Format("{0}", m.Value.Value));
             }
         }
 
@@ -344,24 +377,21 @@ namespace TypeGen
         }
 
         private void GenerateReference(DeclarationBase type)
-        {
-            //TODO: module
-            Formatter.Write(type.Name);
+        {            
+            Formatter.Write(NameResolver.GetReferencedName(type));
         }
         private void GenerateReference(EnumType type)
-        {
-            //TODO: module
-            Formatter.Write(type.Name);
+        {            
+            Formatter.Write(NameResolver.GetReferencedName(type));
         }
+
         private void GenerateReference(PrimitiveType type)
         {
-            //TODO: module
             Formatter.Write(type.Name);
         }
 
         private void GenerateReference(ArrayType t)
         {
-            //TODO: module
             Generate(t.ElementType);
             Formatter.Write("[]");
         }

@@ -43,6 +43,7 @@
     <Compile Include="Generators\INamingStrategy.cs" />
     <Compile Include="Generators\ReflectionGenerator.cs" />
     <Compile Include="Generators\WebApiControllerGenerator.cs" />
+    <Compile Include="Output\INameResolver.cs" />
     <Compile Include="Output\OutputGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Generators\ReflectionGeneratorBase.cs" />

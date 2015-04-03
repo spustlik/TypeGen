@@ -197,7 +197,12 @@ namespace TypeGen.Generators
                 }
                 targetModule.Members.Add(cls);
 
-                proxyClass.Members.Add(new PropertyMember(cm.Name) { MemberType = cls, Initialization = new RawStatements("new ", cls, "(this)") });
+                proxyClass.Members.Add(new PropertyMember(cm.Name.Replace("Controller", ""))
+                {
+                    MemberType = cls,
+                    Accessibility = AccessibilityEnum.Public,
+                    Initialization = new RawStatements("new ", cls, "(this)")
+                });
             }
 
             //TODO: 

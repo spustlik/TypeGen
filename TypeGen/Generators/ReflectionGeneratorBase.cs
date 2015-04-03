@@ -257,7 +257,7 @@ namespace TypeGen
         public EnumMember GenerateEnumMember(FieldInfo value)
         {
             var v = (int)value.GetValue(null);
-            var ev = new EnumMember(NamingStrategy.GetEnumMemberName(value)) { Value = v, ExtraData = { { SOURCEMEMBER_KEY, value } } };
+            var ev = new EnumMember(NamingStrategy.GetEnumMemberName(value), v) { ExtraData = { { SOURCEMEMBER_KEY, value } } };
             return ev;
         }
 

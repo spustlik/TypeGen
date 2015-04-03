@@ -27,21 +27,24 @@ namespace TypeGen
     public sealed class EnumMember : TypeDomBase
     {
         public string Name { get; set; }
-        public EnumMember(string name)
+        public RawStatements Value { get; set; }
+        public EnumMember(string name, int? value)
         {
             Name = name;
+            if (value != null)
+            {
+                Value = new RawStatements(value.ToString());
+            }
         }
-        public int? Value { get; set; }
-        public bool IsHexLiteral { get; set; }
-        //TODO: there is "computed member" in spec
+
         public override string ToString()
         {
             var sb = new StringBuilder();
             sb.Append(Name);
-            if (Value.HasValue)
+            if (Value!=null)
             {
                 sb.Append(" = ");
-                sb.Append(IsHexLiteral ? "0x" + Value.Value.ToString("X") : Value.Value.ToString());
+                sb.Append(Value.ToString());
             }
             return sb.ToString();
         }

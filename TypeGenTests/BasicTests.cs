@@ -200,10 +200,10 @@ class testFunctions {
         public void TestEnum()
         {
             var e = new EnumType("xTypes");
-            e.Members.Add(new EnumMember("Type1"));
-            e.Members.Add(new EnumMember("Type2") { Value = 42 });
-            e.Members.Add(new EnumMember("Type3") { Value = 64, IsHexLiteral = true });
-            e.Members.Add(new EnumMember("Type4"));
+            e.Members.Add(new EnumMember("Type1", null));
+            e.Members.Add(new EnumMember("Type2", 42 ));
+            e.Members.Add(new EnumMember("Type3", null) { Value = new RawStatements("0x40") });
+            e.Members.Add(new EnumMember("Type4", null));
             var g = new OutputGenerator();
             g.Generate(e);
             Assert.AreEqual(@"enum xTypes {
