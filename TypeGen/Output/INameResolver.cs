@@ -21,29 +21,16 @@ namespace TypeGen
     /// </summary>
     public class DefaultNameResolver : INameResolver
     {
-        public Dictionary<string, TypescriptModule> Modules { get; private set; }
-        public TypescriptModule ThisModule
-        {
-            get { return Modules[""]; }
-            set { Modules[""] = value; _cache.Clear(); }
-        }
-        private Dictionary<TypescriptTypeBase, string> _cache = new Dictionary<TypescriptTypeBase, string>();
+        #region private static part
+        private static Dictionary<string, TypescriptModule> Modules = new Dictionary<string, TypescriptModule>();
+        private static Dictionary<TypescriptTypeBase, string> _cache = new Dictionary<TypescriptTypeBase, string>();
 
-        public DefaultNameResolver()
-        {
-            Modules = new Dictionary<string, TypescriptModule>();
-        }
-
-        public void AddModule(TypescriptModule m)
-        {
-            Modules.Add(m.Name, m);
-        }
-        private bool ContainsItem<T>(TypescriptModule m, T item) where T : class
+        private static bool ContainsItem<T>(TypescriptModule m, T item) where T : class
         {
             return m.Members.OfType<DeclarationModuleElement>().Any(d => d.Declaration == item || d.EnumDeclaration == item);
         }
 
-        private Tuple<string, TypescriptModule> FindModule<T>(T item) where T :class
+        private static Tuple<string, TypescriptModule> FindModule<T>(T item) where T : class
         {
             if (ThisModule != null && ContainsItem(ThisModule, item))
             {
@@ -56,6 +43,20 @@ namespace TypeGen
             }
             return null;
         }
+
+        #endregion
+
+        public static TypescriptModule ThisModule
+        {
+            get { TypescriptModule result; Modules.TryGetValue("", out result); return result; }
+            set { Modules[""] = value; _cache.Clear(); }
+        }
+
+        public static void AddModule(TypescriptModule m)
+        {
+            Modules[m.Name] = m;
+        }
+
 
         public string GetReferencedName(EnumType type)
         {
@@ -71,7 +72,7 @@ namespace TypeGen
                 result = result + type.Name;
             }
             else
-            {                
+            {
                 result = "UNKNOWN_ENUM<" + type.Name + ">";
             }
             _cache[type] = result;
