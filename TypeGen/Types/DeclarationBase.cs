@@ -29,7 +29,12 @@ namespace TypeGen
     public sealed class GenericParameter : TypeDomBase
     {
         public string Name { get; set; }
-        //TODO: constraints
+        public GenericParameter(string name)
+        {
+            Name = name;
+        }
+        //extends constraint
+        public TypescriptTypeReference Constraint { get; set; }
     }
 
     public sealed class InterfaceType : DeclarationBase

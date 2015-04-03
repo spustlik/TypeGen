@@ -68,12 +68,12 @@ namespace TypeGen
             if (type.IsArray)
             {
                 if (type.GetArrayRank() == 1)
-                    return new ArrayType() { ElementType = ConverType(type.GetElementType()), ExtraData = { { SOURCETYPE_KEY, type } } };
+                    return new ArrayType(ConverType(type.GetElementType())) { ExtraData = { { SOURCETYPE_KEY, type } } };
             }
             if (typeof(IEnumerable<>).IsAssignableFrom(type) || typeof(IEnumerable).IsAssignableFrom(type))
             {
                 if (type.IsConstructedGenericType)
-                    return new ArrayType() { ElementType = ConverType(type.GetGenericArguments()[0]), ExtraData = { { SOURCETYPE_KEY, type } } };
+                    return new ArrayType(ConverType(type.GetGenericArguments()[0])) { ExtraData = { { SOURCETYPE_KEY, type } } };
             }
             if (type.IsEnum)
             {
@@ -133,7 +133,7 @@ namespace TypeGen
             {
                 foreach (var garg in type.GetGenericArguments())
                 {
-                    result.GenericParameters.Add(new GenericParameter() { Name = NamingStrategy.GetGenericArgumentName(garg), ExtraData = { { SOURCETYPE_KEY, garg} } });
+                    result.GenericParameters.Add(new GenericParameter(NamingStrategy.GetGenericArgumentName(garg)) { ExtraData = { { SOURCETYPE_KEY, garg} } });
                 }                
             }
             //extends from .Base 

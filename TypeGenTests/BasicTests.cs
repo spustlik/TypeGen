@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Text;
+using System.Linq;
 using TypeGen;
 
 namespace TypeGenTests
@@ -41,7 +42,7 @@ line3
             {
                 Name = "testProperty3",
                 Accessibility = AccessibilityEnum.Public,
-                MemberType = new TypescriptTypeReference(new ArrayType() { ElementType = new TypescriptTypeReference(new BoolType()) } )
+                MemberType = new ArrayType(PrimitiveType.Boolean)
             });
             Assert.AreEqual(@"class testClass {
     testProperty: string;
@@ -56,8 +57,8 @@ line3
             var cls = new ClassType() { Name = "testClass" };
             cls.ExtendsTypes.Add(new TypescriptTypeReference("baseClass1"));
             cls.ExtendsTypes.Add(new TypescriptTypeReference("baseClass2"));
-            cls.GenericParameters.Add(new GenericParameter() { Name = "T1" });
-            cls.GenericParameters.Add(new GenericParameter() { Name = "T2" });
+            cls.GenericParameters.Add(new GenericParameter("T1"));
+            cls.GenericParameters.Add(new GenericParameter("T2"));
             cls.Implementations.Add(new TypescriptTypeReference("IType1"));
             cls.Implementations.Add(new TypescriptTypeReference("IType2"));
             Assert.AreEqual(@"class testClass<T1, T2> extends baseClass1, baseClass2 implements IType1, IType2 {
@@ -94,10 +95,13 @@ line3
                 Accessibility = AccessibilityEnum.Public,
                 MemberType = new TypescriptTypeReference(new BoolType())
             });
+            var fun = new FunctionDeclarationMember() { Name = "myFn", ResultType = PrimitiveType.String };
+            intf.Members.Add(fun);
             Assert.AreEqual(@"interface testClass {
     testProperty: string;
     private testProperty2?: number;
     public testProperty3: boolean;
+    function myFn(): string;
 }", testGen(intf));
         }
 
@@ -108,7 +112,63 @@ line3
             return g.Formatter.Output.ToString();
         }
 
+        [TestMethod]
+        public void TestFunctions()
+        {
+            var cls = new ClassType() { Name = "testFunctions" };
+            {
+                var fn = new FunctionDeclarationMember() { Name = "fn1" };
+                cls.Members.Add(fn);
+            }
+            {
+                var fn = new FunctionDeclarationMember() { Name = "fn2", ResultType = new ArrayType(cls) };
+                cls.Members.Add(fn);
+            }
+            {
+                var fn = new FunctionDeclarationMember() { Name = "fn3", Parameters = {
+                        new FunctionParameter("a") { ParameterType = PrimitiveType.Number },
+                        new FunctionParameter("b") { ParameterType = PrimitiveType.Boolean, IsOptional = true},
+                        new FunctionParameter("c"),
+                        new FunctionParameter("d") { IsRest = true, ParameterType = new ArrayType(PrimitiveType.String)},
+                    } };
+                cls.Members.Add(fn);
+            }
+            {
+                var fn = new FunctionDeclarationMember()
+                {
+                    Name = "fn4",
+                    GenericParameters = {
+                        new GenericParameter("T"),
+                        new GenericParameter("T2") { Constraint = cls },
+                    },
+                    Parameters =
+                    {
+                        new FunctionParameter("p1") {ParameterType = new TypescriptTypeReference("T2")},
+                    }
+                };
+                cls.Members.Add(fn);
+            }
+            {
+                var fn = new FunctionMember() { Name = "fn5",
+                    Parameters = { new FunctionParameter("arg") { ParameterType = PrimitiveType.Boolean } },
+                    Body = new RawStatements("return true;")
+                    };
+                cls.Members.Add(fn);
+            }
 
+            Assert.AreEqual(@"
+class testFunctions {
+    function fn1();
+    function fn2(): testFunctions[];
+    function fn3(a: number, b?: boolean, c, ...d: string[]);
+    function fn4<T, T2 extends testFunctions>(p1: T2);
+    function fn5(arg: boolean){
+        return true;
+    }
+}
+".Trim(), testGen(cls));
+
+        }
         [TestMethod]
         public void TestRawStatements()
         {
@@ -119,7 +179,7 @@ line3
             var x3 = new RawStatement("a") + "b";            
 
             var s1 = new RawStatements() { Statements = { "xxx" } };
-            var s2 = "asd" + new RawStatement("tttt");
+            var s2 = new RawStatements("asd", new RawStatement("tttt"));
             s1.Add(s2);
             s1.Add(new TypescriptTypeReference(c));
             s1.Add(":");
@@ -127,6 +187,11 @@ line3
             var g = new OutputGenerator();
             g.Generate(s1);
             Assert.AreEqual("xxxasdtttttest:test", g.Formatter.Output.ToString());
+
+            var test2 = new RawStatements("t1 ", c, " t2");
+            g.Formatter.Output.Clear();
+            g.Generate(test2);
+            Assert.AreEqual("t1 test t2", g.Output);
         }
 
         [TestMethod]
@@ -145,6 +210,28 @@ line3
     Type3 = 0x40,
     Type4
 }", g.Formatter.Output.ToString());
+        }
+
+
+        [TestMethod]
+        public void TestModule()
+        {
+            var m = new Module() { Name = "testModule" };
+            var cls = new ClassType() { Name = "class1" };
+            cls.Members.Add(new PropertyMember() { Name = "Property1", MemberType = PrimitiveType.Boolean });            
+            m.Members.Add(cls);
+            m.Members.Last().IsExporting = true;
+            m.Members.Add(new RawStatements() { Statements = { "function test() : ", cls, " { return null; }" } });
+            var g = new OutputGenerator();
+            g.Generate(m);
+            Assert.AreEqual(@"
+module testModule {
+    export class class1 {
+        Property1: boolean;
+    }
+    function test() : class1 { return null; }
+}
+".Trim(), g.Output.Trim());
         }
     }
 }

@@ -50,6 +50,14 @@ namespace TypeGen
             _lineWritten = true;
         }
 
+        public void WriteEndOfLine()
+        {
+            if (!_lineWritten)
+            {
+                WriteLine();
+            }
+        }
+
         private void WriteIndentIfNeeded()
         {
             if (_lineWritten)
@@ -77,6 +85,7 @@ namespace TypeGen
                 needSeparator = true;
             }
         }
+
     }
 
 }

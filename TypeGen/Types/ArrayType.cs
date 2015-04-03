@@ -14,5 +14,10 @@ namespace TypeGen
         {
             return ElementType.ToString() + "[]";
         }
+
+        public ArrayType(TypescriptTypeReference elementType)
+        {
+            ElementType = elementType;
+        }
     }
 }

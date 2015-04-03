@@ -55,13 +55,12 @@
     <Compile Include="Types\RawStatement.cs" />
     <Compile Include="Types\TypeDomBase.cs" />
     <Compile Include="Types\TypescriptType.cs" />
-    <Compile Include="Generators\WebApiReflectionGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Types\_diagram.cd" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Types\_readme.txt" />
+    <None Include="Types\_grammar.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

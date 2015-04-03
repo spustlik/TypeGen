@@ -17,6 +17,64 @@ namespace TypeGen
             Formatter = new TextFormatter();
         }
 
+        public void Generate(Module m)
+        {
+            Formatter.Write("module ");
+            Formatter.Write(m.Name);
+            Formatter.Write(" {");
+            Formatter.WriteLine();
+            Formatter.PushIndent();
+            Formatter.WriteSeparated("\n", m.Members, Generate);
+            Formatter.PopIndent();
+            Formatter.WriteEndOfLine();
+            Formatter.Write("}");
+        }
+
+        private void Generate(ModuleElement element)
+        {
+            if (element.IsExporting)
+            {
+                Formatter.Write("export ");
+            }            
+            if (element is DeclarationModuleElement)
+            {
+                Generate((DeclarationModuleElement)element);
+            }
+            else if (element is RawModuleElement)
+            {
+                Generate((RawModuleElement)element);
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void Generate(DeclarationModuleElement element)
+        {
+            if (element.Declaration != null)
+            {
+                Generate(element.Declaration);
+            }
+            else if (element.EnumDeclaration != null)
+            {
+                Generate(element.EnumDeclaration);
+            }
+            else if (element.InnerModule != null)
+            {
+                Generate(element.InnerModule);
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void Generate(RawModuleElement element)
+        {
+            Generate(element.Raw);
+        }
+
         public void Generate(EnumType type)
         {
             Formatter.Write("enum ");
@@ -25,7 +83,7 @@ namespace TypeGen
             Formatter.WriteLine();
             Formatter.PushIndent();
             Formatter.WriteSeparated(",\n", type.Members, Generate);
-            Formatter.WriteLine();
+            Formatter.WriteEndOfLine();
             Formatter.PopIndent();
             Formatter.Write("}");
         }
@@ -82,11 +140,10 @@ namespace TypeGen
             foreach (var m in cls.Members)
             {                
                 Generate(m);
-                //TODO: methods and ctor doesnt end with ";"
-                Formatter.Write(";");
-                Formatter.WriteLine();
+                Formatter.WriteEndOfLine();
             }
             Formatter.PopIndent();
+            Formatter.WriteEndOfLine();
             Formatter.Write("}");
         }
 
@@ -110,9 +167,8 @@ namespace TypeGen
             Formatter.PushIndent();
             foreach (var m in cls.Members)
             {
-                Generate(m);                
-                Formatter.Write(";"); //methods also
-                Formatter.WriteLine();
+                Generate(m);
+                Formatter.WriteEndOfLine();
             }
             Formatter.PopIndent();
             Formatter.Write("}");
@@ -123,6 +179,10 @@ namespace TypeGen
             if (m is PropertyMember)
             {
                 Generate((PropertyMember)m);
+            }   
+            else if (m is FunctionMemberBase)
+            {
+                Generate((FunctionMemberBase)m);
             }
             else
             {
@@ -130,18 +190,85 @@ namespace TypeGen
             }
         }
 
+        private void Generate(FunctionMemberBase fn)
+        {
+            Generate(fn.Accessibility);
+            Formatter.Write("function ");
+            Formatter.Write(fn.Name);
+            if (fn.IsGeneric)
+            {
+                Formatter.Write("<");
+                Formatter.WriteSeparated(", ", fn.GenericParameters, Generate);
+                Formatter.Write(">");
+            }
+            Formatter.Write("(");
+            Formatter.WriteSeparated(", ", fn.Parameters, Generate);
+            Formatter.Write(")");
+            if (fn.ResultType != null)
+            {
+                Formatter.Write(": ");
+                Generate(fn.ResultType);
+            }
+            if (fn is FunctionDeclarationMember)
+            {
+                Formatter.Write(";");
+            }
+            else if (fn is FunctionMember)
+            {
+                Formatter.Write("{");
+                Formatter.WriteLine();
+                Formatter.PushIndent();
+                var fnm = (FunctionMember)fn;
+                if (fnm != null)
+                {
+                    Generate(fnm.Body);
+                }
+                Formatter.PopIndent();
+                Formatter.WriteEndOfLine();
+                Formatter.Write("}");
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void Generate(FunctionParameter par)
+        {
+            if (par.IsRest)
+            {
+                Formatter.Write("...");
+            }
+            Formatter.Write(par.Name);
+            if (par.IsOptional)
+            {
+                Formatter.Write("?");
+            }
+            if (par.ParameterType != null)
+            {
+                Formatter.Write(": ");
+                Generate(par.ParameterType);
+            }
+        }
+
         private void Generate(PropertyMember m)
         {
-            if (m.Accessibility != null)
-            {
-                Formatter.Write(m.Accessibility.Value.ToStr());
-                Formatter.Write(" ");
-            }
+            Generate(m.Accessibility);
             Formatter.Write(m.Name);
             if (m.IsOptional)
                 Formatter.Write("?");
             Formatter.Write(": ");
-            Generate(m.MemberType);            
+            Generate(m.MemberType);
+            Formatter.Write(";");
+        }
+
+        private void Generate(AccessibilityEnum? accessibility)
+        {
+            if (accessibility != null)
+            {
+                Formatter.Write(accessibility.Value.ToStr());
+                Formatter.Write(" ");
+            }
         }
 
         private void Generate(TypescriptTypeReference obj)
@@ -150,9 +277,12 @@ namespace TypeGen
             {
                 Formatter.Write(obj.TypeName);
             }
+            else if (obj.Raw != null)
+            {
+                Generate(obj.Raw);
+            }
             else
             {
-                //TODO: module qualified names, generic instances
                 GenerateReference(obj.ReferencedType);
             }
             if (obj.GenericParameters.Count > 0)
@@ -213,6 +343,11 @@ namespace TypeGen
         private void Generate(GenericParameter obj)
         {
             Formatter.Write(obj.Name);
+            if (obj.Constraint != null)
+            {
+                Formatter.Write(" extends ");
+                Generate(obj.Constraint);
+            }
         }
 
         public void Generate(RawStatements raw)

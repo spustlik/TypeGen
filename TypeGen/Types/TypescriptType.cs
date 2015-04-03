@@ -16,6 +16,7 @@ namespace TypeGen
     {
         public TypescriptTypeBase ReferencedType { get; private set; }
         public string TypeName { get; private set; }
+        public RawStatements Raw { get; private set; }
         public List<TypescriptTypeReference> GenericParameters { get; private set; }
         private TypescriptTypeReference()
         {
@@ -28,6 +29,10 @@ namespace TypeGen
         public TypescriptTypeReference(string typeName) : this()
         {
             TypeName = typeName;
+        }
+        public TypescriptTypeReference(RawStatements raw) : this()
+        {
+            Raw = raw;
         }
 
         public override string ToString()

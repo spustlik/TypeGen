@@ -9,25 +9,32 @@ namespace TypeGen
     public sealed class RawStatements : TypeDomBase
     {
         public List<RawStatementBase> Statements { get; private set; }
-        public RawStatements(IEnumerable<RawStatementBase> values = null)
+        private RawStatements()
         {
             Statements = new List<RawStatementBase>();
-            if (values != null)
-            {
-                Add(values);
-            }
+        }
+        public RawStatements(IEnumerable<RawStatementBase> values) : this()
+        {            
+            Add(values);
+        }
+        public RawStatements(params RawStatementBase[] values) : this()
+        {
+            Add(values);
         }
         public void Add(IEnumerable<RawStatementBase> values)
         {
-            Statements.AddRange(values);
+            if (values!=null)
+                Statements.AddRange(values);
         }
         public void Add(params RawStatementBase[] values)
         {
-            Statements.AddRange(values);
+            if (values != null)
+                Statements.AddRange(values);
         }
         public void Add(RawStatements values)
         {
-            Add(values.Statements);
+            if (values != null)
+                Add(values.Statements);
         }
 
         public void Add(TypescriptTypeReference tref)
@@ -38,19 +45,19 @@ namespace TypeGen
 
     public abstract class RawStatementBase : TypeDomBase
     {
-        public static RawStatements operator +(RawStatementBase left, string right)
-        {
-            return new RawStatements() { Statements = { left, right } };
-        }
-        public static RawStatements operator +(string left, RawStatementBase right)
-        {
-            return new RawStatements() { Statements = { left, right } };
-        }
-        public static RawStatements operator +(RawStatementBase left, RawStatementBase right)
-        {
-            return new RawStatements() { Statements = { left, right } };
-        }
         public static implicit operator RawStatementBase(TypescriptTypeReference type)
+        {
+            return new RawStatementTypeReference(type);
+        }
+        public static implicit operator RawStatementBase(ClassType type)
+        {
+            return new RawStatementTypeReference(type);
+        }
+        public static implicit operator RawStatementBase(InterfaceType type)
+        {
+            return new RawStatementTypeReference(type);
+        }
+        public static implicit operator RawStatementBase(EnumType type)
         {
             return new RawStatementTypeReference(type);
         }

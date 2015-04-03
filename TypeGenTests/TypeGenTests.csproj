@@ -61,7 +61,7 @@
       <Project>{50d0c276-3fbc-4cf3-9edf-f8a80046fd9d}</Project>
       <Name>TypeGen</Name>
     </ProjectReference>
-    <ProjectReference Include="..\WebApplication1\WebApplication1.csproj">
+    <ProjectReference Include="C:\Users\StuchlikJ\Dropbox\Dlubal\TypeScriptHTMLApp1\WebApplication1\WebApplication1.csproj">
       <Project>{7bcd4ddf-4f04-4588-8b66-93a2bcdf0d17}</Project>
       <Name>WebApplication1</Name>
     </ProjectReference>
