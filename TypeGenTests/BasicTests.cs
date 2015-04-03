@@ -155,6 +155,14 @@ line3
                     };
                 cls.Members.Add(fn);
             }
+            {
+                var fn = new FunctionMember()
+                {
+                    Name = "fn6",
+                    Parameters = { new FunctionParameter("arg") { ParameterType = PrimitiveType.String, DefaultValue = new RawStatements("'42'") } },
+                };
+                cls.Members.Add(fn);
+            }
 
             Assert.AreEqual(@"
 class testFunctions {
@@ -164,6 +172,8 @@ class testFunctions {
     function fn4<T, T2 extends testFunctions>(p1: T2);
     function fn5(arg: boolean){
         return true;
+    }
+    function fn6(arg: string = '42'){
     }
 }
 ".Trim(), testGen(cls));

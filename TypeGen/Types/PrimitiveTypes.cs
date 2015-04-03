@@ -31,7 +31,9 @@ namespace TypeGen
         public static readonly NumberType Number = new NumberType();
         public static readonly StringType String = new StringType();
         public static readonly BoolType Boolean = new BoolType();
+        public static readonly VoidType Void = new VoidType();
         public static readonly DateTimeType Date = new DateTimeType();
+        
     }
 
     public sealed class AnyType : PrimitiveType
@@ -39,6 +41,13 @@ namespace TypeGen
         public override string Name
         {
             get { return "any"; }
+        }
+    }
+    public sealed class VoidType : PrimitiveType
+    {
+        public override string Name
+        {
+            get { return "void"; }
         }
     }
 

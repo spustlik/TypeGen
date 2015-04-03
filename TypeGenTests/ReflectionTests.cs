@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using TypeGen;
+using TypeGen.Reflection;
 
 namespace TypeGenTests
 {
@@ -16,31 +17,32 @@ namespace TypeGenTests
             rg.GenerateInterface(typeof(TestingClass));
 
             var g = new OutputGenerator();
-            g.GenerateReflection(rg);
+            g.Generate(rg.GenerationStrategy.TargetModule);
 
             Assert.AreEqual(
-@"enum MyEnum {
-    Value1 = 0,
-    Value2 = 1,
-    Value3 = 10,
-    Value4 = 11
-}
-interface IMyInterface {
-    Property2: string;
-}
-interface ITestingClassBase extends IMyInterface {
-    Property1: number;
-    Property2: string;
-}
-interface ITestingClass extends ITestingClassBase {
-    Property3: MyEnum;
-    Property4?: number;
-    Property5: string[];
-    Property6: ITestingClass;
-    Property7: ITestingClass[];
-    Property8: ITestingClass[];
-}
-", g.Output);
+@"module GeneratedModule {
+    interface ITestingClass extends ITestingClassBase {
+        Property3: MyEnum;
+        Property4?: number;
+        Property5: string[];
+        Property6: ITestingClass;
+        Property7: ITestingClass[];
+        Property8: ITestingClass[];
+    }
+    interface ITestingClassBase extends IMyInterface {
+        Property1: number;
+        Property2: string;
+    }
+    interface IMyInterface {
+        Property2: string;
+    }
+    enum MyEnum {
+        Value1 = 0,
+        Value2 = 1,
+        Value3 = 10,
+        Value4 = 11
+    }
+}", g.Output);
         }
 
 
@@ -52,31 +54,29 @@ interface ITestingClass extends ITestingClassBase {
             rg.GenerateInterface(typeof(PagedCompany));
 
             var g = new OutputGenerator();
-            g.GenerateReflection(rg);
+            g.Generate(rg.GenerationStrategy.TargetModule);
             Assert.AreEqual(
-@"interface ICompanyModel {
-    VAT: string;
-    Name: string;
-}
-interface IPagedCompany extends IPagedModel<ICompanyModel> {
-}
-interface IAdminUser {
-    Name: string;
-    Login: string;
-}
-interface IPagedModel<T> {
-    TotalCount: number;
-    Values: T[];
-}
-interface IPagedAminUser extends IPagedModel<IAdminUser> {
-}
-
-".Trim(), g.Output.Trim());
+@"
+module GeneratedModule {
+    interface IPagedAminUser extends IPagedModel<IAdminUser> {
+    }
+    interface IPagedModel<T> {
+        TotalCount: number;
+        Values: T[];
+    }
+    interface IAdminUser {
+        Name: string;
+        Login: string;
+    }
+    interface IPagedCompany extends IPagedModel<ICompanyModel> {
+    }
+    interface ICompanyModel {
+        VAT: string;
+        Name: string;
+    }
+}".Trim(), g.Output.Trim());
 
         }
-
-
-
 
         [TestMethod]
         public void TestGenerics2()
@@ -85,22 +85,62 @@ interface IPagedAminUser extends IPagedModel<IAdminUser> {
             rg.GenerateInterface(typeof(Test1<int>));
 
             var g = new OutputGenerator();
-            g.GenerateReflection(rg);
+            g.Generate(rg.GenerationStrategy.TargetModule);
             Assert.AreEqual(
-@"interface IGenTest<T> {
-    Value: T;
-}
-interface IGenList<TI> {
-    Values: IGenTest<TI>[];
-}
-interface ITest1<Int32> {
-    T1: IGenList<string>;
-    T2: IGenList<number>;
-    T3: IGenList<IGenList<boolean>>;
-    T4: IGenList<number[]>[];
-}
+@"
+module GeneratedModule {
+    interface ITest1<Int32> {
+        T1: IGenList<string>;
+        T2: IGenList<number>;
+        T3: IGenList<IGenList<boolean>>;
+        T4: IGenList<number[]>[];
+    }
+    interface IGenList<TI> {
+        Values: IGenTest<TI>[];
+    }
+    interface IGenTest<T> {
+        Value: T;
+    }
+}".Trim(), g.Output.Trim());
+        }
 
-".Trim(), g.Output.Trim());
+
+        [TestMethod]
+        public void TestMethods()
+        {
+            var rg = new ReflectionGenerator();
+            rg.GenerationStrategy.GenerateMethods = true;
+            rg.GenerateInterface(typeof(TestGenMethods<>));
+
+            var g = new OutputGenerator();
+            g.Generate(rg.GenerationStrategy.TargetModule);
+
+            Assert.AreEqual(@"
+module GeneratedModule {
+    interface ITestGenMethods<T> {
+        function Test1(input: T): string;
+        function Test2<T2>(input: T2, withDefault?: string = '42'): boolean;
+        function Test3(x: number, ...args: string[]): void;
+    }
+}".Trim(), g.Output.Trim());
+        }
+    }
+
+    public class TestGenMethods<T>
+    {
+        public string Test1(T input)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Test2<T2>(T2 input, string withDefault = "42")
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Test3(int? x, params string[] args)
+        {
+            throw new NotImplementedException();
         }
 
     }

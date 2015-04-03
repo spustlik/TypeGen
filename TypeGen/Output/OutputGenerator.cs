@@ -208,7 +208,7 @@ namespace TypeGen
             {
                 Formatter.Write(": ");
                 Generate(fn.ResultType);
-            }
+            }            
             if (fn is FunctionDeclarationMember)
             {
                 Formatter.Write(";");
@@ -219,7 +219,7 @@ namespace TypeGen
                 Formatter.WriteLine();
                 Formatter.PushIndent();
                 var fnm = (FunctionMember)fn;
-                if (fnm != null)
+                if (fnm.Body != null)
                 {
                     Generate(fnm.Body);
                 }
@@ -248,6 +248,11 @@ namespace TypeGen
             {
                 Formatter.Write(": ");
                 Generate(par.ParameterType);
+            }
+            if (par.DefaultValue != null)
+            {
+                Formatter.Write(" = ");
+                Generate(par.DefaultValue);
             }
         }
 

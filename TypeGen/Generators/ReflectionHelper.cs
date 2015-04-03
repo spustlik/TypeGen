@@ -28,24 +28,5 @@ namespace TypeGen
             return type.GetInterfaces().Any(i => i.IsTypeBaseOrSelf(interfaceFullName));
         }
 
-        //TODO: remove
-        public static OutputGenerator GenerateReflection(this OutputGenerator g, ReflectionGenerator rg)
-        {
-            foreach (var item in rg.Enums.Reverse())
-            {
-                //TODO: accessibility, modules
-                g.Generate(item);
-                g.Formatter.WriteLine();
-            }
-            foreach (var item in rg.Declarations.Reverse())
-            {
-                //TODO: accessibility, modules
-                g.Generate(item);
-                g.Formatter.WriteLine();
-            }
-
-            return g;
-        }
-
     }
 }
