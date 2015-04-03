@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,8 +21,12 @@ namespace TypeGen
     /// </summary>
     public class DefaultNameResolver : INameResolver
     {
-        public TypescriptModule ThisModule { get; set; }
         public Dictionary<string, TypescriptModule> Modules { get; private set; }
+        public TypescriptModule ThisModule
+        {
+            get { return Modules[""]; }
+            set { Modules[""] = value; _cache.Clear(); }
+        }
         private Dictionary<TypescriptTypeBase, string> _cache = new Dictionary<TypescriptTypeBase, string>();
 
         public DefaultNameResolver()
@@ -29,6 +34,10 @@ namespace TypeGen
             Modules = new Dictionary<string, TypescriptModule>();
         }
 
+        public void AddModule(TypescriptModule m)
+        {
+            Modules.Add(m.Name, m);
+        }
         private bool ContainsItem<T>(TypescriptModule m, T item) where T : class
         {
             return m.Members.OfType<DeclarationModuleElement>().Any(d => d.Declaration == item || d.EnumDeclaration == item);
@@ -62,8 +71,8 @@ namespace TypeGen
                 result = result + type.Name;
             }
             else
-            {
-                result = type.Name; 
+            {                
+                result = "UNKNOWN_ENUM<" + type.Name + ">";
             }
             _cache[type] = result;
             return result;
@@ -84,7 +93,7 @@ namespace TypeGen
             }
             else
             {
-                result = type.Name;
+                result = "UNKNOWN_DECLARATION<" + type.Name + ">";
             }
             _cache[type] = result;
             return result;
