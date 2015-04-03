@@ -10,8 +10,9 @@ namespace TypeGen
     {
         public string Name { get; set; }
         public List<EnumMember> Members { get; private set; }
-        public EnumType()
+        public EnumType(string name)
         {
+            Name = name;
             Members = new List<EnumMember>();
         }
         public override string ToString()
@@ -26,6 +27,10 @@ namespace TypeGen
     public sealed class EnumMember : TypeDomBase
     {
         public string Name { get; set; }
+        public EnumMember(string name)
+        {
+            Name = name;
+        }
         public int? Value { get; set; }
         public bool IsHexLiteral { get; set; }
         //TODO: there is "computed member" in spec

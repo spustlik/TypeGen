@@ -42,6 +42,7 @@
     <Compile Include="Generators\IGenerationStrategy.cs" />
     <Compile Include="Generators\INamingStrategy.cs" />
     <Compile Include="Generators\ReflectionGenerator.cs" />
+    <Compile Include="Generators\WebApiControllerGenerator.cs" />
     <Compile Include="Output\OutputGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Generators\ReflectionGeneratorBase.cs" />
@@ -53,7 +54,7 @@
     <Compile Include="Types\DeclarationBase.cs" />
     <Compile Include="Types\DeclarationMember.cs" />
     <Compile Include="Types\EnumType.cs" />
-    <Compile Include="Types\Module.cs" />
+    <Compile Include="Types\TypescriptModule.cs" />
     <Compile Include="Types\PrimitiveTypes.cs" />
     <Compile Include="Types\RawStatement.cs" />
     <Compile Include="Types\TypeDomBase.cs" />

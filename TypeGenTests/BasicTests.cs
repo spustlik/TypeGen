@@ -25,22 +25,19 @@ line3
         [TestMethod]
         public void TestClassGen()
         {
-            var cls = new ClassType() { Name = "testClass" };
-            cls.Members.Add(new PropertyMember()
+            var cls = new ClassType("testClass");
+            cls.Members.Add(new PropertyMember("testProperty")
             {
-                Name = "testProperty",
                 MemberType = new TypescriptTypeReference(new StringType())
             });
-            cls.Members.Add(new PropertyMember()
-            {
-                Name = "testProperty2",
+            cls.Members.Add(new PropertyMember("testProperty2")
+            {                
                 Accessibility = AccessibilityEnum.Private,
                 IsOptional = true,
                 MemberType = new TypescriptTypeReference(new NumberType())
             });
-            cls.Members.Add(new PropertyMember()
+            cls.Members.Add(new PropertyMember("testProperty3")
             {
-                Name = "testProperty3",
                 Accessibility = AccessibilityEnum.Public,
                 MemberType = new ArrayType(PrimitiveType.Boolean)
             });
@@ -54,7 +51,7 @@ line3
         [TestMethod]
         public void TestClassGen2()
         {
-            var cls = new ClassType() { Name = "testClass" };
+            var cls = new ClassType("testClass");
             cls.ExtendsTypes.Add(new TypescriptTypeReference("baseClass1"));
             cls.ExtendsTypes.Add(new TypescriptTypeReference("baseClass2"));
             cls.GenericParameters.Add(new GenericParameter("T1"));
@@ -76,32 +73,29 @@ line3
         [TestMethod]
         public void TestInterfaceGen()
         {
-            var intf = new InterfaceType() { Name = "testClass" };
-            intf.Members.Add(new PropertyMember()
+            var intf = new InterfaceType("testClass");
+            intf.Members.Add(new PropertyMember("testProperty")
             {
-                Name = "testProperty",
                 MemberType = new TypescriptTypeReference(new StringType())
             });
-            intf.Members.Add(new PropertyMember()
-            {
-                Name = "testProperty2",
+            intf.Members.Add(new PropertyMember("testProperty2")
+            {                
                 Accessibility = AccessibilityEnum.Private,
                 IsOptional = true,
                 MemberType = new TypescriptTypeReference(new NumberType())
             });
-            intf.Members.Add(new PropertyMember()
-            {
-                Name = "testProperty3",
+            intf.Members.Add(new PropertyMember("testProperty3")
+            {                
                 Accessibility = AccessibilityEnum.Public,
                 MemberType = new TypescriptTypeReference(new BoolType())
             });
-            var fun = new FunctionDeclarationMember() { Name = "myFn", ResultType = PrimitiveType.String };
+            var fun = new FunctionDeclarationMember("myFn") { ResultType = PrimitiveType.String, Accessibility = AccessibilityEnum.Public };
             intf.Members.Add(fun);
             Assert.AreEqual(@"interface testClass {
     testProperty: string;
     private testProperty2?: number;
     public testProperty3: boolean;
-    function myFn(): string;
+    public myFn(): string;
 }", testGen(intf));
         }
 
@@ -115,17 +109,17 @@ line3
         [TestMethod]
         public void TestFunctions()
         {
-            var cls = new ClassType() { Name = "testFunctions" };
+            var cls = new ClassType("testFunctions" );
             {
-                var fn = new FunctionDeclarationMember() { Name = "fn1" };
+                var fn = new FunctionDeclarationMember("fn1" );
                 cls.Members.Add(fn);
             }
             {
-                var fn = new FunctionDeclarationMember() { Name = "fn2", ResultType = new ArrayType(cls) };
+                var fn = new FunctionDeclarationMember("fn2") { ResultType = new ArrayType(cls) };
                 cls.Members.Add(fn);
             }
             {
-                var fn = new FunctionDeclarationMember() { Name = "fn3", Parameters = {
+                var fn = new FunctionDeclarationMember("fn3") { Parameters = {
                         new FunctionParameter("a") { ParameterType = PrimitiveType.Number },
                         new FunctionParameter("b") { ParameterType = PrimitiveType.Boolean, IsOptional = true},
                         new FunctionParameter("c"),
@@ -134,9 +128,8 @@ line3
                 cls.Members.Add(fn);
             }
             {
-                var fn = new FunctionDeclarationMember()
+                var fn = new FunctionDeclarationMember("fn4")
                 {
-                    Name = "fn4",
                     GenericParameters = {
                         new GenericParameter("T"),
                         new GenericParameter("T2") { Constraint = cls },
@@ -149,16 +142,15 @@ line3
                 cls.Members.Add(fn);
             }
             {
-                var fn = new FunctionMember() { Name = "fn5",
+                var fn = new FunctionMember("fn5", new RawStatements("return true;"))
+                {
                     Parameters = { new FunctionParameter("arg") { ParameterType = PrimitiveType.Boolean } },
-                    Body = new RawStatements("return true;")
-                    };
+                };
                 cls.Members.Add(fn);
             }
             {
-                var fn = new FunctionMember()
-                {
-                    Name = "fn6",
+                var fn = new FunctionMember("fn6", null)
+                {                    
                     Parameters = { new FunctionParameter("arg") { ParameterType = PrimitiveType.String, DefaultValue = new RawStatements("'42'") } },
                 };
                 cls.Members.Add(fn);
@@ -166,14 +158,14 @@ line3
 
             Assert.AreEqual(@"
 class testFunctions {
-    function fn1();
-    function fn2(): testFunctions[];
-    function fn3(a: number, b?: boolean, c, ...d: string[]);
-    function fn4<T, T2 extends testFunctions>(p1: T2);
-    function fn5(arg: boolean){
+    fn1();
+    fn2(): testFunctions[];
+    fn3(a: number, b?: boolean, c, ...d: string[]);
+    fn4<T, T2 extends testFunctions>(p1: T2);
+    fn5(arg: boolean) {
         return true;
     }
-    function fn6(arg: string = '42'){
+    fn6(arg: string = '42') {
     }
 }
 ".Trim(), testGen(cls));
@@ -183,7 +175,7 @@ class testFunctions {
         public void TestRawStatements()
         {
 
-            var c = new ClassType() { Name = "test" };
+            var c = new ClassType("test");
 
             var x2 = "a" + new RawStatement("b");
             var x3 = new RawStatement("a") + "b";            
@@ -207,11 +199,11 @@ class testFunctions {
         [TestMethod]
         public void TestEnum()
         {
-            var e = new EnumType() { Name = "xTypes" };
-            e.Members.Add(new EnumMember() { Name = "Type1" });
-            e.Members.Add(new EnumMember() { Name = "Type2", Value = 42 });
-            e.Members.Add(new EnumMember() { Name = "Type3", Value = 64, IsHexLiteral = true });
-            e.Members.Add(new EnumMember() { Name = "Type4" });
+            var e = new EnumType("xTypes");
+            e.Members.Add(new EnumMember("Type1"));
+            e.Members.Add(new EnumMember("Type2") { Value = 42 });
+            e.Members.Add(new EnumMember("Type3") { Value = 64, IsHexLiteral = true });
+            e.Members.Add(new EnumMember("Type4"));
             var g = new OutputGenerator();
             g.Generate(e);
             Assert.AreEqual(@"enum xTypes {
@@ -226,9 +218,9 @@ class testFunctions {
         [TestMethod]
         public void TestModule()
         {
-            var m = new Module() { Name = "testModule" };
-            var cls = new ClassType() { Name = "class1" };
-            cls.Members.Add(new PropertyMember() { Name = "Property1", MemberType = PrimitiveType.Boolean });            
+            var m = new TypescriptModule("testModule");
+            var cls = new ClassType("class1");
+            cls.Members.Add(new PropertyMember("Property1") { MemberType = PrimitiveType.Boolean });            
             m.Members.Add(cls);
             m.Members.Last().IsExporting = true;
             m.Members.Add(new RawStatements() { Statements = { "function test() : ", cls, " { return null; }" } });

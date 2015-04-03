@@ -6,13 +6,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeGen.Reflection
+namespace TypeGen.Generators
 {
     public class ReflectionGenerator : ReflectionGeneratorBase
     {
         public new NamingStrategy NamingStrategy { get { return (NamingStrategy)base.NamingStrategy; } }
         public new GenerationStrategy GenerationStrategy { get { return (GenerationStrategy)base.GenerationStrategy; } }
-        public Module Module { get { return GenerationStrategy.TargetModule; } }
+        public TypescriptModule Module { get { return GenerationStrategy.TargetModule; } }
 
         public ReflectionGenerator() : base(new NamingStrategy(), new GenerationStrategy())
         {
@@ -114,7 +114,7 @@ namespace TypeGen.Reflection
 
     public class GenerationStrategy : IGenerationStrategy
     {
-        public Module TargetModule { get; set; }
+        public TypescriptModule TargetModule { get; set; }
         /// <summary>
         /// generate classes instead of interfaces
         /// </summary>
@@ -126,7 +126,7 @@ namespace TypeGen.Reflection
 
         public GenerationStrategy()
         {
-            TargetModule = new Module() { Name = "GeneratedModule" };
+            TargetModule = new TypescriptModule("GeneratedModule");
         }
 
         public virtual bool ShouldGenerateClass(Type type)

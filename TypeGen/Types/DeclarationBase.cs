@@ -17,8 +17,9 @@ namespace TypeGen
 
         public List<DeclarationMember> Members { get; private set; }
 
-        public DeclarationBase()
+        public DeclarationBase(string name)
         {
+            Name = name;
             ExtendsTypes = new List<TypescriptTypeReference>();
             GenericParameters = new List<GenericParameter>();
             Members = new List<DeclarationMember>();
@@ -39,6 +40,9 @@ namespace TypeGen
 
     public sealed class InterfaceType : DeclarationBase
     {
+        public InterfaceType(string name) :base(name)
+        {
+        }
         // interface xxx<T1,T2> extends ... { } 
         public override string ToString()
         {
@@ -66,7 +70,7 @@ namespace TypeGen
         // class xxx<T1,T2> extends ... implements yyy
         public List<TypescriptTypeReference> Implementations { get; private set; }
         public bool IsImplementing { get { return Implementations.Count > 0; } }
-        public ClassType()
+        public ClassType(string name) :base(name)
         {
             Implementations = new List<TypescriptTypeReference>();
         }

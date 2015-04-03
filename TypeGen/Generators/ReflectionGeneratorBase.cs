@@ -96,7 +96,7 @@ namespace TypeGen
         } 
         public InterfaceType GenerateInterface(Type type)
         {
-            var result = new InterfaceType() { Name = NamingStrategy.GetInterfaceName(type) };
+            var result = new InterfaceType(NamingStrategy.GetInterfaceName(type));
             GenerateDeclarationBase(result, type);
             //implemented interfaces as extends
             if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
@@ -129,7 +129,7 @@ namespace TypeGen
 
         public FunctionDeclarationMember GenerateMethodDeclaration(MethodInfo method)
         {
-            var result = new FunctionDeclarationMember() { Name = NamingStrategy.GetMethodName(method), ExtraData = { { SOURCEMEMBER_KEY, method } } };
+            var result = new FunctionDeclarationMember(NamingStrategy.GetMethodName(method)) { ExtraData = { { SOURCEMEMBER_KEY, method } } };
             if (method.ReturnType != typeof(void))
             {
                 result.ResultType = GenerateFromType(method.ReturnType);
@@ -177,7 +177,7 @@ namespace TypeGen
 
         public ClassType GenerateClass(Type type)
         {
-            var result = new ClassType() { Name = NamingStrategy.GetClassName(type)};
+            var result = new ClassType(NamingStrategy.GetClassName(type));
             GenerateDeclarationBase(result, type);
             //implemented interfaces as implements
             if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
@@ -232,9 +232,8 @@ namespace TypeGen
 
         public DeclarationMember GenerateProperty(PropertyInfo pi)
         {
-            var pm = new PropertyMember()
+            var pm = new PropertyMember(NamingStrategy.GetPropertyName(pi))
             {
-                Name = NamingStrategy.GetPropertyName(pi),
                 ExtraData = { { SOURCEMEMBER_KEY, pi } },
                 IsOptional = Nullable.GetUnderlyingType(pi.PropertyType) != null,
                 MemberType = GenerateFromType(pi.PropertyType)
@@ -244,7 +243,7 @@ namespace TypeGen
 
         public TypescriptTypeReference GenerateEnum(Type type)
         {
-            var enumType = new EnumType() { Name = NamingStrategy.GetEnumName(type), ExtraData = { { SOURCETYPE_KEY, type } } };
+            var enumType = new EnumType(NamingStrategy.GetEnumName(type)) { ExtraData = { { SOURCETYPE_KEY, type } } };
             _typeMap[type] = enumType;
             GenerationStrategy.AddDeclaration(enumType);
             var values = type.GetFields(BindingFlags.Static | BindingFlags.Public);
@@ -258,7 +257,7 @@ namespace TypeGen
         public EnumMember GenerateEnumMember(FieldInfo value)
         {
             var v = (int)value.GetValue(null);
-            var ev = new EnumMember() { Name = NamingStrategy.GetEnumMemberName(value), Value = v, ExtraData = { { SOURCEMEMBER_KEY, value } } };
+            var ev = new EnumMember(NamingStrategy.GetEnumMemberName(value)) { Value = v, ExtraData = { { SOURCEMEMBER_KEY, value } } };
             return ev;
         }
 

@@ -17,17 +17,22 @@ namespace TypeGen
             Formatter = new TextFormatter();
         }
 
-        public void Generate(Module m)
+        public void Generate(TypescriptModule m)
         {
             Formatter.Write("module ");
             Formatter.Write(m.Name);
             Formatter.Write(" {");
             Formatter.WriteLine();
             Formatter.PushIndent();
-            Formatter.WriteSeparated("\n", m.Members, Generate);
+            GenerateModuleContent(m);
             Formatter.PopIndent();
             Formatter.WriteEndOfLine();
             Formatter.Write("}");
+        }
+
+        public void GenerateModuleContent(TypescriptModule m)
+        {
+            Formatter.WriteSeparated("\n", m.Members, Generate);
         }
 
         private void Generate(ModuleElement element)
@@ -184,16 +189,27 @@ namespace TypeGen
             {
                 Generate((FunctionMemberBase)m);
             }
+            else if (m is RawDeclarationMember)
+            {
+                Generate((RawDeclarationMember)m);
+            }
             else
             {
                 throw new ArgumentOutOfRangeException();
             }
         }
 
+        private void Generate(RawDeclarationMember m)
+        {
+            if (m.Raw != null)
+            {
+                Generate(m.Raw);
+            }
+        }
+
         private void Generate(FunctionMemberBase fn)
         {
             Generate(fn.Accessibility);
-            Formatter.Write("function ");
             Formatter.Write(fn.Name);
             if (fn.IsGeneric)
             {
@@ -215,7 +231,7 @@ namespace TypeGen
             }
             else if (fn is FunctionMember)
             {
-                Formatter.Write("{");
+                Formatter.Write(" {");
                 Formatter.WriteLine();
                 Formatter.PushIndent();
                 var fnm = (FunctionMember)fn;
@@ -264,6 +280,11 @@ namespace TypeGen
                 Formatter.Write("?");
             Formatter.Write(": ");
             Generate(m.MemberType);
+            if (m.Initialization != null)
+            {
+                Formatter.Write(" = ");
+                Generate(m.Initialization);
+            }
             Formatter.Write(";");
         }
 

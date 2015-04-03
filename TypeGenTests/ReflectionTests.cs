@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using TypeGen;
-using TypeGen.Reflection;
+using TypeGen.Generators;
 
 namespace TypeGenTests
 {
@@ -118,9 +118,9 @@ module GeneratedModule {
             Assert.AreEqual(@"
 module GeneratedModule {
     interface ITestGenMethods<T> {
-        function Test1(input: T): string;
-        function Test2<T2>(input: T2, withDefault?: string = '42'): boolean;
-        function Test3(x: number, ...args: string[]): void;
+        Test1(input: T): string;
+        Test2<T2>(input: T2, withDefault?: string = '42'): boolean;
+        Test3(x: number, ...args: string[]): void;
     }
 }".Trim(), g.Output.Trim());
         }

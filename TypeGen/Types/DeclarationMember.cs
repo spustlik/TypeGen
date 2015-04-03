@@ -11,6 +11,10 @@ namespace TypeGen
         //according to spec: properties are public by default
         public AccessibilityEnum? Accessibility { get; set; }
 
+        public static implicit operator DeclarationMember(RawStatements from)
+        {
+            return new RawDeclarationMember(from);
+        }
     }
 
     public sealed class PropertyMember : DeclarationMember
@@ -21,6 +25,12 @@ namespace TypeGen
 
         public bool IsOptional { get; set; }
 
+        public RawStatements Initialization { get; set; }
+
+        public PropertyMember(string name)
+        {
+            Name = name;
+        }
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -45,10 +55,11 @@ namespace TypeGen
         public bool IsGeneric { get { return GenericParameters.Count > 0; } }
         public List<FunctionParameter> Parameters { get; private set; }
         public TypescriptTypeReference ResultType { get; set; }        
-        protected FunctionMemberBase()
+        protected FunctionMemberBase(string name)
         {
             GenericParameters = new List<GenericParameter>();
             Parameters = new List<FunctionParameter>();
+            Name = name;
         }
     }
 
@@ -67,15 +78,30 @@ namespace TypeGen
 
     public sealed class FunctionDeclarationMember : FunctionMemberBase
     {
+        public FunctionDeclarationMember(string name) : base(name)
+        {
+        }
     }
 
     public sealed class FunctionMember : FunctionMemberBase
     {
         public RawStatements Body { get; set; }
+        public FunctionMember(string name, RawStatements body) : base(name)
+        {
+            Body = body;
+        }
     }
-
 
     //indexer?
     //accessor? (get method, set method) ES5
     //constructor, index, call
+    public sealed class RawDeclarationMember : DeclarationMember
+    {
+        public RawStatements Raw { get; set; }
+        public RawDeclarationMember(RawStatements raw)
+        {
+            Raw = raw;
+        }
+    }
+
 }

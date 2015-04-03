@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace TypeGen
 {
-    public sealed class Module : TypeDomBase
+    public sealed class TypescriptModule : TypeDomBase
     {
         public string Name { get; set; }
         public List<ModuleElement> Members { get; private set; }
-        public Module()
+        public TypescriptModule(string name)
         {
+            Name = name;
             Members = new List<ModuleElement>();
         }
     }
@@ -27,7 +28,7 @@ namespace TypeGen
         {
             return new DeclarationModuleElement(from);
         }
-        public static implicit operator ModuleElement(Module from)
+        public static implicit operator ModuleElement(TypescriptModule from)
         {
             return new DeclarationModuleElement(from);
         }
@@ -41,7 +42,7 @@ namespace TypeGen
     {
         public DeclarationBase Declaration { get; private set; }
         public EnumType EnumDeclaration { get; private set; }
-        public Module InnerModule { get; private set; }
+        public TypescriptModule InnerModule { get; private set; }
 
         public DeclarationModuleElement(DeclarationBase decl)
         {
@@ -51,7 +52,7 @@ namespace TypeGen
         {
             EnumDeclaration = enumDecl;
         }
-        public DeclarationModuleElement(Module innerModule)
+        public DeclarationModuleElement(TypescriptModule innerModule)
         {
             InnerModule = innerModule;
         }
