@@ -52,9 +52,9 @@ namespace TypeGen
             set { Modules[""] = value; _cache.Clear(); }
         }
 
-        public static void AddModule(TypescriptModule m)
+        public static void AddModule(TypescriptModule m, string alias = null)
         {
-            Modules[m.Name] = m;
+            Modules[alias ?? m.Name] = m;
         }
 
 
@@ -73,7 +73,7 @@ namespace TypeGen
             }
             else
             {
-                result = "UNKNOWN_ENUM<" + type.Name + ">";
+                result = type.Name;
             }
             _cache[type] = result;
             return result;
@@ -94,7 +94,7 @@ namespace TypeGen
             }
             else
             {
-                result = "UNKNOWN_DECLARATION<" + type.Name + ">";
+                result = type.Name;
             }
             _cache[type] = result;
             return result;

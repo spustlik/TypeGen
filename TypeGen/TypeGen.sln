@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeGen", "TypeGen.csproj", "{62E92A5A-B677-4F25-8DC4-33AE872DC82B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{94E1DA67-8EB8-4C8E-937C-55FC54EB618D}"
+	ProjectSection(SolutionItems) = preProject
+		..\ambientGrammar.xlsx = ..\ambientGrammar.xlsx
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeGenTests", "..\TypeGenTests\TypeGenTests.csproj", "{9F0563C1-9D5E-43CD-8331-EBE0B94452E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test1", "..\Test1\Test1.csproj", "{C5A10849-0C28-4BCA-901C-1C11B3CD0A41}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkillDriver.Api", "..\..\..\SkillDriver\Web\SkillDriver.Api\SkillDriver.Api.csproj", "{08DC5441-6900-4C13-8823-9EF5B0C25D89}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62E92A5A-B677-4F25-8DC4-33AE872DC82B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62E92A5A-B677-4F25-8DC4-33AE872DC82B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62E92A5A-B677-4F25-8DC4-33AE872DC82B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62E92A5A-B677-4F25-8DC4-33AE872DC82B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F0563C1-9D5E-43CD-8331-EBE0B94452E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F0563C1-9D5E-43CD-8331-EBE0B94452E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F0563C1-9D5E-43CD-8331-EBE0B94452E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F0563C1-9D5E-43CD-8331-EBE0B94452E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5A10849-0C28-4BCA-901C-1C11B3CD0A41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5A10849-0C28-4BCA-901C-1C11B3CD0A41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5A10849-0C28-4BCA-901C-1C11B3CD0A41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5A10849-0C28-4BCA-901C-1C11B3CD0A41}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08DC5441-6900-4C13-8823-9EF5B0C25D89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08DC5441-6900-4C13-8823-9EF5B0C25D89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08DC5441-6900-4C13-8823-9EF5B0C25D89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08DC5441-6900-4C13-8823-9EF5B0C25D89}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -15,6 +15,20 @@ namespace TypeGen
             Name = name;
             Members = new List<ModuleElement>();
         }
+
+        public void MakeAllExportable(bool isExporting)
+        {
+            foreach (var element in Members)
+            {
+                element.IsExporting = isExporting;
+            }
+        }
+
+        public override string ToString()
+        {
+            return "module " + Name + " (" + Members.Count + " members)";
+        }
+
     }
 
     public abstract class ModuleElement : TypeDomBase
@@ -57,6 +71,10 @@ namespace TypeGen
             InnerModule = innerModule;
         }
 
+        public override string ToString()
+        {
+            return (IsExporting ? "export " : "") + ((object)Declaration ?? (object)EnumDeclaration ?? InnerModule).ToString();
+        }
     }
 
     //used for 
@@ -69,5 +87,10 @@ namespace TypeGen
     public sealed class RawModuleElement : ModuleElement
     {
         public RawStatements Raw { get; set; }
+
+        public override string ToString()
+        {
+            return Raw + "";
+        }
     }
 }

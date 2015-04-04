@@ -41,6 +41,11 @@ namespace TypeGen
         {
             Add((RawStatementBase)tref);
         }
+
+        public override string ToString()
+        {
+            return "(Raw " + Statements.Count + ")" + String.Join("", Statements.Select(s => s.ToString()));
+        }
     }
 
     public abstract class RawStatementBase : TypeDomBase
@@ -74,6 +79,10 @@ namespace TypeGen
         {
             Content = content;
         }
+        public override string ToString()
+        {
+            return Content;
+        }
     }
 
     public sealed class RawStatementTypeReference : RawStatementBase
@@ -82,6 +91,10 @@ namespace TypeGen
         public RawStatementTypeReference(TypescriptTypeReference typeRef = null) 
         {
             TypeReference = typeRef;
+        }
+        public override string ToString()
+        {
+            return TypeReference + "";
         }
     }
 }

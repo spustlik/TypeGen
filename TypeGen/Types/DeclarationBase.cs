@@ -25,6 +25,14 @@ namespace TypeGen
             Members = new List<DeclarationMember>();
         }
 
+        public override string ToString()
+        {
+            return Name +
+                    (IsGeneric ? "<" + String.Join(",", GenericParameters) + ">" : "") +
+                    (IsExtending ? " extends " + String.Join(", ", ExtendsTypes.Select(x => x.ToString())) : "") +
+                    " (" + Members.Count + ")";
+        }
+
     }
 
     public sealed class GenericParameter : TypeDomBase
@@ -36,6 +44,10 @@ namespace TypeGen
         }
         //extends constraint
         public TypescriptTypeReference Constraint { get; set; }
+        public override string ToString()
+        {
+            return Name + (Constraint != null ? "extends " + Constraint : null);
+        }
     }
 
     public sealed class InterfaceType : DeclarationBase
@@ -46,22 +58,7 @@ namespace TypeGen
         // interface xxx<T1,T2> extends ... { } 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.Append("interface ");
-            sb.Append(Name);
-            if (IsGeneric)
-            {
-                sb.Append("<");
-                sb.Append(String.Join(", ", GenericParameters.Select(p => p.Name)));
-                sb.Append(">");
-            }
-            if (IsExtending)
-            {
-                sb.Append(" extends ");
-                sb.Append(String.Join(", ", ExtendsTypes.Select(t => t.ToString())));
-            }
-            return sb.ToString();
-
+            return "interface " + base.ToString();
         }
     }
 
@@ -77,26 +74,8 @@ namespace TypeGen
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.Append("class ");
-            sb.Append(Name);
-            if (IsGeneric)
-            {
-                sb.Append("<");
-                sb.Append(String.Join(", ", GenericParameters.Select(p => p.Name)));
-                sb.Append(">");
-            }
-            if (IsExtending)
-            {
-                sb.Append(" extends ");
-                sb.Append(String.Join(", ", ExtendsTypes.Select(t => t.ToString())));
-            }
-            if (IsImplementing)
-            {
-                sb.Append(" implements");
-                sb.Append(String.Join(", ", Implementations.Select(t => t.ToString())));
-            }
-            return sb.ToString();
+            return "class " + base.ToString() +
+                (IsImplementing ? " implements " + String.Join(", ", Implementations.Select(x => x.ToString())) : "");
         }
     }
 

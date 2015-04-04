@@ -17,10 +17,7 @@ namespace TypeGen
         }
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.Append("enum ");
-            sb.Append(Name);
-            return sb.ToString();
+            return "enum " + Name + " (" + Members.Count + " members)";
         }
     }
 

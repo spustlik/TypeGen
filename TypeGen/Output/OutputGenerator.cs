@@ -29,7 +29,7 @@ namespace TypeGen
         }
         public void GenerateNonAmbient(TypescriptModule module)
         {
-            GenerateModule(module, e=>!CanGenerateInAmbientModule(e));
+            GenerateModule(module, e => !CanGenerateInAmbientModule(e));
         }
         public void Generate(TypescriptModule m)
         {
@@ -47,16 +47,47 @@ namespace TypeGen
             Formatter.PopIndent();
             Formatter.WriteEndOfLine();
             Formatter.Write("}");
+            Formatter.WriteLine();
         }
 
         public void GenerateModuleContent(TypescriptModule module, Func<ModuleElement, bool> elementFilter)
         {
+            DefaultNameResolver.ThisModule = module;
             var members = module.Members.AsEnumerable();
             if (elementFilter!=null)
             {
                 members = members.Where(elementFilter);
             }
-            Formatter.WriteSeparated("\n", members, Generate);
+            var ordered = members.ToList();
+            int i = 0;
+            while(i < ordered.Count)
+            {
+                var md = ordered[i] as DeclarationModuleElement;
+                if (md != null)
+                {
+                    if (md.Declaration != null)
+                    {
+                        var indexes = md.Declaration.ExtendsTypes.Where(et=>et.ReferencedType!=null).Select(et => GetIndexInModule(ordered, et.ReferencedType)).ToArray();
+                        if (indexes.Length > 0)
+                        {
+                            var max = indexes.Max();
+                            if (max > i)
+                            {
+                                ordered.RemoveAt(i); //moves all next elements  -1
+                                ordered.Insert(max, md);
+                                continue; //do not increment
+                            }
+                        }
+                    }
+                }
+                i++;
+            }
+            Formatter.WriteSeparated("\n", ordered, Generate);
+        }
+
+        private int GetIndexInModule(List<ModuleElement> ordered, TypescriptTypeBase type)
+        {
+            return ordered.FindIndex(x => (x is DeclarationModuleElement) && (((DeclarationModuleElement)x).Declaration == type));
         }
 
         private bool CanGenerateInAmbientModule(ModuleElement moduleElement)
@@ -311,8 +342,11 @@ namespace TypeGen
             Formatter.Write(m.Name);
             if (m.IsOptional)
                 Formatter.Write("?");
-            Formatter.Write(": ");
-            Generate(m.MemberType);
+            if (m.MemberType != null)
+            {
+                Formatter.Write(": ");
+                Generate(m.MemberType);
+            }
             if (m.Initialization != null)
             {
                 Formatter.Write(" = ");

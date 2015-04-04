@@ -37,8 +37,15 @@ namespace TypeGen
 
         public override string ToString()
         {
-            return TypeName ?? ReferencedType.ToString();
+            if (TypeName != null)
+                return TypeName;
+            if (ReferencedType != null)
+                return "{" + ReferencedType.ToString() + "}";
+            if (Raw != null)
+                return Raw.ToString();
+            return "<TypeRef>";
         }
+
         public static implicit operator TypescriptTypeReference(TypescriptTypeBase type)
         {
             return new TypescriptTypeReference(type);

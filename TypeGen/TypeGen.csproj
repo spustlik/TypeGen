@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="Generators\IGenerationStrategy.cs" />
     <Compile Include="Generators\INamingStrategy.cs" />
+    <Compile Include="Generators\KnockoutGenerator.cs" />
     <Compile Include="Generators\ReflectionGenerator.cs" />
     <Compile Include="Generators\WebApiControllerGenerator.cs" />
     <Compile Include="Output\INameResolver.cs" />

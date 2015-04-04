@@ -26,14 +26,6 @@ namespace TypeGen.Generators
             }
         }
 
-        public void MakeAllExportable()
-        {
-            foreach (var element in Module.Members)
-            {
-                element.IsExporting = true;
-            }
-        }
-
     }
 
     public enum LetterCasing

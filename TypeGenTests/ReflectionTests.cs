@@ -21,6 +21,13 @@ namespace TypeGenTests
 
             Assert.AreEqual(
 @"module GeneratedModule {
+    interface IMyInterface {
+        Property2: string;
+    }
+    interface ITestingClassBase extends IMyInterface {
+        Property1: number;
+        Property2: string;
+    }
     interface ITestingClass extends ITestingClassBase {
         Property3: MyEnum;
         Property4?: number;
@@ -29,20 +36,14 @@ namespace TypeGenTests
         Property7: ITestingClass[];
         Property8: ITestingClass[];
     }
-    interface ITestingClassBase extends IMyInterface {
-        Property1: number;
-        Property2: string;
-    }
-    interface IMyInterface {
-        Property2: string;
-    }
     enum MyEnum {
         Value1 = 0,
         Value2 = 1,
         Value3 = 10,
         Value4 = 11
     }
-}", g.Output);
+}
+".Trim(), g.Output.Trim());
         }
 
 
@@ -58,11 +59,11 @@ namespace TypeGenTests
             Assert.AreEqual(
 @"
 module GeneratedModule {
-    interface IPagedAminUser extends IPagedModel<IAdminUser> {
-    }
     interface IPagedModel<T> {
         TotalCount: number;
         Values: T[];
+    }
+    interface IPagedAminUser extends IPagedModel<IAdminUser> {
     }
     interface IAdminUser {
         Name: string;
@@ -124,6 +125,45 @@ module GeneratedModule {
     }
 }".Trim(), g.Output.Trim());
         }
+
+        [TestMethod]
+        public void TestInheritanceReordering()
+        {
+            var rg = new ReflectionGenerator();
+            rg.GenerationStrategy.GenerateClasses = true;
+            rg.GenerateClass(typeof(C));
+
+            var g = new OutputGenerator();
+            g.Generate(rg.GenerationStrategy.TargetModule);
+            Assert.AreEqual(@"
+module GeneratedModule {
+    class A {
+        MyProperty: B;
+    }
+    class B extends A {
+        PropertyOnB: number;
+    }
+    class C extends B {
+        PropertyOnC: string;
+    }
+}
+".Trim(), g.Output.Trim());
+        }
+    }
+
+
+    public class C : B
+    {
+        public string PropertyOnC { get; set; }
+    }
+    public class B : A
+    {
+        public int PropertyOnB { get; set; }
+    }
+
+    public class A
+    {
+        public B MyProperty { get; set; }
     }
 
     public class TestGenMethods<T>

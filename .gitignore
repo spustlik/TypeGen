@@ -9,3 +9,5 @@ obj/
 *.exe
 *.pdb
 *.csproj.user
+packages/
+test1/
