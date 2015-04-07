@@ -126,6 +126,11 @@ namespace TypeGen.Generators
             return GenerateClasses;
         }
 
+        protected virtual bool IsSystemType(Type type)
+        {
+            return type.Assembly == typeof(object).Assembly;
+        }
+
         public virtual bool ShouldGenerateProperties(DeclarationBase decl, Type type)
         {
             return true;
@@ -140,11 +145,25 @@ namespace TypeGen.Generators
 
         public virtual bool ShouldGenerateBaseClass(DeclarationBase decl, Type type, Type baseType)
         {
+            if (IsSystemType(baseType))
+                return false;
             return true;
+        }
+
+        public bool ShouldGenerateGenericTypeArgument(TypescriptTypeBase result, Type genericTypeArgument)
+        {
+            return true;
+        }
+
+        public bool ShouldGenerateImplementedInterface(DeclarationBase decl, Type interfaceType)
+        {
+            return !IsSystemType(interfaceType);
         }
 
         public virtual bool ShouldGenerateImplementedInterfaces(DeclarationBase decl, Type type)
         {
+            if (type.Assembly == typeof(object).Assembly)
+                return false;
             return true;
         }
 

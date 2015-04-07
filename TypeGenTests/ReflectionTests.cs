@@ -149,8 +149,45 @@ module GeneratedModule {
 }
 ".Trim(), g.Output.Trim());
         }
+
+        [TestMethod]
+        public void TestSystemTypesGeneration()
+        {
+            var rg = new ReflectionGenerator();
+            rg.GenerationStrategy.GenerateClasses = true;
+            rg.GenerateClass(typeof(SystemTypesClass));
+
+            var g = new OutputGenerator();
+            g.Generate(rg.GenerationStrategy.TargetModule);
+            Assert.AreEqual(@"
+module GeneratedModule {
+    class SystemTypesClass<T> {
+        GenericProperty: SystemTypesClass<any>;
+    }
+    class SystemTypesClass extends SystemTypesClass<number> {
+    }
+}
+".Trim(), g.Output.Trim());
+        }
     }
 
+    public class SystemTypesClass<T> : IDisposable
+    {
+        public SystemTypesClass<object> GenericProperty { get; set; }
+        public SystemTypesClass<object> GenericMethod()
+        {
+            throw new NotImplementedException();
+        }
+
+        void IDisposable.Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class SystemTypesClass : SystemTypesClass<int>
+    {
+
+    }
 
     public class C : B
     {

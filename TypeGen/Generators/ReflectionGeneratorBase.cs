@@ -24,6 +24,7 @@ namespace TypeGen
             _typeMap = new Dictionary<Type, TypescriptTypeBase>()
             {
                 { typeof(void), PrimitiveType.Void },
+                { typeof(object), PrimitiveType.Any },
                 { typeof(int), PrimitiveType.Number },
                 { typeof(double), PrimitiveType.Number },
                 { typeof(float), PrimitiveType.Number },
@@ -73,7 +74,13 @@ namespace TypeGen
                 if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
                     var tref = GenerateFromType(type.GetGenericTypeDefinition());
-                    tref.GenericParameters.AddRange(type.GenericTypeArguments.Select(a => GenerateFromType(a)));
+                    foreach (var genericTypeArgument in type.GenericTypeArguments)
+                    {
+                        if (GenerationStrategy.ShouldGenerateGenericTypeArgument(result, genericTypeArgument))
+                        {
+                            tref.GenericParameters.Add(GenerateFromType(genericTypeArgument));
+                        }
+                    }
                     return tref;
                 }
                 return GenerateClassDeclaration(type);
@@ -94,24 +101,6 @@ namespace TypeGen
                 return GenerateInterface(type);
             }
         } 
-        public InterfaceType GenerateInterface(Type type)
-        {
-            var result = new InterfaceType(NamingStrategy.GetInterfaceName(type));
-            GenerateDeclarationBase(result, type);
-            //implemented interfaces as extends
-            if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
-            {
-                var allInterfaces = type.GetInterfaces();
-                var implemented = allInterfaces.Where(intf => type.GetInterfaceMap(intf).TargetMethods.Any(m => m.DeclaringType == type)).ToArray();
-                foreach (var intf in implemented)
-                {
-                    result.ExtendsTypes.Add(GenerateFromType(intf));
-                }
-            }
-            GenerateMethodDeclarations(type, result);
-            return result;
-        }
-
         private void GenerateMethodDeclarations(Type type, DeclarationBase declaration)
         {
             //method declarations
@@ -175,6 +164,27 @@ namespace TypeGen
             return par;
         }
 
+        public InterfaceType GenerateInterface(Type type)
+        {
+            var result = new InterfaceType(NamingStrategy.GetInterfaceName(type));
+            GenerateDeclarationBase(result, type);
+            //implemented interfaces as extends
+            if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
+            {
+                var allInterfaces = type.GetInterfaces();
+                var implemented = allInterfaces.Where(intf => type.GetInterfaceMap(intf).TargetMethods.Any(m => m.DeclaringType == type)).ToArray();
+                foreach (var intf in implemented)
+                {
+                    if (GenerationStrategy.ShouldGenerateImplementedInterface(result, intf))
+                    {
+                        result.ExtendsTypes.Add(GenerateFromType(intf));
+                    }
+                }
+            }
+            GenerateMethodDeclarations(type, result);
+            return result;
+        }
+
         public ClassType GenerateClass(Type type)
         {
             var result = new ClassType(NamingStrategy.GetClassName(type));
@@ -186,7 +196,10 @@ namespace TypeGen
                 var implemented = allInterfaces.Where(intf => type.GetInterfaceMap(intf).TargetMethods.Any(m => m.DeclaringType == type)).ToArray();
                 foreach (var intf in implemented)
                 {
-                    result.Implementations.Add(GenerateFromType(intf));
+                    if (GenerationStrategy.ShouldGenerateImplementedInterface(result, intf))
+                    {
+                        result.Implementations.Add(GenerateFromType(intf));
+                    }
                 }
             }
             GenerateMethodDeclarations(type, result);
