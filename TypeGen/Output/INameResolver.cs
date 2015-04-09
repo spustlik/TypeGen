@@ -73,7 +73,7 @@ namespace TypeGen
             }
             else
             {
-                result = type.Name;
+                result = GetFailedName(type.Name);
             }
             _cache[type] = result;
             return result;
@@ -94,10 +94,20 @@ namespace TypeGen
             }
             else
             {
-                result = type.Name;
+                result = GetFailedName(type.Name);
             }
             _cache[type] = result;
             return result;
+        }
+
+        public static bool EnableFails { get; set; }
+        protected virtual string GetFailedName(string name)
+        {
+            if (EnableFails)
+            {
+                return "FAILED<" + name + ">";
+            }
+            return name;
         }
 
     }

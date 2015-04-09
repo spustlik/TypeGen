@@ -87,6 +87,10 @@ namespace TypeGen.Generators
             throw new InvalidOperationException("Not array type");
         }
 
+
+        public bool GenerateFromJs { get; set; }
+        public bool JsExistenceCheck { get; set; }
+
         private Dictionary<DeclarationBase, ClassType> _map;
         
         public void GenerateObservableModule(TypescriptModule source, TypescriptModule target)
@@ -128,15 +132,67 @@ namespace TypeGen.Generators
                     target.Implementations.Add(MapType(item));
                 }
             }
-            foreach (var item in src.Members.OfType<PropertyMember>())
+            foreach (var srcItem in src.Members.OfType<PropertyMember>())
             {
-                var property = new PropertyMember(item.Name);
-                property.Accessibility = item.Accessibility;
-                property.Initialization = MapRaw(item.Initialization);
+                var property = new PropertyMember(srcItem.Name);
+                property.Accessibility = srcItem.Accessibility;
+                property.Initialization = MapRaw(srcItem.Initialization);
                 //property.IsOptional = item.IsOptional;
-                property.MemberType = MapType(item.MemberType);
+                property.MemberType = MapType(srcItem.MemberType);
                 MakeObservableInitialization(property);
                 target.Members.Add(property);
+            }
+            if (GenerateFromJs)
+            {
+                var fromJS = new RawStatements();
+                if (target.IsExtending)
+                {
+                    fromJS.Add("super.fromJS(obj);\n");
+                }
+                foreach (var targetItem in target.Members.OfType<PropertyMember>())
+                {
+                    var srcItem = src.Members.OfType<PropertyMember>().First(x => x.Name == targetItem.Name);
+                    TypescriptTypeBase itemType = null;
+                    if (srcItem.MemberType != null && srcItem.MemberType.ReferencedType != null)
+                        itemType = srcItem.MemberType.ReferencedType;
+
+                    if (JsExistenceCheck)
+                    {
+                        fromJS.Add("if (obj." + srcItem.Name + ") { ");
+                    }
+
+                    if (itemType is ArrayType)
+                    {
+                        var elementType = ExtractArrayElement(srcItem.MemberType);
+                        if (elementType != null && elementType.ReferencedType != null && elementType.ReferencedType is DeclarationBase)
+                        {
+                            fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ".map(item=>new ", elementType, "().fromJS(item)))");
+                        }
+                        else
+                        {
+                            //todo:conversions
+                            fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ")");
+                        }
+                    }
+                    else
+                    {
+                        if (itemType == PrimitiveType.Date)
+                        {
+                            fromJS.Add("this." + srcItem.Name + "(new Date(obj." + srcItem.Name + "))");
+                        }
+                        else
+                        {
+                            fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ")");
+                        }
+                    }
+                    if (JsExistenceCheck)
+                    {
+                        fromJS.Add("};");
+                    }
+                    fromJS.Add("\n");
+                }
+                fromJS.Add("return this;");
+                target.Members.Add(new FunctionMember("fromJS", fromJS) { Parameters = { new FunctionParameter("obj") } });
             }
         }
 
@@ -176,6 +232,11 @@ namespace TypeGen.Generators
             else if (r.ReferencedType != null && r.ReferencedType is DeclarationBase)
             {
                 result = new TypescriptTypeReference(MapDeclaration((DeclarationBase)r.ReferencedType));
+            }
+            else if (r.ReferencedType != null && r.ReferencedType is ArrayType)
+            {
+                var array = (ArrayType)r.ReferencedType;
+                result = new TypescriptTypeReference(new ArrayType(MapType( array.ElementType )));
             }
             else
             {
