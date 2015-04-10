@@ -9,6 +9,7 @@ namespace TypeGen.Generators
 
     public class KnockoutGenerator
     {
+        #region Static makers
         public static void MakeObservable(TypescriptModule module)
         {
             foreach (var item in module.Members.OfType<DeclarationModuleElement>())
@@ -80,6 +81,7 @@ namespace TypeGen.Generators
             }
         }
 
+        #endregion
         private static TypescriptTypeReference ExtractArrayElement(TypescriptTypeReference item)
         {
             if (item.ReferencedType != null && item.ReferencedType is ArrayType)
@@ -91,11 +93,20 @@ namespace TypeGen.Generators
         public bool GenerateFromJs { get; set; }
         public bool JsExistenceCheck { get; set; }
 
-        private Dictionary<DeclarationBase, ClassType> _map;
-        
+        class MapItem
+        {
+            public ClassType Class;
+            public InterfaceType Interface;
+        }
+        private Dictionary<DeclarationBase, MapItem> _map;
+        private Stack<bool> _objectTypeMapping;
+        public KnockoutGenerator()
+        {
+            _objectTypeMapping = new Stack<bool>();
+        }
         public void GenerateObservableModule(TypescriptModule source, TypescriptModule target)
         {
-            _map = new Dictionary<DeclarationBase, ClassType>();
+            _map = new Dictionary<DeclarationBase, MapItem>();
             foreach (var item in source.Members.OfType<DeclarationModuleElement>())
             {
                 if (item.Declaration !=null)
@@ -106,34 +117,70 @@ namespace TypeGen.Generators
                         name = name.Substring(1);
                     }
                     var cls = new ClassType(name);
-                    _map[item.Declaration] = cls;
+                    _map[item.Declaration] = new MapItem() { Class = cls };
                     target.Members.Add(cls);
                 }
             }
 
-            foreach (var pair in _map)
+            BeginInterfaceMapping(false);
+            try
             {
-                GenerateObservable(pair.Key, pair.Value);
+                foreach (var pair in _map)
+                {
+                    if (pair.Key is ClassType)
+                    {
+                        GenerateObservableClassFromClass((ClassType)pair.Key, pair.Value.Class);
+                    }
+                    else if (pair.Key is InterfaceType)
+                    {
+                        GenerateObservableClassFromInterface((InterfaceType)pair.Key, pair.Value.Class);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException("Generating observable class from " + pair.Key);
+                    }
+                }
             }
-
+            finally
+            {
+                EndInterfaceMapping();
+            }
         }
 
-        private void GenerateObservable(DeclarationBase src, ClassType target)
+        private void GenerateObservableClassFromInterface(InterfaceType src, ClassType target)
         {
-            foreach (var item in src.GenericParameters)
+            if (src.ExtendsTypes.Any(t => t.ReferencedType is ClassType))
             {
-                target.GenericParameters.Add(new GenericParameter(item.Name) { Constraint = MapType(item.Constraint) });
+                throw new Exception("Interface " + src.Name + " cannot extend class");
+            }
+            foreach (var item in src.ExtendsTypes)
+            {
+                if (item.ReferencedType is InterfaceType)
+                {
+                    // interface inherits from another interfaces, so make this class implement them
+                    // TODO: implementation code!
+                    BeginInterfaceMapping(true);
+                    try
+                    {
+                        target.Implementations.Add(MapType(item));
+                    }
+                    finally
+                    {
+                        EndInterfaceMapping();
+                    }
+                }
+                else
+                {
+                    target.Implementations.Add(MapType(item));
+                }
             }
 
-            if (src.ExtendsTypes.Count(t=>t.ReferencedType is ClassType) > 1)
-            {
-                throw new Exception("Class "+src.Name + " cannot extend more classes");
-            }
-            foreach (var item in src.ExtendsTypes.Where(t=>t.ReferencedType is ClassType))
-            {
-                target.ExtendsTypes.Add(MapType(item));
-            }
-            foreach (var item in src.ExtendsTypes.Where(t=>!(t.ReferencedType is ClassType)))
+            GenerateObservableBase(src, target);
+        }
+
+        private void GenerateObservableClassFromClass(ClassType src, ClassType target)
+        {
+            foreach (var item in src.Implementations)
             {
                 if (item.ReferencedType is InterfaceType)
                 {
@@ -144,22 +191,16 @@ namespace TypeGen.Generators
                     target.Implementations.Add(MapType(item));
                 }
             }
+            GenerateObservableBase(src, target);
+        }
 
-            var cls = src as ClassType;
-            if (cls != null)
+        private void GenerateObservableBase(DeclarationBase src, ClassType target)
+        {
+            foreach (var item in src.GenericParameters)
             {
-                foreach (var item in cls.Implementations)
-                {
-                    if (item.ReferencedType is InterfaceType)
-                    {
-                        target.Implementations.Add(item);
-                    }
-                    else
-                    {
-                        target.Implementations.Add(MapType(item));
-                    }
-                }
+                target.GenericParameters.Add(new GenericParameter(item.Name) { Constraint = MapType(item.Constraint) });
             }
+
             foreach (var srcItem in src.Members.OfType<PropertyMember>())
             {
                 var property = new PropertyMember(srcItem.Name);
@@ -173,7 +214,7 @@ namespace TypeGen.Generators
             if (GenerateFromJs)
             {
                 var fromJS = new RawStatements();
-                if (target.IsExtending)
+                if (target.Extends != null)
                 {
                     fromJS.Add("super.fromJS(obj);\n");
                 }
@@ -244,6 +285,16 @@ namespace TypeGen.Generators
             return result;
         }
 
+        private void BeginInterfaceMapping(bool isInterface)
+        {
+            _objectTypeMapping.Push(isInterface);
+        }
+
+        private void EndInterfaceMapping()
+        {
+            _objectTypeMapping.Pop();
+        }
+
         private TypescriptTypeReference MapType(TypescriptTypeReference r)
         {
             if (r == null)
@@ -279,10 +330,12 @@ namespace TypeGen.Generators
 
         private DeclarationBase MapDeclaration(DeclarationBase declarationBase)
         {
-            ClassType rt;
-            if (_map.TryGetValue(declarationBase, out rt))
+            MapItem mapItem;
+            if (_map.TryGetValue(declarationBase, out mapItem))
             {
-                return rt;
+                if (_objectTypeMapping.Peek()) 
+                    return mapItem.Interface;
+                return mapItem.Class;
             }
             return declarationBase;
         }

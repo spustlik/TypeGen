@@ -168,6 +168,14 @@ namespace TypeGen
         {
             var result = new InterfaceType(NamingStrategy.GetInterfaceName(type));
             GenerateDeclarationBase(result, type);
+            //extends from .Base 
+            if (type.BaseType != null && type.BaseType != typeof(object))
+            {
+                if (GenerationStrategy.ShouldGenerateBaseClass(result, type, type.BaseType))
+                {
+                    result.ExtendsTypes.Add(GenerateFromType(type.BaseType));
+                }
+            }
             //implemented interfaces as extends
             if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
             {
@@ -212,6 +220,14 @@ namespace TypeGen
         {
             var result = new ClassType(NamingStrategy.GetClassName(type));
             GenerateDeclarationBase(result, type);
+            //extends from .Base 
+            if (type.BaseType != null && type.BaseType != typeof(object))
+            {
+                if (GenerationStrategy.ShouldGenerateBaseClass(result, type, type.BaseType))
+                {
+                    result.Extends = GenerateFromType(type.BaseType);
+                }
+            }
             //implemented interfaces as implements
             if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
             {
@@ -242,14 +258,6 @@ namespace TypeGen
                 {
                     result.GenericParameters.Add(new GenericParameter(NamingStrategy.GetGenericArgumentName(garg)) { ExtraData = { { SOURCETYPE_KEY, garg} } });
                 }                
-            }
-            //extends from .Base 
-            if (type.BaseType != null && type.BaseType != typeof(object))
-            {
-                if (GenerationStrategy.ShouldGenerateBaseClass(result, type, type.BaseType))
-                {
-                    result.ExtendsTypes.Add(GenerateFromType(type.BaseType));
-                }
             }
 
             //properties

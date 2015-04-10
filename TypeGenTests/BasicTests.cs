@@ -52,13 +52,12 @@ line3
         public void TestClassGen2()
         {
             var cls = new ClassType("testClass");
-            cls.ExtendsTypes.Add(new TypescriptTypeReference("baseClass1"));
-            cls.ExtendsTypes.Add(new TypescriptTypeReference("baseClass2"));
+            cls.Extends = new TypescriptTypeReference("baseClass1");
             cls.GenericParameters.Add(new GenericParameter("T1"));
             cls.GenericParameters.Add(new GenericParameter("T2"));
             cls.Implementations.Add(new TypescriptTypeReference("IType1"));
             cls.Implementations.Add(new TypescriptTypeReference("IType2"));
-            Assert.AreEqual(@"class testClass<T1, T2> extends baseClass1, baseClass2 implements IType1, IType2 {
+            Assert.AreEqual(@"class testClass<T1, T2> extends baseClass1 implements IType1, IType2 {
 }", testGen(cls));
         }
 

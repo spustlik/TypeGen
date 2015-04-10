@@ -58,16 +58,31 @@ namespace TypeGen
             {
                 members = members.Where(elementFilter);
             }
+            var ordered = OrderByInheritance(members);
+            Formatter.WriteSeparated("\n", ordered, Generate);
+        }
+
+        private List<ModuleElement> OrderByInheritance(IEnumerable<ModuleElement> members)
+        {
             var ordered = members.ToList();
             int i = 0;
-            while(i < ordered.Count)
+            while (i < ordered.Count)
             {
                 var md = ordered[i] as DeclarationModuleElement;
                 if (md != null)
                 {
                     if (md.Declaration != null)
                     {
-                        var indexes = md.Declaration.ExtendsTypes.Where(et=>et.ReferencedType!=null).Select(et => GetIndexInModule(ordered, et.ReferencedType)).ToArray();
+                        var extends = new List<TypescriptTypeReference>();
+                        if (md.Declaration is InterfaceType)
+                        {
+                            extends.AddRange(((InterfaceType)md.Declaration).ExtendsTypes);
+                        }
+                        else if (md.Declaration is ClassType)
+                        {
+                            extends.Add(((ClassType)md.Declaration).Extends);
+                        }
+                        var indexes = extends.Where(e=>e!=null).Where(et => et.ReferencedType != null).Select(et => GetIndexInModule(ordered, et.ReferencedType)).ToArray();
                         if (indexes.Length > 0)
                         {
                             var max = indexes.Max();
@@ -82,7 +97,7 @@ namespace TypeGen
                 }
                 i++;
             }
-            Formatter.WriteSeparated("\n", ordered, Generate);
+            return ordered;
         }
 
         private int GetIndexInModule(List<ModuleElement> ordered, TypescriptTypeBase type)
@@ -193,10 +208,10 @@ namespace TypeGen
                 Formatter.WriteSeparated(", ", cls.GenericParameters, Generate);
                 Formatter.Write(">");
             }
-            if (cls.IsExtending)
+            if (cls.Extends!=null)
             {
                 Formatter.Write(" extends ");
-                Formatter.WriteSeparated(", ", cls.ExtendsTypes, Generate);
+                Generate(cls.Extends);
             }
             if (cls.IsImplementing)
             {

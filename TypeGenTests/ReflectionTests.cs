@@ -21,6 +21,12 @@ namespace TypeGenTests
 
             Assert.AreEqual(
 @"module GeneratedModule {
+    enum MyEnum {
+        Value1 = 0,
+        Value2 = 1,
+        Value3 = 10,
+        Value4 = 11
+    }
     interface IMyInterface {
         Property2: string;
     }
@@ -35,12 +41,6 @@ namespace TypeGenTests
         Property6: ITestingClass;
         Property7: ITestingClass[];
         Property8: ITestingClass[];
-    }
-    enum MyEnum {
-        Value1 = 0,
-        Value2 = 1,
-        Value3 = 10,
-        Value4 = 11
     }
 }
 ".Trim(), g.Output.Trim());

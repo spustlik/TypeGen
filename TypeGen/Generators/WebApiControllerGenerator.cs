@@ -174,7 +174,7 @@ namespace TypeGen.Generators
         public void GenerateControllers(IEnumerable<ControllerModel> controllers, ReflectionGeneratorBase reflectionGenerator, TypescriptModule targetModule)
         {
             var proxyClass = new ClassType("GeneratedProxy");
-            proxyClass.ExtendsTypes.Add(new TypescriptTypeReference("base.ProxyBase"));
+            proxyClass.Extends = new TypescriptTypeReference("base.ProxyBase");
             targetModule.Members.Add(new DeclarationModuleElement(proxyClass) { IsExporting = true });
             foreach (var cm in controllers)
             {

@@ -9,9 +9,7 @@ namespace TypeGen
     public class DeclarationBase : TypescriptTypeBase
     {
         public string Name { get; set; }
-        public List<TypescriptTypeReference> ExtendsTypes { get; private set; }
-        public bool IsExtending { get { return ExtendsTypes.Count > 0; } }
-
+        
         public List<GenericParameter> GenericParameters { get; private set; }
         public bool IsGeneric { get { return GenericParameters.Count > 0; } }
 
@@ -20,7 +18,6 @@ namespace TypeGen
         public DeclarationBase(string name)
         {
             Name = name;
-            ExtendsTypes = new List<TypescriptTypeReference>();
             GenericParameters = new List<GenericParameter>();
             Members = new List<DeclarationMember>();
         }
@@ -29,7 +26,6 @@ namespace TypeGen
         {
             return Name +
                     (IsGeneric ? "<" + String.Join(",", GenericParameters) + ">" : "") +
-                    (IsExtending ? " extends " + String.Join(", ", ExtendsTypes.Select(x => x.ToString())) : "") +
                     " (" + Members.Count + ")";
         }
 
@@ -52,13 +48,19 @@ namespace TypeGen
 
     public sealed class InterfaceType : DeclarationBase
     {
-        public InterfaceType(string name) :base(name)
+        public List<TypescriptTypeReference> ExtendsTypes { get; private set; }
+        public bool IsExtending { get { return ExtendsTypes.Count > 0; } }
+        public InterfaceType(string name)
+            : base(name)
         {
+            ExtendsTypes = new List<TypescriptTypeReference>();
         }
         // interface xxx<T1,T2> extends ... { } 
         public override string ToString()
         {
-            return "interface " + base.ToString();
+            return "interface " + base.ToString() +
+                    (IsExtending ? " extends " + String.Join(", ", ExtendsTypes.Select(x => x.ToString())) : "") 
+                ;
         }
     }
 
@@ -67,6 +69,8 @@ namespace TypeGen
         // class xxx<T1,T2> extends ... implements yyy
         public List<TypescriptTypeReference> Implementations { get; private set; }
         public bool IsImplementing { get { return Implementations.Count > 0; } }
+
+        public TypescriptTypeReference Extends { get; set; }
         public ClassType(string name) :base(name)
         {
             Implementations = new List<TypescriptTypeReference>();
@@ -75,6 +79,7 @@ namespace TypeGen
         public override string ToString()
         {
             return "class " + base.ToString() +
+                (Extends!=null ? " extends "+ Extends.ToString() : "") +
                 (IsImplementing ? " implements " + String.Join(", ", Implementations.Select(x => x.ToString())) : "");
         }
     }
