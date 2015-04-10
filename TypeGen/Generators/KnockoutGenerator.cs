@@ -66,6 +66,29 @@ namespace TypeGen.Generators
             }
         }
 
+        private void MakeObservableInterfaceProperty(PropertyMember property)
+        {
+            property.Initialization = null;
+            var type = property.MemberType;
+            if (type != null && type.ReferencedType != null)
+            {
+                if (type.ReferencedType is ArrayType)
+                {
+                    property.MemberType = new TypescriptTypeReference("KnockoutObservableArray") { GenericParameters = { ExtractArrayElement(type) } };
+                }
+                else
+                {
+                    property.MemberType = new TypescriptTypeReference("KnockoutObservable") { GenericParameters = { type } };
+                }
+            }
+            else
+            {
+                property.MemberType = new TypescriptTypeReference("KnockoutObservable<any>");
+            }
+        }
+
+
+
         private static void MakeObservable(InterfaceType interfaceType)
         {
             foreach (var item in interfaceType.Members.OfType<PropertyMember>())
@@ -90,8 +113,8 @@ namespace TypeGen.Generators
         }
 
 
-        public bool GenerateFromJs { get; set; }
-        public bool JsExistenceCheck { get; set; }
+        public bool Enable_JsConversion_Functions { get; set; }
+        public bool JsConversion_Function_PropertyExistenceCheck { get; set; }
 
         class MapItem
         {
@@ -99,23 +122,81 @@ namespace TypeGen.Generators
             public InterfaceType Interface;
         }
         private Dictionary<DeclarationBase, MapItem> _map;
-        private Stack<bool> _objectTypeMapping;
+        private Stack<bool> _interfaceMapping;
         public KnockoutGenerator()
         {
-            _objectTypeMapping = new Stack<bool>();
-        }
-        public void GenerateObservableModule(TypescriptModule source, TypescriptModule target)
-        {
+            _interfaceMapping = new Stack<bool>();
             _map = new Dictionary<DeclarationBase, MapItem>();
+        }
+        public void GenerateObservableModule(TypescriptModule source, TypescriptModule target, bool interfaces)
+        {
+            // src class      -> class       base class -> class              implemented interfaces -> implements obsInterface 
+            // src interface  ->  !implementation class implemented interfaces -> implements observableInterface + code implementation (makes sense, interface defines api for server, I want to create model )
+            // src class      -> interface   base class -> obsInterface       implemented interfaces -> implements obsInterface (makes sense, I want to implement model myself, interfaces defines content)
+            // src interface  -> interface   base class -> obsInterface       implemented interfaces -> implements obsInterface 
+
+            if (interfaces)
+            {
+                GenerateInterfaces(source, target);
+            }
+            else
+            {
+                GenerateClasses(source, target);
+            }
+        }
+
+        private void GenerateInterfaces(TypescriptModule source, TypescriptModule target)
+        {
+            foreach (var item in source.Members.OfType<DeclarationModuleElement>())
+            {
+                if (item.Declaration != null)
+                {
+                    var name = item.Declaration.Name;
+                    //TODO: naming, but conflicts!
+                    var intf = new InterfaceType(name);
+                    _map[item.Declaration] = new MapItem() { Interface = intf };
+                    target.Members.Add(intf);
+                }
+            }
+
+            BeginInterfaceMapping(true);
+            try
+            {
+                foreach (var pair in _map)
+                {
+                    GenerateObservableInterface(pair.Key, pair.Value.Interface);
+                }
+            }
+            finally
+            {
+                EndInterfaceMapping();
+            }
+        }
+
+        private void GenerateObservableInterface(DeclarationBase source, InterfaceType target)
+        {
+            foreach (var extends in source.GetExtends())
+            {
+                target.ExtendsTypes.Add(MapType(extends));
+            }
+            if (source is ClassType)
+            {
+                foreach (var implements in ((ClassType)source).Implementations)
+                {
+                    target.ExtendsTypes.Add(MapType(implements));
+                }
+            }
+            GenerateObservableBase(source, target);
+        }
+
+        public void GenerateClasses(TypescriptModule source, TypescriptModule target)
+        {
             foreach (var item in source.Members.OfType<DeclarationModuleElement>())
             {
                 if (item.Declaration !=null)
                 {
                     var name = item.Declaration.Name;
-                    if (item.Declaration is InterfaceType && name.StartsWith("I"))
-                    {
-                        name = name.Substring(1);
-                    }
+                    //TODO: naming, but conflicts!
                     var cls = new ClassType(name);
                     _map[item.Declaration] = new MapItem() { Class = cls };
                     target.Members.Add(cls);
@@ -126,7 +207,7 @@ namespace TypeGen.Generators
             try
             {
                 foreach (var pair in _map)
-                {
+                {                    
                     if (pair.Key is ClassType)
                     {
                         GenerateObservableClassFromClass((ClassType)pair.Key, pair.Value.Class);
@@ -176,25 +257,35 @@ namespace TypeGen.Generators
             }
 
             GenerateObservableBase(src, target);
+            if (Enable_JsConversion_Functions)
+            {
+                AddFromJsFunction(src, target);
+            }
+
         }
 
         private void GenerateObservableClassFromClass(ClassType src, ClassType target)
         {
-            foreach (var item in src.Implementations)
+            BeginInterfaceMapping(true);
+            try
             {
-                if (item.ReferencedType is InterfaceType)
-                {
-                    target.Implementations.Add(item);
-                }
-                else
+                foreach (var item in src.Implementations)
                 {
                     target.Implementations.Add(MapType(item));
                 }
             }
+            finally
+            {
+                EndInterfaceMapping();
+            }
             GenerateObservableBase(src, target);
+            if (Enable_JsConversion_Functions)
+            {
+                AddFromJsFunction(src, target);
+            }
         }
 
-        private void GenerateObservableBase(DeclarationBase src, ClassType target)
+        private void GenerateObservableBase(DeclarationBase src, DeclarationBase target)
         {
             foreach (var item in src.GenericParameters)
             {
@@ -208,61 +299,74 @@ namespace TypeGen.Generators
                 property.Initialization = MapRaw(srcItem.Initialization);
                 //property.IsOptional = item.IsOptional;
                 property.MemberType = MapType(srcItem.MemberType);
-                MakeObservableInitialization(property);
+                MakeObservableProperty(property);
                 target.Members.Add(property);
             }
-            if (GenerateFromJs)
+        }
+
+        private void MakeObservableProperty(PropertyMember property)
+        {
+            if (_interfaceMapping.Peek())
             {
-                var fromJS = new RawStatements();
-                if (target.Extends != null)
+                MakeObservableInterfaceProperty(property);
+            }
+            else
+            {
+                MakeObservableInitialization(property);
+            }
+        }
+
+        private void AddFromJsFunction(DeclarationBase src, ClassType target)
+        {
+            var fromJS = new RawStatements();
+            if (target.Extends != null)
+            {
+                fromJS.Add("super.fromJS(obj);\n");
+            }
+            foreach (var targetItem in target.Members.OfType<PropertyMember>())
+            {
+                var srcItem = src.Members.OfType<PropertyMember>().First(x => x.Name == targetItem.Name);
+                TypescriptTypeBase itemType = null;
+                if (srcItem.MemberType != null && srcItem.MemberType.ReferencedType != null)
+                    itemType = srcItem.MemberType.ReferencedType;
+
+                if (JsConversion_Function_PropertyExistenceCheck)
                 {
-                    fromJS.Add("super.fromJS(obj);\n");
+                    fromJS.Add("if (obj." + srcItem.Name + ") { ");
                 }
-                foreach (var targetItem in target.Members.OfType<PropertyMember>())
+
+                if (itemType is ArrayType)
                 {
-                    var srcItem = src.Members.OfType<PropertyMember>().First(x => x.Name == targetItem.Name);
-                    TypescriptTypeBase itemType = null;
-                    if (srcItem.MemberType != null && srcItem.MemberType.ReferencedType != null)
-                        itemType = srcItem.MemberType.ReferencedType;
-
-                    if (JsExistenceCheck)
+                    var elementType = ExtractArrayElement(srcItem.MemberType);
+                    if (elementType != null && elementType.ReferencedType != null && elementType.ReferencedType is DeclarationBase)
                     {
-                        fromJS.Add("if (obj." + srcItem.Name + ") { ");
-                    }
-
-                    if (itemType is ArrayType)
-                    {
-                        var elementType = ExtractArrayElement(srcItem.MemberType);
-                        if (elementType != null && elementType.ReferencedType != null && elementType.ReferencedType is DeclarationBase)
-                        {
-                            fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ".map(item=>new ", elementType, "().fromJS(item)))");
-                        }
-                        else
-                        {
-                            //todo:conversions
-                            fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ")");
-                        }
+                        fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ".map(item=>new ", elementType, "().fromJS(item)))");
                     }
                     else
                     {
-                        if (itemType == PrimitiveType.Date)
-                        {
-                            fromJS.Add("this." + srcItem.Name + "(new Date(obj." + srcItem.Name + "))");
-                        }
-                        else
-                        {
-                            fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ")");
-                        }
+                        //todo:conversions
+                        fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ")");
                     }
-                    if (JsExistenceCheck)
-                    {
-                        fromJS.Add("};");
-                    }
-                    fromJS.Add("\n");
                 }
-                fromJS.Add("return this;");
-                target.Members.Add(new FunctionMember("fromJS", fromJS) { Parameters = { new FunctionParameter("obj") } });
+                else
+                {
+                    if (itemType == PrimitiveType.Date)
+                    {
+                        fromJS.Add("this." + srcItem.Name + "(new Date(obj." + srcItem.Name + "))");
+                    }
+                    else
+                    {
+                        fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ")");
+                    }
+                }
+                if (JsConversion_Function_PropertyExistenceCheck)
+                {
+                    fromJS.Add("};");
+                }
+                fromJS.Add("\n");
             }
+            fromJS.Add("return this;");
+            target.Members.Add(new FunctionMember("fromJS", fromJS) { Parameters = { new FunctionParameter("obj") } });
         }
 
         private RawStatements MapRaw(RawStatements source)
@@ -287,12 +391,12 @@ namespace TypeGen.Generators
 
         private void BeginInterfaceMapping(bool isInterface)
         {
-            _objectTypeMapping.Push(isInterface);
+            _interfaceMapping.Push(isInterface);
         }
 
         private void EndInterfaceMapping()
         {
-            _objectTypeMapping.Pop();
+            _interfaceMapping.Pop();
         }
 
         private TypescriptTypeReference MapType(TypescriptTypeReference r)
@@ -333,7 +437,7 @@ namespace TypeGen.Generators
             MapItem mapItem;
             if (_map.TryGetValue(declarationBase, out mapItem))
             {
-                if (_objectTypeMapping.Peek()) 
+                if (_interfaceMapping.Peek()) 
                     return mapItem.Interface;
                 return mapItem.Class;
             }

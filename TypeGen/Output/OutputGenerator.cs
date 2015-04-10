@@ -73,16 +73,7 @@ namespace TypeGen
                 {
                     if (md.Declaration != null)
                     {
-                        var extends = new List<TypescriptTypeReference>();
-                        if (md.Declaration is InterfaceType)
-                        {
-                            extends.AddRange(((InterfaceType)md.Declaration).ExtendsTypes);
-                        }
-                        else if (md.Declaration is ClassType)
-                        {
-                            extends.Add(((ClassType)md.Declaration).Extends);
-                        }
-                        var indexes = extends.Where(e=>e!=null).Where(et => et.ReferencedType != null).Select(et => GetIndexInModule(ordered, et.ReferencedType)).ToArray();
+                        var indexes = md.Declaration.GetExtends().Where(e=>e!=null).Where(et => et.ReferencedType != null).Select(et => GetIndexInModule(ordered, et.ReferencedType)).ToArray();
                         if (indexes.Length > 0)
                         {
                             var max = indexes.Max();

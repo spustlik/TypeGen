@@ -84,4 +84,23 @@ namespace TypeGen
         }
     }
 
+    public static class ExtendingExtension
+    {
+        public static IEnumerable<TypescriptTypeReference> GetExtends(this DeclarationBase decl)
+        {
+            if (decl is InterfaceType)
+            {
+                return ((InterfaceType)decl).ExtendsTypes;
+            }
+            else if (decl is ClassType)
+            {
+                return new[] { ((ClassType)decl).Extends };
+            }
+            else
+            {
+                throw new NotImplementedException("Cannot get extends from " + decl);
+            }
+        }
+    }
+
 }
