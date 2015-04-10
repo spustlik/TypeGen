@@ -100,7 +100,12 @@ namespace TypeGen.Generators
             {
                 if (item.Declaration !=null)
                 {
-                    var cls = new ClassType(item.Declaration.Name);
+                    var name = item.Declaration.Name;
+                    if (item.Declaration is InterfaceType && name.StartsWith("I"))
+                    {
+                        name = name.Substring(1);
+                    }
+                    var cls = new ClassType(name);
                     _map[item.Declaration] = cls;
                     target.Members.Add(cls);
                 }
@@ -120,16 +125,39 @@ namespace TypeGen.Generators
                 target.GenericParameters.Add(new GenericParameter(item.Name) { Constraint = MapType(item.Constraint) });
             }
 
-            foreach (var item in src.ExtendsTypes)
+            if (src.ExtendsTypes.Count(t=>t.ReferencedType is ClassType) > 1)
+            {
+                throw new Exception("Class "+src.Name + " cannot extend more classes");
+            }
+            foreach (var item in src.ExtendsTypes.Where(t=>t.ReferencedType is ClassType))
             {
                 target.ExtendsTypes.Add(MapType(item));
             }
+            foreach (var item in src.ExtendsTypes.Where(t=>!(t.ReferencedType is ClassType)))
+            {
+                if (item.ReferencedType is InterfaceType)
+                {
+                    target.Implementations.Add(item);
+                }
+                else
+                {
+                    target.Implementations.Add(MapType(item));
+                }
+            }
+
             var cls = src as ClassType;
             if (cls != null)
             {
                 foreach (var item in cls.Implementations)
                 {
-                    target.Implementations.Add(MapType(item));
+                    if (item.ReferencedType is InterfaceType)
+                    {
+                        target.Implementations.Add(item);
+                    }
+                    else
+                    {
+                        target.Implementations.Add(MapType(item));
+                    }
                 }
             }
             foreach (var srcItem in src.Members.OfType<PropertyMember>())

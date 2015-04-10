@@ -171,8 +171,7 @@ namespace TypeGen
             //implemented interfaces as extends
             if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
             {
-                var allInterfaces = type.GetInterfaces();
-                var implemented = allInterfaces.Where(intf => type.GetInterfaceMap(intf).TargetMethods.Any(m => m.DeclaringType == type)).ToArray();
+                var implemented = GetImplementedInterfaces(type).ToArray();
                 foreach (var intf in implemented)
                 {
                     if (GenerationStrategy.ShouldGenerateImplementedInterface(result, intf))
@@ -183,6 +182,30 @@ namespace TypeGen
             }
             GenerateMethodDeclarations(type, result);
             return result;
+        }
+
+        private static IEnumerable<Type> GetImplementedInterfaces(Type type)
+        {
+            var allInterfaces = type.GetInterfaces();
+            if (type.IsInterface)
+                return allInterfaces;
+            var result = new List<Type>();
+            //return allInterfaces.Where(intf => type.GetInterfaceMap(intf).TargetMethods.Any(m => m.DeclaringType == type));
+            foreach (var intf in allInterfaces)
+            {
+                try {
+                    var map = type.GetInterfaceMap(intf);
+                    if (map.TargetMethods.Any(m => m.DeclaringType == type))
+                    {
+                        result.Add(intf);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    throw new ApplicationException("Error when acquiring interfaces map from " + type + ", interface:" + intf, ex);
+                }
+            }
+            return result;            
         }
 
         public ClassType GenerateClass(Type type)
