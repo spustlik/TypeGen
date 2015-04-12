@@ -66,7 +66,7 @@ namespace TypeGen.Generators
                     Name = m.Name,
                     HttpMethod = GetHttpMethod(m)
                 };
-                if (m.ReturnType != typeof(void))
+                if (m.ReturnType != typeof(void) && !m.ReturnType.IsTypeBaseOrSelf("System.Net.Http.HttpResponseMessage"))
                 {
                     aModel.ResultType = m.ReturnType;
                 }

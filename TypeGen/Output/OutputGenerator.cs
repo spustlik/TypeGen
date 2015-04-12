@@ -412,7 +412,7 @@ namespace TypeGen
             }
             else
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("Cannot generate reference "+referencedType);
             }            
         }
 
