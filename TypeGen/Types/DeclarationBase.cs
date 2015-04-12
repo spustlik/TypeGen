@@ -94,7 +94,7 @@ namespace TypeGen
             }
             else if (decl is ClassType)
             {
-                return new[] { ((ClassType)decl).Extends };
+                return (new[] { ((ClassType)decl).Extends }).Where(x => x != null);
             }
             else
             {

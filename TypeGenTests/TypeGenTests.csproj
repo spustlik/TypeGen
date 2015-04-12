@@ -58,12 +58,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TypeGen\TypeGen.csproj">
-      <Project>{50d0c276-3fbc-4cf3-9edf-f8a80046fd9d}</Project>
+      <Project>{62e92a5a-b677-4f25-8dc4-33ae872dc82b}</Project>
       <Name>TypeGen</Name>
-    </ProjectReference>
-    <ProjectReference Include="C:\Users\StuchlikJ\Dropbox\Dlubal\TypeScriptHTMLApp1\WebApplication1\WebApplication1.csproj">
-      <Project>{7bcd4ddf-4f04-4588-8b66-93a2bcdf0d17}</Project>
-      <Name>WebApplication1</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

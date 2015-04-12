@@ -231,8 +231,7 @@ namespace TypeGen
             //implemented interfaces as implements
             if (GenerationStrategy.ShouldGenerateImplementedInterfaces(result, type))
             {
-                var allInterfaces = type.GetInterfaces();
-                var implemented = allInterfaces.Where(intf => type.GetInterfaceMap(intf).TargetMethods.Any(m => m.DeclaringType == type)).ToArray();
+                var implemented = GetImplementedInterfaces(type);
                 foreach (var intf in implemented)
                 {
                     if (GenerationStrategy.ShouldGenerateImplementedInterface(result, intf))
