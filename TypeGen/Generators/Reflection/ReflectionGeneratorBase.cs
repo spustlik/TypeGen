@@ -299,7 +299,7 @@ namespace TypeGen
 
         public EnumMember GenerateEnumMember(FieldInfo value)
         {
-            var v = (int)value.GetValue(null);
+            var v = Convert.ToInt32(value.GetValue(null));
             var ev = new EnumMember(NamingStrategy.GetEnumMemberName(value), v) { ExtraData = { { SOURCEMEMBER_KEY, value } } };
             return ev;
         }

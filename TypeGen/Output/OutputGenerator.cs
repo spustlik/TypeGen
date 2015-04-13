@@ -107,12 +107,12 @@ namespace TypeGen
 
         private void Generate(ModuleElement element)
         {
-            if (element.IsExporting)
-            {
-                Formatter.Write("export ");
-            }            
             if (element is DeclarationModuleElement)
             {
+                if (element.IsExporting)
+                {
+                    Formatter.Write("export ");
+                }
                 Generate((DeclarationModuleElement)element);
             }
             else if (element is RawModuleElement)

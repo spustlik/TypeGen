@@ -88,6 +88,12 @@ namespace TypeGen.Generators
         /// </summary>
         public bool GenerateMethods { get; set; }
 
+        /// <summary>
+        /// enable generation of interfaces implemented in System namespace
+        /// </summary>
+        public bool GenerateSystemInterfaces { get; set; }
+        
+
         public GenerationStrategy()
         {
             TargetModule = new TypescriptModule("GeneratedModule");
@@ -100,7 +106,7 @@ namespace TypeGen.Generators
 
         protected virtual bool IsSystemType(Type type)
         {
-            return type.Assembly == typeof(object).Assembly;
+            return type.Assembly == typeof(object).Assembly || type.Namespace.StartsWith("System");
         }
 
         public virtual bool ShouldGenerateProperties(DeclarationBase decl, Type type)
@@ -134,18 +140,18 @@ namespace TypeGen.Generators
 
         public virtual bool ShouldGenerateImplementedInterfaces(DeclarationBase decl, Type type)
         {
-            if (type.Assembly == typeof(object).Assembly)
-                return false;
-            return true;
+            return !IsSystemType(type);
         }
 
         public virtual void AddDeclaration(DeclarationBase decl)
         {
+            TargetModule.Members.Add(new RawStatements("// generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY]));
             TargetModule.Members.Add(decl);
         }
 
         public virtual void AddDeclaration(EnumType decl)
         {
+            TargetModule.Members.Add(new RawStatements("// generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY]));
             TargetModule.Members.Add(decl);
         }
 

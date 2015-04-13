@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using TypeGen;
 using TypeGen.Generators;
+using System.Runtime.Serialization;
 
 namespace TypeGenTests
 {
@@ -277,7 +278,7 @@ module GeneratedModule {
         Value3 = 10,
         Value4
     }
-    public class TestingClass : TestingClassBase
+    public class TestingClass : TestingClassBase, ISerializable
     {
         public MyEnum Property3 { get; set; }
         public int? Property4 { get; set; }
@@ -285,5 +286,10 @@ module GeneratedModule {
         public TestingClass Property6 { get; set; }
         public TestingClass[] Property7 { get; set; }
         public List<TestingClass> Property8 { get; set; }
+
+        void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
