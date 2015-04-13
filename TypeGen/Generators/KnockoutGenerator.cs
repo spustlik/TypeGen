@@ -6,6 +6,24 @@ using System.Threading.Tasks;
 
 namespace TypeGen.Generators
 {
+    public class KnockoutOptions
+    {
+        public bool Enable_JsConversion_Functions { get; set; }
+        public bool JsConversion_Function_PropertyExistenceCheck { get; set; }
+        public virtual string GetInterfaceName(DeclarationBase source)
+        {
+            var name = source.Name;
+            name = NamingHelper.RemovePrefix("I", name, LetterCasing.Upper);
+            name = "IObservable" + NamingHelper.FirstLetter(LetterCasing.Upper, name);
+            return name;
+        }
+        public virtual string GetClassName(DeclarationBase source)
+        {
+            var name = source.Name;
+            name = NamingHelper.FirstLetter(LetterCasing.Lower, name);
+            return name;
+        }
+    }
 
     public class KnockoutGenerator
     {
@@ -112,9 +130,7 @@ namespace TypeGen.Generators
             throw new InvalidOperationException("Not array type");
         }
 
-
-        public bool Enable_JsConversion_Functions { get; set; }
-        public bool JsConversion_Function_PropertyExistenceCheck { get; set; }
+        public KnockoutOptions Options { get; private set; }
 
         class MapItem
         {
@@ -122,12 +138,15 @@ namespace TypeGen.Generators
             public InterfaceType Interface;
         }
         private Dictionary<DeclarationBase, MapItem> _map;
+        private TypescriptModule _target;
         private Stack<bool> _interfaceMapping;
         public KnockoutGenerator()
         {
             _interfaceMapping = new Stack<bool>();
             _map = new Dictionary<DeclarationBase, MapItem>();
+            Options = new KnockoutOptions();
         }
+
         public void GenerateObservableModule(TypescriptModule source, TypescriptModule target, bool interfaces)
         {
             // src class      -> class       base class -> class              implemented interfaces -> implements obsInterface 
@@ -135,42 +154,20 @@ namespace TypeGen.Generators
             // src class      -> interface   base class -> obsInterface       implemented interfaces -> implements obsInterface (makes sense, I want to implement model myself, interfaces defines content)
             // src interface  -> interface   base class -> obsInterface       implemented interfaces -> implements obsInterface 
 
-            if (interfaces)
-            {
-                GenerateInterfaces(source, target);
-            }
-            else
-            {
-                GenerateClasses(source, target);
-            }
-        }
-
-        private void GenerateInterfaces(TypescriptModule source, TypescriptModule target)
-        {
-            foreach (var item in source.Members.OfType<DeclarationModuleElement>())
-            {
-                if (item.Declaration != null)
-                {
-                    var name = item.Declaration.Name;
-                    //TODO: naming, but conflicts!
-                    var intf = new InterfaceType(name);
-                    _map[item.Declaration] = new MapItem() { Interface = intf };
-                    target.Members.Add(intf);
-                }
-            }
-
-            BeginInterfaceMapping(true);
+            _target = target;
+            BeginInterfaceMapping(interfaces);
             try
             {
-                foreach (var pair in _map)
+                foreach (var item in source.Members.OfType<DeclarationModuleElement>().Where(d => d.Declaration != null))
                 {
-                    GenerateObservableInterface(pair.Key, pair.Value.Interface);
+                    MapDeclaration(item.Declaration, createMap: true);
                 }
             }
             finally
             {
                 EndInterfaceMapping();
             }
+
         }
 
         private void GenerateObservableInterface(DeclarationBase source, InterfaceType target)
@@ -189,42 +186,19 @@ namespace TypeGen.Generators
             GenerateObservableBase(source, target);
         }
 
-        public void GenerateClasses(TypescriptModule source, TypescriptModule target)
+        private void GenerateObservableClass(DeclarationBase source, ClassType target)
         {
-            foreach (var item in source.Members.OfType<DeclarationModuleElement>())
+            if (source is ClassType)
             {
-                if (item.Declaration !=null)
-                {
-                    var name = item.Declaration.Name;
-                    //TODO: naming, but conflicts!
-                    var cls = new ClassType(name);
-                    _map[item.Declaration] = new MapItem() { Class = cls };
-                    target.Members.Add(cls);
-                }
+                GenerateObservableClassFromClass((ClassType)source, target);
             }
-
-            BeginInterfaceMapping(false);
-            try
+            else if (source is InterfaceType)
             {
-                foreach (var pair in _map)
-                {                    
-                    if (pair.Key is ClassType)
-                    {
-                        GenerateObservableClassFromClass((ClassType)pair.Key, pair.Value.Class);
-                    }
-                    else if (pair.Key is InterfaceType)
-                    {
-                        GenerateObservableClassFromInterface((InterfaceType)pair.Key, pair.Value.Class);
-                    }
-                    else
-                    {
-                        throw new NotImplementedException("Generating observable class from " + pair.Key);
-                    }
-                }
+                GenerateObservableClassFromInterface((InterfaceType)source, target);
             }
-            finally
+            else
             {
-                EndInterfaceMapping();
+                throw new NotImplementedException("Generating observable class from " + source);
             }
         }
 
@@ -238,12 +212,19 @@ namespace TypeGen.Generators
             {
                 if (item.ReferencedType is InterfaceType)
                 {
-                    // interface inherits from another interfaces, so make this class implement them
-                    // TODO: implementation code!
+                    // interface inherits from another interfaces, so make this class implement them                    
                     BeginInterfaceMapping(true);
                     try
                     {
-                        target.Implementations.Add(MapType(item));
+                        var mapped = MapType(item);
+                        target.Implementations.Add(mapped);
+                        // implementation code
+                        var intf = (InterfaceType)item.ReferencedType;
+                        target.Members.Add(new RawDeclarationMember(new RawStatements("// implementation of " + mapped)));
+                        foreach (var member in intf.Members.OfType<PropertyMember>())
+                        {
+                            GenerateObservableProperty(target, member);
+                        }
                     }
                     finally
                     {
@@ -257,7 +238,7 @@ namespace TypeGen.Generators
             }
 
             GenerateObservableBase(src, target);
-            if (Enable_JsConversion_Functions)
+            if (Options.Enable_JsConversion_Functions)
             {
                 AddFromJsFunction(src, target);
             }
@@ -279,7 +260,7 @@ namespace TypeGen.Generators
                 EndInterfaceMapping();
             }
             GenerateObservableBase(src, target);
-            if (Enable_JsConversion_Functions)
+            if (Options.Enable_JsConversion_Functions)
             {
                 AddFromJsFunction(src, target);
             }
@@ -294,14 +275,19 @@ namespace TypeGen.Generators
 
             foreach (var srcItem in src.Members.OfType<PropertyMember>())
             {
-                var property = new PropertyMember(srcItem.Name);
-                property.Accessibility = srcItem.Accessibility;
-                property.Initialization = MapRaw(srcItem.Initialization);
-                //property.IsOptional = item.IsOptional;
-                property.MemberType = MapType(srcItem.MemberType);
-                MakeObservableProperty(property);
-                target.Members.Add(property);
+                GenerateObservableProperty(target, srcItem);
             }
+        }
+
+        private void GenerateObservableProperty(DeclarationBase target, PropertyMember source)
+        {
+            var property = new PropertyMember(source.Name);
+            property.Accessibility = source.Accessibility;
+            property.Initialization = MapRaw(source.Initialization);
+            //property.IsOptional = item.IsOptional;
+            property.MemberType = MapType(source.MemberType);
+            MakeObservableProperty(property);
+            target.Members.Add(property);
         }
 
         private void MakeObservableProperty(PropertyMember property)
@@ -330,7 +316,7 @@ namespace TypeGen.Generators
                 if (srcItem.MemberType != null && srcItem.MemberType.ReferencedType != null)
                     itemType = srcItem.MemberType.ReferencedType;
 
-                if (JsConversion_Function_PropertyExistenceCheck)
+                if (Options.JsConversion_Function_PropertyExistenceCheck)
                 {
                     fromJS.Add("if (obj." + srcItem.Name + ") { ");
                 }
@@ -359,7 +345,7 @@ namespace TypeGen.Generators
                         fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ")");
                     }
                 }
-                if (JsConversion_Function_PropertyExistenceCheck)
+                if (Options.JsConversion_Function_PropertyExistenceCheck)
                 {
                     fromJS.Add("};");
                 }
@@ -377,7 +363,7 @@ namespace TypeGen.Generators
             foreach (var s in source.Statements)
             {
                 var sr = s as RawStatementTypeReference;
-                if (sr!=null)
+                if (sr != null)
                 {
                     result.Add(MapType(sr.TypeReference));
                 }
@@ -419,7 +405,7 @@ namespace TypeGen.Generators
             else if (r.ReferencedType != null && r.ReferencedType is ArrayType)
             {
                 var array = (ArrayType)r.ReferencedType;
-                result = new TypescriptTypeReference(new ArrayType(MapType( array.ElementType )));
+                result = new TypescriptTypeReference(new ArrayType(MapType(array.ElementType)));
             }
             else
             {
@@ -432,16 +418,37 @@ namespace TypeGen.Generators
             return result;
         }
 
-        private DeclarationBase MapDeclaration(DeclarationBase declarationBase)
+        private DeclarationBase MapDeclaration(DeclarationBase declarationBase, bool createMap = true)
         {
             MapItem mapItem;
-            if (_map.TryGetValue(declarationBase, out mapItem))
+            if (!_map.TryGetValue(declarationBase, out mapItem) && !createMap)
+                return declarationBase;
+
+            if (mapItem == null)
             {
-                if (_interfaceMapping.Peek()) 
-                    return mapItem.Interface;
+                mapItem = new MapItem();
+                _map[declarationBase] = mapItem;
+            }
+            if (_interfaceMapping.Peek())
+            {
+                if (mapItem.Interface == null)
+                {
+                    mapItem.Interface = new InterfaceType(Options.GetInterfaceName(declarationBase));
+                    _target.Members.Add(mapItem.Interface);
+                    GenerateObservableInterface(declarationBase, mapItem.Interface);
+                }
+                return mapItem.Interface;
+            }
+            else
+            {
+                if (mapItem.Class == null)
+                {
+                    mapItem.Class = new ClassType(Options.GetClassName(declarationBase));
+                    _target.Members.Add(mapItem.Class);
+                    GenerateObservableClass(declarationBase, mapItem.Class);
+                }
                 return mapItem.Class;
             }
-            return declarationBase;
         }
 
     }

@@ -16,10 +16,10 @@ namespace TypeGen
         public const string SOURCETYPE_KEY = "SOURCE_TYPE";
         public const string SOURCEMEMBER_KEY = "SOURCE_PROPERTY";
 
-        public INamingStrategy NamingStrategy { get; private set; }
+        public IReflectedNamingStrategy NamingStrategy { get; private set; }
         public IGenerationStrategy GenerationStrategy { get; private set; }
 
-        public ReflectionGeneratorBase(INamingStrategy naming, IGenerationStrategy generation)
+        public ReflectionGeneratorBase(IReflectedNamingStrategy naming, IGenerationStrategy generation)
         {
             _typeMap = new Dictionary<Type, TypescriptTypeBase>()
             {

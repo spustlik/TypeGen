@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace TypeGen
 {
+
     [DebuggerDisplay("{Formatter.DebuggerOutput}")]
     public class OutputGenerator
     {
@@ -120,7 +121,7 @@ namespace TypeGen
             }
             else
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("Cannot generate module element " + element);
             }
         }
 
@@ -140,7 +141,7 @@ namespace TypeGen
             }
             else
             {
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException("Cannot generate declaration module element " + element);
             }
         }
 

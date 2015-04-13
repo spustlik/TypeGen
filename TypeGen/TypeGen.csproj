@@ -32,26 +32,24 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Generators\IGenerationStrategy.cs" />
-    <Compile Include="Generators\INamingStrategy.cs" />
+    <Compile Include="Generators\NamingHelper.cs" />
+    <Compile Include="Generators\Reflection\IReflectionGenerationStrategy.cs" />
+    <Compile Include="Generators\Reflection\IReflectedNamingStrategy.cs" />
     <Compile Include="Generators\KnockoutGenerator.cs" />
-    <Compile Include="Generators\ReflectionGenerator.cs" />
+    <Compile Include="Generators\Reflection\ReflectionGenerator.cs" />
     <Compile Include="Generators\WebApiControllerGenerator.cs" />
     <Compile Include="Output\INameResolver.cs" />
     <Compile Include="Output\OutputGenerator.cs" />
+    <Compile Include="Output\OutputGeneratorNew.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Generators\ReflectionGeneratorBase.cs" />
-    <Compile Include="Generators\ReflectionHelper.cs" />
+    <Compile Include="Generators\Reflection\ReflectionGeneratorBase.cs" />
+    <Compile Include="Generators\Reflection\ReflectionHelper.cs" />
     <Compile Include="Output\TextFormatter.cs" />
     <Compile Include="Types\Accessibility.cs" />
-    <Compile Include="Types\AmbientContainer.cs" />
     <Compile Include="Types\ArrayType.cs" />
     <Compile Include="Types\DeclarationBase.cs" />
     <Compile Include="Types\DeclarationMember.cs" />
@@ -61,13 +59,16 @@
     <Compile Include="Types\RawStatement.cs" />
     <Compile Include="Types\TypeDomBase.cs" />
     <Compile Include="Types\TypescriptType.cs" />
+    <Compile Include="Visitors\VisitorBase.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Generators\_observables.md" />
     <None Include="Types\_diagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Types\_grammar.md" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

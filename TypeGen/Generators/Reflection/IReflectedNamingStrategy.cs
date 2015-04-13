@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace TypeGen
 {
-    public interface INamingStrategy
+    public interface IReflectedNamingStrategy
     {
         string GetClassName(Type type);
         string GetEnumMemberName(FieldInfo value);

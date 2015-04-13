@@ -26,7 +26,7 @@ namespace TypeGen
         {
             return Name +
                     (IsGeneric ? "<" + String.Join(",", GenericParameters) + ">" : "") +
-                    " (" + Members.Count + ")";
+                    " (" + Members.Count + " members)";
         }
 
     }
