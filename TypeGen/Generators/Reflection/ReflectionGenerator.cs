@@ -93,6 +93,10 @@ namespace TypeGen.Generators
         /// </summary>
         public bool GenerateSystemInterfaces { get; set; }
         
+        /// <summary>
+        /// add comment with source name
+        /// </summary>
+        public bool CommentSource { get; set; }
 
         public GenerationStrategy()
         {
@@ -145,14 +149,18 @@ namespace TypeGen.Generators
 
         public virtual void AddDeclaration(DeclarationBase decl)
         {
-            TargetModule.Members.Add(new RawStatements("// generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY]));
-            TargetModule.Members.Add(decl);
+            var m = new DeclarationModuleElement(decl);
+            if (CommentSource)
+                m.Comment = "generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY];
+            TargetModule.Members.Add(m);
         }
 
         public virtual void AddDeclaration(EnumType decl)
         {
-            TargetModule.Members.Add(new RawStatements("// generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY]));
-            TargetModule.Members.Add(decl);
+            var m = new DeclarationModuleElement(decl);
+            if (CommentSource)
+                m.Comment = "generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY];
+            TargetModule.Members.Add(m);
         }
 
         public virtual RawStatements GenerateLiteral(object value, TypescriptTypeReference type)

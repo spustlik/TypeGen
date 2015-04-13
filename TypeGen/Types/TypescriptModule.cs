@@ -8,6 +8,7 @@ namespace TypeGen
 {
     public sealed class TypescriptModule : TypeDomBase
     {
+        public string Comment { get; set; }
         public string Name { get; set; }
         public List<ModuleElement> Members { get; private set; }
         public TypescriptModule(string name)
@@ -33,6 +34,7 @@ namespace TypeGen
 
     public abstract class ModuleElement : TypeDomBase
     {
+        public string Comment { get; set; }
         public bool IsExporting { get; set; }
         public static implicit operator ModuleElement(DeclarationBase from)
         {

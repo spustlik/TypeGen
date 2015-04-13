@@ -23,6 +23,7 @@ namespace TypeGen
 
     public sealed class EnumMember : TypeDomBase
     {
+        public string Comment { get; set; }
         public string Name { get; set; }
         public RawStatements Value { get; set; }
         public EnumMember(string name, int? value)

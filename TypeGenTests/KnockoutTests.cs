@@ -38,15 +38,15 @@ module GeneratedModule {
             o.Generate(observables);
             Assert.AreEqual(@"
 module Observables {
-    interface ITest1 {
+    interface IObservableTest1 {
         Prop1: KnockoutObservable<string>;
         Prop2: KnockoutObservable<number>;
     }
-    interface ITest1B extends ITest1 {
+    interface IObservableTest1B extends IObservableTest1 {
         Prop3: KnockoutObservable<boolean>;
-        Ref: KnockoutObservable<ITest1>;
+        Ref: KnockoutObservable<IObservableTest1>;
         PropArray: KnockoutObservableArray<string>;
-        SelfArray: KnockoutObservableArray<ITest1B>;
+        SelfArray: KnockoutObservableArray<IObservableTest1B>;
     }
 }".Trim(), o.Output.Trim());
 
@@ -83,15 +83,15 @@ module GeneratedModule {
             o.Generate(observables);
             Assert.AreEqual(@"
 module Observables {
-    interface Test1 {
+    interface IObservableTest1 {
         Prop1: KnockoutObservable<string>;
         Prop2: KnockoutObservable<number>;
     }
-    interface Test1B extends Test1 {
+    interface IObservableTest1B extends IObservableTest1 {
         Prop3: KnockoutObservable<boolean>;
-        Ref: KnockoutObservable<Test1>;
+        Ref: KnockoutObservable<IObservableTest1>;
         PropArray: KnockoutObservableArray<string>;
-        SelfArray: KnockoutObservableArray<Test1B>;
+        SelfArray: KnockoutObservableArray<IObservableTest1B>;
     }
 }
 ".Trim(), o.Output.Trim());
@@ -128,13 +128,13 @@ module GeneratedModule {
             o.Generate(observables);
             Assert.AreEqual(@"
 module Observables {
-    class Test1B {
+    class test1B {
         Prop3 = ko.observable<boolean>();
-        Ref = ko.observable<Test1>();
+        Ref = ko.observable<test1>();
         PropArray = ko.observableArray<string>();
-        SelfArray = ko.observableArray<Test1B>();
+        SelfArray = ko.observableArray<test1B>();
     }
-    class Test1 {
+    class test1 {
         Prop1 = ko.observable<string>();
         Prop2 = ko.observable<number>();
     }
@@ -143,7 +143,42 @@ module Observables {
 
         }
 
+        [TestMethod]
+        public void TestInterfacesToObservableClasses()
+        {
+            var rg = new ReflectionGenerator();
+            rg.GenerationStrategy.GenerateClasses = false;
+            rg.GenerateTypes(new[] { typeof(Test1B), typeof(Test1) });
+            var o1 = new OutputGenerator();
+            o1.Generate(rg.Module);
+            var ko = new KnockoutGenerator();
+            var observables = new TypescriptModule("Observables");
+            ko.GenerateObservableModule(rg.Module, observables, false);
 
+            var o = new OutputGenerator();
+            o.Generate(observables);
+            Assert.IsNull(Helper.StringCompare(@"
+module Observables {
+    class test1B implements IObservableTest1 {        
+        Prop1: KnockoutObservable<string>;
+        Prop2: KnockoutObservable<number>;
+        Prop3 = ko.observable<boolean>();
+        Ref = ko.observable<test1>();
+        PropArray = ko.observableArray<string>();
+        SelfArray = ko.observableArray<test1B>();
+    }
+    interface IObservableTest1 {
+        Prop1: KnockoutObservable<string>;
+        Prop2: KnockoutObservable<number>;
+    }
+    class test1 {
+        Prop1 = ko.observable<string>();
+        Prop2 = ko.observable<number>();
+    }
+}
+", o.Output));
+
+        }
 
 
         private static ReflectionGenerator test3refl(bool sourceClasses)
@@ -181,6 +216,24 @@ module Observables {
             string result = "";
             result = test3(sourceClasses: true, destClasses: false);
             Assert.AreEqual(@"
+module Observables {
+    interface IObservableITest3A {
+        Prop1: KnockoutObservable<number>;
+    }
+    interface IObservableTest3A extends IObservableITest3A {
+        Prop1: KnockoutObservable<number>;
+    }
+    interface IObservableITest3B extends IObservableITest3A {
+        Prop2: KnockoutObservable<string>;
+    }
+    interface IObservableITest3C extends IObservableITest3A, IObservableITest3B {
+        Prop3: KnockoutObservable<string>;
+    }
+    interface IObservableTest3 extends IObservableTest3A, IObservableITest3C, IObservableITest3B {
+        Prop2: KnockoutObservable<string>;
+        Prop3: KnockoutObservable<string>;
+    }
+}
 ".Trim(), result.Trim());
 
         }

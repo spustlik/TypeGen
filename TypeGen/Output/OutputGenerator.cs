@@ -14,8 +14,11 @@ namespace TypeGen
         public TextFormatter Formatter { get; set; }
         public string Output { get { return Formatter.Output.ToString(); } }
         public INameResolver NameResolver { get; set; }
+        public bool GenerateComments { get; set; }
+
         public OutputGenerator(INameResolver nameResolver = null)
         {
+            GenerateComments = true;
             Formatter = new TextFormatter();
             if (nameResolver == null)
                 NameResolver = new DefaultNameResolver();
@@ -39,6 +42,7 @@ namespace TypeGen
 
         private void GenerateModule(TypescriptModule module, Func<ModuleElement, bool> elementFilter = null)
         {
+            GenerateLineComment(module.Comment);
             Formatter.Write("module ");
             Formatter.Write(module.Name);
             Formatter.Write(" {");
@@ -49,6 +53,21 @@ namespace TypeGen
             Formatter.WriteEndOfLine();
             Formatter.Write("}");
             Formatter.WriteLine();
+        }
+
+        private void GenerateLineComment(string comment)
+        {
+            if (String.IsNullOrEmpty(comment) || !GenerateComments)
+                return;
+            Formatter.Write("// " + comment);
+            Formatter.WriteLine();
+        }
+
+        private void GenerateInlineComment(string comment)
+        {
+            if (String.IsNullOrEmpty(comment) || !GenerateComments)
+                return;
+            Formatter.Write("/* " + comment + " */");
         }
 
         public void GenerateModuleContent(TypescriptModule module, Func<ModuleElement, bool> elementFilter)
@@ -107,6 +126,7 @@ namespace TypeGen
 
         private void Generate(ModuleElement element)
         {
+            GenerateLineComment(element.Comment);
             if (element is DeclarationModuleElement)
             {
                 if (element.IsExporting)
@@ -146,7 +166,7 @@ namespace TypeGen
         }
 
         private void Generate(RawModuleElement element)
-        {
+        {            
             Generate(element.Raw);
         }
 
@@ -165,6 +185,7 @@ namespace TypeGen
 
         private void Generate(EnumMember m)
         {
+            GenerateLineComment(m.Comment);
             Formatter.Write(m.Name);
             if (m.Value != null)
             {
@@ -191,7 +212,7 @@ namespace TypeGen
         }
 
         public void Generate(ClassType cls)
-        {
+        {            
             Formatter.Write("class ");
             Formatter.Write(cls.Name);
             if (cls.IsGeneric)
@@ -224,7 +245,7 @@ namespace TypeGen
         }
 
         public void Generate(InterfaceType cls)
-        {
+        {            
             Formatter.Write("interface ");
             Formatter.Write(cls.Name);
             if (cls.IsGeneric)
@@ -252,6 +273,7 @@ namespace TypeGen
 
         private void Generate(DeclarationMember m)
         {
+            GenerateLineComment(m.Comment);
             if (m is PropertyMember)
             {
                 Generate((PropertyMember)m);
@@ -279,7 +301,7 @@ namespace TypeGen
         }
 
         private void Generate(FunctionMemberBase fn)
-        {
+        {            
             Generate(fn.Accessibility);
             Formatter.Write(fn.Name);
             if (fn.IsGeneric)
@@ -322,6 +344,7 @@ namespace TypeGen
 
         private void Generate(FunctionParameter par)
         {
+            GenerateInlineComment(par.Comment);
             if (par.IsRest)
             {
                 Formatter.Write("...");
@@ -439,6 +462,7 @@ namespace TypeGen
 
         private void Generate(GenericParameter obj)
         {
+            GenerateInlineComment(obj.Comment);
             Formatter.Write(obj.Name);
             if (obj.Constraint != null)
             {

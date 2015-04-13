@@ -234,5 +234,49 @@ module testModule {
 }
 ".Trim(), g.Output.Trim());
         }
+
+        [TestMethod]
+        public void TestComments()
+        {
+            var m = new TypescriptModule("testModule") { Comment = "module" };
+            var cls = new ClassType("class1");
+            cls.Members.Add(new PropertyMember("Property1") { MemberType = PrimitiveType.Boolean, Comment = "property" });
+            m.Members.Add(cls);
+            m.Members.Last().Comment = "class";
+            m.Members.Last().IsExporting = true;
+            m.Members.Add(new RawStatements() { Statements = { "function test() : ", cls, " { return null; }" } });
+            m.Members.Last().Comment = "raw";
+            cls.Members.Add(new FunctionMember("fn",
+                new RawStatements("/*comment*/\n", "dosomething();\n", "//comment") )
+            {
+                Comment = "function",
+                Parameters = {
+                    new FunctionParameter("x") {ParameterType = PrimitiveType.Boolean, Comment = "param" }
+                }
+            });
+            cls.Members.Last().Comment = "function";
+            var g = new OutputGenerator();
+            g.GenerateComments = true;
+            g.Generate(m);
+            Assert.IsNull( 
+                Helper.StringCompare(@"
+// module
+module testModule {
+    // class
+    export class class1 {
+        // property
+        Property1: boolean;
+        // function
+        fn(/* param */x: boolean) {
+            /*comment*/
+            dosomething();
+            //comment
+        }
+    }
+    // raw
+    function test() : class1 { return null; }
+}
+", g.Output));
+        }
     }
 }

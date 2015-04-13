@@ -8,7 +8,7 @@ namespace TypeGen
 {
     public abstract class DeclarationMember : TypeDomBase
     {
-        //according to spec: properties are public by default
+        public string Comment { get; set; }        
         public AccessibilityEnum? Accessibility { get; set; }
 
         public static implicit operator DeclarationMember(RawStatements from)
@@ -65,6 +65,7 @@ namespace TypeGen
 
     public sealed class FunctionParameter : TypeDomBase
     {
+        public string Comment { get; set; }
         public string Name { get; set; }
         public FunctionParameter(string name)
         {

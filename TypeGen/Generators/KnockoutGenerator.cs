@@ -13,13 +13,20 @@ namespace TypeGen.Generators
         public virtual string GetInterfaceName(DeclarationBase source)
         {
             var name = source.Name;
-            name = NamingHelper.RemovePrefix("I", name, LetterCasing.Upper);
+            if (source is InterfaceType)
+            {
+                name = NamingHelper.RemovePrefix("I", name, LetterCasing.Upper);
+            }
             name = "IObservable" + NamingHelper.FirstLetter(LetterCasing.Upper, name);
             return name;
         }
         public virtual string GetClassName(DeclarationBase source)
         {
             var name = source.Name;
+            if (source is InterfaceType)
+            {
+                name = NamingHelper.RemovePrefix("I", name, LetterCasing.Upper);
+            }
             name = NamingHelper.FirstLetter(LetterCasing.Lower, name);
             return name;
         }
@@ -220,10 +227,16 @@ namespace TypeGen.Generators
                         target.Implementations.Add(mapped);
                         // implementation code
                         var intf = (InterfaceType)item.ReferencedType;
-                        target.Members.Add(new RawDeclarationMember(new RawStatements("// implementation of " + mapped)));
+                        //target.Members.Add(new RawDeclarationMember(new RawStatements("// implementation of " + mapped)));
+                        bool commented = false;
                         foreach (var member in intf.Members.OfType<PropertyMember>())
                         {
                             GenerateObservableProperty(target, member);
+                            if (!commented)
+                            {
+                                target.Members.Last().Comment = "implementation of " + ((DeclarationBase)mapped.ReferencedType).Name;
+                                commented = true;
+                            }
                         }
                     }
                     finally
@@ -279,7 +292,7 @@ namespace TypeGen.Generators
             }
         }
 
-        private void GenerateObservableProperty(DeclarationBase target, PropertyMember source)
+        private PropertyMember GenerateObservableProperty(DeclarationBase target, PropertyMember source)
         {
             var property = new PropertyMember(source.Name);
             property.Accessibility = source.Accessibility;
@@ -288,6 +301,7 @@ namespace TypeGen.Generators
             property.MemberType = MapType(source.MemberType);
             MakeObservableProperty(property);
             target.Members.Add(property);
+            return property;
         }
 
         private void MakeObservableProperty(PropertyMember property)
