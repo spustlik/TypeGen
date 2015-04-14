@@ -25,7 +25,6 @@ namespace TypeGen.Generators
                 GenerateFromType(t);
             }
         }
-
     }
 
     public class NamingStrategy : IReflectedNamingStrategy
@@ -163,7 +162,12 @@ namespace TypeGen.Generators
             TargetModule.Members.Add(m);
         }
 
-        public virtual RawStatements GenerateLiteral(object value, TypescriptTypeReference type)
+        public virtual RawStatements GenerateLiteral(object value, TypescriptTypeReference targetType)
+        {
+            return GenerateRawLiteral(value, targetType);
+        }
+
+        public static RawStatements GenerateRawLiteral(object value, TypescriptTypeReference targetType)
         {
             //can use JsonConvert.Serialize object (with casting to target type)
             if (value is string)
@@ -171,9 +175,9 @@ namespace TypeGen.Generators
             if (value is bool)
                 return new RawStatements((bool)value ? "true" : "false");
             if (value is float)
-                return GenerateLiteral((double)(float)value, type);
+                return GenerateRawLiteral((double)(float)value, targetType);
             if (value is int)
-                return GenerateLiteral((double)(int)value, type);
+                return GenerateRawLiteral((double)(int)value, targetType);
             if (value is double)
                 return new RawStatements(((double)value).ToString(CultureInfo.InvariantCulture));
             return null;

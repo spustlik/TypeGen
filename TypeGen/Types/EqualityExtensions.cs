@@ -8,10 +8,11 @@ namespace TypeGen
 {
     public static class EqualityExtensions
     {
+        //modules are not compared
         //enums, classes and interfaces are compared to reference
         // it is considerable to compare shapes, exact order of members, types only, etc.
-        //modules are not compared
-        
+        // shapes comparing is not possible in TypeDom, because of raw property initializators and raw members
+
         public static bool IsSame(this EnumMember m1, EnumMember m2)
         {
             if (m1 == null || m2 == null)
@@ -270,5 +271,6 @@ namespace TypeGen
                 return obj.GetHashCode();
             }
         }
+
     }
 }

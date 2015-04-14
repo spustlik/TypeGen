@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace TypeGen
+namespace TypeGen.Generators
 {
     public interface IGenerationStrategy
     {
@@ -17,7 +17,7 @@ namespace TypeGen
 
         void AddDeclaration(EnumType decl);
         void AddDeclaration(DeclarationBase decl);
-        RawStatements GenerateLiteral(object value, TypescriptTypeReference type);
+        RawStatements GenerateLiteral(object value, TypescriptTypeReference targetType);
         
     }
 }

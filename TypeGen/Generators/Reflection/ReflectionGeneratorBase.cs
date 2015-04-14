@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TypeGen
+namespace TypeGen.Generators
 {
     public class ReflectionGeneratorBase
     {
@@ -41,6 +41,11 @@ namespace TypeGen
             TypescriptTypeBase result;
             if (_typeMap.TryGetValue(type, out result))
                 return result;
+            return TypeGenerator(type, result);
+        }
+
+        protected virtual TypescriptTypeReference TypeGenerator(Type type, TypescriptTypeBase result)
+        {
             if (Nullable.GetUnderlyingType(type) != null)
             {
                 var r = GenerateFromType(Nullable.GetUnderlyingType(type));
@@ -83,14 +88,13 @@ namespace TypeGen
                     }
                     return tref;
                 }
-                return GenerateClassDeclaration(type);
+                return GenerateObjectDeclaration(type);
             }
 
             return new AnyType() { ExtraData = { { SOURCETYPE_KEY, type } } };
         }
 
-
-        private DeclarationBase GenerateClassDeclaration(Type type)
+        protected virtual DeclarationBase GenerateObjectDeclaration(Type type)
         {
             if (GenerationStrategy.ShouldGenerateClass(type))
             {
@@ -101,7 +105,8 @@ namespace TypeGen
                 return GenerateInterface(type);
             }
         } 
-        private void GenerateMethodDeclarations(Type type, DeclarationBase declaration)
+
+        protected virtual void GenerateMethodDeclarations(Type type, DeclarationBase declaration)
         {
             //method declarations
             if (GenerationStrategy.ShouldGenerateMethods(declaration, type))
@@ -116,7 +121,7 @@ namespace TypeGen
             }
         }
 
-        public FunctionDeclarationMember GenerateMethodDeclaration(MethodInfo method)
+        public virtual FunctionDeclarationMember GenerateMethodDeclaration(MethodInfo method)
         {
             var result = new FunctionDeclarationMember(NamingStrategy.GetMethodName(method)) { ExtraData = { { SOURCEMEMBER_KEY, method } } };
             if (method.ReturnType != typeof(void))
@@ -144,7 +149,7 @@ namespace TypeGen
             return result;
         }
 
-        private FunctionParameter GenerateMethodParameter(ParameterInfo paramInfo)
+        protected virtual FunctionParameter GenerateMethodParameter(ParameterInfo paramInfo)
         {
             var par = new FunctionParameter(paramInfo.Name)
             {
@@ -164,7 +169,7 @@ namespace TypeGen
             return par;
         }
 
-        public InterfaceType GenerateInterface(Type type)
+        public virtual InterfaceType GenerateInterface(Type type)
         {
             var result = new InterfaceType(NamingStrategy.GetInterfaceName(type));
             GenerateDeclarationBase(result, type);
@@ -192,7 +197,7 @@ namespace TypeGen
             return result;
         }
 
-        private static IEnumerable<Type> GetImplementedInterfaces(Type type)
+        protected virtual IEnumerable<Type> GetImplementedInterfaces(Type type)
         {
             var allInterfaces = type.GetInterfaces();
             if (type.IsInterface)
@@ -216,7 +221,7 @@ namespace TypeGen
             return result;            
         }
 
-        public ClassType GenerateClass(Type type)
+        public virtual ClassType GenerateClass(Type type)
         {
             var result = new ClassType(NamingStrategy.GetClassName(type));
             GenerateDeclarationBase(result, type);
@@ -273,7 +278,7 @@ namespace TypeGen
             }            
         }
 
-        public DeclarationMember GenerateProperty(PropertyInfo pi)
+        public virtual DeclarationMember GenerateProperty(PropertyInfo pi)
         {
             var pm = new PropertyMember(NamingStrategy.GetPropertyName(pi))
             {
@@ -284,7 +289,7 @@ namespace TypeGen
             return pm;
         }
 
-        public TypescriptTypeReference GenerateEnum(Type type)
+        public virtual TypescriptTypeReference GenerateEnum(Type type)
         {
             var enumType = new EnumType(NamingStrategy.GetEnumName(type)) { ExtraData = { { SOURCETYPE_KEY, type } } };
             _typeMap[type] = enumType;
@@ -297,7 +302,7 @@ namespace TypeGen
             return enumType;
         }
 
-        public EnumMember GenerateEnumMember(FieldInfo value)
+        public virtual EnumMember GenerateEnumMember(FieldInfo value)
         {
             var v = Convert.ToInt32(value.GetValue(null));
             var ev = new EnumMember(NamingStrategy.GetEnumMemberName(value), v) { ExtraData = { { SOURCEMEMBER_KEY, value } } };

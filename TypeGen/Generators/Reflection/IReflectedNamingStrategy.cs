@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace TypeGen
+namespace TypeGen.Generators
 {
     public interface IReflectedNamingStrategy
     {

@@ -79,7 +79,7 @@ namespace TypeGen.Generators
                 if (type != null && type.ReferencedType != null && type.ReferencedType is ArrayType)
                 {
                     item.Initialization.Add("ko.observableArray<");
-                    item.Initialization.Add(ExtractArrayElement(type));
+                    item.Initialization.Add(type.ExtractArrayElement());
                     item.Initialization.Add(">()");
                 }
                 else
@@ -99,7 +99,7 @@ namespace TypeGen.Generators
             {
                 if (type.ReferencedType is ArrayType)
                 {
-                    property.MemberType = new TypescriptTypeReference("KnockoutObservableArray") { GenericParameters = { ExtractArrayElement(type) } };
+                    property.MemberType = new TypescriptTypeReference("KnockoutObservableArray") { GenericParameters = { type.ExtractArrayElement() } };
                 }
                 else
                 {
@@ -120,7 +120,7 @@ namespace TypeGen.Generators
             {
                 if (item.MemberType != null && item.MemberType.ReferencedType != null && item.MemberType.ReferencedType is ArrayType)
                 {
-                    item.MemberType = new TypescriptTypeReference("KnockoutObservableArray") { GenericParameters = { ExtractArrayElement(item.MemberType) } };
+                    item.MemberType = new TypescriptTypeReference("KnockoutObservableArray") { GenericParameters = { item.MemberType.ExtractArrayElement() } };
                 }
                 else
                 {
@@ -130,12 +130,6 @@ namespace TypeGen.Generators
         }
 
         #endregion
-        private static TypescriptTypeReference ExtractArrayElement(TypescriptTypeReference item)
-        {
-            if (item.ReferencedType != null && item.ReferencedType is ArrayType)
-                return ((ArrayType)item.ReferencedType).ElementType;
-            throw new InvalidOperationException("Not array type");
-        }
 
         public KnockoutOptions Options { get; private set; }
 
@@ -321,7 +315,7 @@ namespace TypeGen.Generators
 
                 if (itemType is ArrayType)
                 {
-                    var elementType = ExtractArrayElement(srcItem.MemberType);
+                    var elementType = srcItem.MemberType.ExtractArrayElement();
                     if (elementType != null && elementType.ReferencedType != null && elementType.ReferencedType is DeclarationBase)
                     {
                         fromJS.Add("this." + srcItem.Name + "(obj." + srcItem.Name + ".map(item=>new ", elementType, "().fromJS(item)))");
