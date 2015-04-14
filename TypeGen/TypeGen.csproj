@@ -39,6 +39,7 @@
     <Compile Include="Generators\Helper.cs" />
     <Compile Include="Generators\KnockoutReflectionGenerator.cs" />
     <Compile Include="Generators\NamingHelper.cs" />
+    <Compile Include="Generators\Optimizer.cs" />
     <Compile Include="Generators\Reflection\IReflectionGenerationStrategy.cs" />
     <Compile Include="Generators\Reflection\IReflectedNamingStrategy.cs" />
     <Compile Include="Generators\KnockoutGenerator.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="Types\RawStatement.cs" />
     <Compile Include="Types\TypeDomBase.cs" />
     <Compile Include="Types\TypescriptType.cs" />
+    <Compile Include="Visitors\RewriterBase.cs" />
     <Compile Include="Visitors\VisitorBase.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -35,9 +35,6 @@ class test1B extends test1 {
             var o = new OutputGenerator();
             o.GenerateModuleContent(kogen.Module, null);
             Assert.AreEqual(null, Helper.StringCompare(@"
-interface IObservableITest3A {
-    Prop1: KnockoutObservable<number>;
-}
 class test3A implements IObservableITest3A {
     Prop1 = ko.observable<number>();
 }
@@ -46,6 +43,9 @@ class test3 extends test3A implements IObservableITest3C, IObservableITest3B {
     Prop3 = ko.observable<string>();
     Prop4 = ko.observable<IObservableITest3A>();
     PropOwn = ko.observable<test3A>();
+}
+interface IObservableITest3A {
+    Prop1: KnockoutObservable<number>;
 }
 interface IObservableITest3B extends IObservableITest3A {
     Prop2: KnockoutObservable<string>;

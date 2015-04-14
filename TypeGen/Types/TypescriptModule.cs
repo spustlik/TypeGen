@@ -10,7 +10,7 @@ namespace TypeGen
     {
         public string Comment { get; set; }
         public string Name { get; set; }
-        public List<ModuleElement> Members { get; private set; }
+        public List<ModuleElement> Members { get; internal set; }
         public TypescriptModule(string name)
         {
             Name = name;

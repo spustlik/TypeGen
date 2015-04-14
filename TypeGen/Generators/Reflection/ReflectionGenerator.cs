@@ -44,8 +44,15 @@ namespace TypeGen.Generators
         public virtual string GetInterfaceName(Type type)
         {
             var n = NamingHelper.GetNonGenericTypeName(type);
-            n = NamingHelper.RemovePrefix(InterfacePrefix, n, LetterCasing.Upper);
-            n = InterfacePrefix + NamingHelper.FirstLetter(FirstLetterCasing, n);
+            if (type.IsInterface)
+            {
+                n = NamingHelper.RemovePrefix(InterfacePrefix, n, LetterCasing.Upper);
+                n = InterfacePrefix + NamingHelper.FirstLetter(FirstLetterCasing, n);
+            }
+            else
+            {
+                n = "i" + NamingHelper.FirstLetter(FirstLetterCasing, n);
+            }
             return n;
         }
 

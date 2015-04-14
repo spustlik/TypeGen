@@ -11,6 +11,8 @@ namespace TypeGenTests
     [TestClass]
     public class ReflectionTests
     {
+
+
         [TestMethod]
         public void TestIntf()
         {
@@ -20,30 +22,29 @@ namespace TypeGenTests
             var g = new OutputGenerator();
             g.Generate(rg.GenerationStrategy.TargetModule);
 
-            Assert.AreEqual(
-@"module GeneratedModule {
+            Assert.AreEqual(null, Helper.StringCompare(@"
+module GeneratedModule {
+    interface IMyInterface {
+        Property2: string;
+    }
+    interface iTestingClassBase extends IMyInterface {
+        Property1: number;
+    }
+    interface iTestingClass extends iTestingClassBase {
+        Property3: MyEnum;
+        Property4?: number;
+        Property5: string[];
+        Property6: iTestingClass;
+        Property7: iTestingClass[];
+        Property8: iTestingClass[];
+    }
     enum MyEnum {
         Value1 = 0,
         Value2 = 1,
         Value3 = 10,
         Value4 = 11
     }
-    interface IMyInterface {
-        Property2: string;
-    }
-    interface ITestingClassBase extends IMyInterface {
-        Property1: number;
-    }
-    interface ITestingClass extends ITestingClassBase {
-        Property3: MyEnum;
-        Property4?: number;
-        Property5: string[];
-        Property6: ITestingClass;
-        Property7: ITestingClass[];
-        Property8: ITestingClass[];
-    }
-}
-".Trim(), g.Output.Trim());
+}", g.Output));
         }
 
 
@@ -59,19 +60,19 @@ namespace TypeGenTests
             Assert.AreEqual(
 @"
 module GeneratedModule {
-    interface IPagedModel<T> {
+    interface iPagedModel<T> {
         TotalCount: number;
         Values: T[];
     }
-    interface IPagedAminUser extends IPagedModel<IAdminUser> {
+    interface iPagedAminUser extends iPagedModel<iAdminUser> {
     }
-    interface IAdminUser {
+    interface iAdminUser {
         Name: string;
         Login: string;
     }
-    interface IPagedCompany extends IPagedModel<ICompanyModel> {
+    interface iPagedCompany extends iPagedModel<iCompanyModel> {
     }
-    interface ICompanyModel {
+    interface iCompanyModel {
         VAT: string;
         Name: string;
     }
@@ -83,28 +84,46 @@ module GeneratedModule {
         public void TestGenerics2()
         {
             var rg = new ReflectionGenerator();
-            rg.GenerateInterface(typeof(Test1<int>));
+            //nonsense?!? rg.GenerateInterface(typeof(Test1<int>));
+            rg.GenerateInterface(typeof(Test1<>));
 
             var g = new OutputGenerator();
             g.Generate(rg.GenerationStrategy.TargetModule);
             Assert.AreEqual(
 @"
 module GeneratedModule {
-    interface ITest1<Int32> {
-        T1: IGenList<string>;
-        T2: IGenList<number>;
-        T3: IGenList<IGenList<boolean>>;
-        T4: IGenList<number[]>[];
+    interface iTest1<T> {
+        T1: iGenList<string>;
+        T2: iGenList<number>;
+        T3: iGenList<iGenList<boolean>>;
+        T4: iGenList<T[]>[];
     }
-    interface IGenList<TI> {
-        Values: IGenTest<TI>[];
+    interface iGenList<TI> {
+        Values: iGenTest<TI>[];
     }
-    interface IGenTest<T> {
+    interface iGenTest<T> {
         Value: T;
     }
 }".Trim(), g.Output.Trim());
         }
 
+        [TestMethod]
+        public void TestGenericsInstance()
+        {
+            var rg = new ReflectionGenerator();
+            
+            rg.GenerateInterface(typeof(GenTest<int>));
+
+            var g = new OutputGenerator();
+            g.Generate(rg.GenerationStrategy.TargetModule);
+            Assert.AreEqual(null,Helper.StringCompare(
+@"
+module GeneratedModule {
+    interface iGenTest_Int32 {
+        Value: number;
+    }
+}", g.Output));
+        }
 
         [TestMethod]
         public void TestMethods()
@@ -118,7 +137,7 @@ module GeneratedModule {
 
             Assert.AreEqual(@"
 module GeneratedModule {
-    interface ITestGenMethods<T> {
+    interface iTestGenMethods<T> {
         Test1(input: T): string;
         Test2<T2>(input: T2, withDefault?: string = '42'): boolean;
         Test3(x: number, ...args: string[]): void;
@@ -227,6 +246,7 @@ module GeneratedModule {
     {
         public T Value { get; set; }
     }
+
     public class GenList<TI>
     {
         public IEnumerable<GenTest<TI>> Values { get; set; }

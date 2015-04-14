@@ -214,28 +214,6 @@ module Observables {
         }
 
         [TestMethod]
-        public void TestInheritance1()
-        {
-            var result = test3reflstr(sourceClasses: false);
-            Assert.AreEqual(null, Helper.StringCompare(@"
-module GeneratedModule {
-    interface ITest3A {
-        Prop1: number;
-    }
-    interface Test3A extends ITest3A {        
-    }
-    interface ITest3B extends ITest3A {
-        Prop2: string;
-    }
-    interface ITest3C extends ITest3A, ITest3B {
-        Prop3: string;
-    }
-    interface Test3 extends Test3A, ITest3C, ITest3B {
-    }
-}", result));
-        }
-
-        [TestMethod]
         public void TestInheritance2()
         {
             var result = test3reflstr(sourceClasses: true);

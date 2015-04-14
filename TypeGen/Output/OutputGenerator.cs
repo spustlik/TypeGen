@@ -93,7 +93,12 @@ namespace TypeGen
                 {
                     if (md.Declaration != null)
                     {
-                        var indexes = md.Declaration.GetExtends().Where(e=>e!=null).Where(et => et.ReferencedType != null).Select(et => GetIndexInModule(ordered, et.ReferencedType)).ToArray();
+                        var indexes = md.Declaration
+                                        .GetExtends()
+                                        .Where(e => e != null)
+                                        .Where(et => et.ReferencedType != null)
+                                        .Select(et => GetIndexInModule(ordered, et.ReferencedType))
+                                        .ToArray();
                         if (indexes.Length > 0)
                         {
                             var max = indexes.Max();

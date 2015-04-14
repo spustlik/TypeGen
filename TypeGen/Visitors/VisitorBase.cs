@@ -21,7 +21,7 @@ namespace TypeGen.Visitors
 
         public virtual void VisitModule(TypescriptModule module)
         {
-            foreach (var moduleMember in module.Members)
+            foreach (var moduleMember in module.Members.ToArray())
             {
                 Visit(moduleMember);
             }
@@ -70,7 +70,7 @@ namespace TypeGen.Visitors
 
         public virtual void VisitEnumType(EnumType type)
         {
-            foreach (var member in type.Members)
+            foreach (var member in type.Members.ToArray())
             {
                 VisitEnumMember(member);
             }
@@ -104,7 +104,7 @@ namespace TypeGen.Visitors
         {
             if (decl.IsGeneric)
             {
-                foreach (var item in decl.GenericParameters)
+                foreach (var item in decl.GenericParameters.ToArray())
                 {
                     VisitGenericParameter(item);
                 }
@@ -113,7 +113,7 @@ namespace TypeGen.Visitors
 
         public virtual void VisitMembers(DeclarationBase decl)
         {
-            foreach (var m in decl.Members)
+            foreach (var m in decl.Members.ToArray())
             {
                 Visit(m);
             }
@@ -128,7 +128,7 @@ namespace TypeGen.Visitors
             }
             if (cls.IsImplementing)
             {
-                foreach (var item in cls.Implementations)
+                foreach (var item in cls.Implementations.ToArray())
                 {
                     VisitTypeReference(item);
                 }
@@ -141,7 +141,7 @@ namespace TypeGen.Visitors
             VisitGenericParameters(intf);
             if (intf.IsExtending)
             {
-                foreach (var item in intf.ExtendsTypes)
+                foreach (var item in intf.ExtendsTypes.ToArray())
                 {
                     VisitTypeReference(item);
                 }
@@ -198,12 +198,12 @@ namespace TypeGen.Visitors
             VisitAccessibility(fn.Accessibility);
             if (fn.IsGeneric)
             {
-                foreach (var item in fn.GenericParameters)
+                foreach (var item in fn.GenericParameters.ToArray())
                 {
                     VisitGenericParameter(item);
                 }
             }
-            foreach (var item in fn.Parameters)
+            foreach (var item in fn.Parameters.ToArray())
             {
                 VisitFunctionParameter(item);
             }
@@ -274,7 +274,7 @@ namespace TypeGen.Visitors
             }
             if (obj.GenericParameters.Count > 0)
             {
-                foreach (var item in obj.GenericParameters)
+                foreach (var item in obj.GenericParameters.ToArray())
                 {
                     VisitTypeReference(item);
                 }
@@ -341,7 +341,7 @@ namespace TypeGen.Visitors
 
         public virtual void VisitRaw(RawStatements raw)
         {
-            foreach (var item in raw.Statements)
+            foreach (var item in raw.Statements.ToArray())
             {
                 Visit(raw, item);
             }

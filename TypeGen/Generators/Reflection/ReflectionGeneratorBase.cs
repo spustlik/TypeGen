@@ -193,32 +193,14 @@ namespace TypeGen.Generators
                     }
                 }
             }
+            GenerateProperties(type, result, skipImplementedByInterfaces: true);
             GenerateMethodDeclarations(type, result);
             return result;
         }
 
         protected virtual IEnumerable<Type> GetImplementedInterfaces(Type type)
         {
-            var allInterfaces = type.GetInterfaces();
-            if (type.IsInterface)
-                return allInterfaces;
-            var result = new List<Type>();
-            //return allInterfaces.Where(intf => type.GetInterfaceMap(intf).TargetMethods.Any(m => m.DeclaringType == type));
-            foreach (var intf in allInterfaces)
-            {
-                try {
-                    var map = type.GetInterfaceMap(intf);
-                    if (map.TargetMethods.Any(m => m.DeclaringType == type))
-                    {
-                        result.Add(intf);
-                    }
-                }
-                catch(Exception ex)
-                {
-                    throw new ApplicationException("Error when acquiring interfaces map from " + type + ", interface:" + intf, ex);
-                }
-            }
-            return result;            
+            return type.GetImplementedInterfaces();
         }
 
         public virtual ClassType GenerateClass(Type type)
@@ -245,6 +227,7 @@ namespace TypeGen.Generators
                     }
                 }
             }
+            GenerateProperties(type, result, skipImplementedByInterfaces: false);
             GenerateMethodDeclarations(type, result);
             return result;
         }
@@ -253,17 +236,32 @@ namespace TypeGen.Generators
         {
             result.ExtraData[SOURCETYPE_KEY] = type;
             _typeMap[type] = result;
-            GenerationStrategy.AddDeclaration(result);            
+            GenerationStrategy.AddDeclaration(result);
 
             //generics
             if (type.IsGenericType)
             {
+                var suffix = new List<string>();
                 foreach (var garg in type.GetGenericArguments())
                 {
-                    result.GenericParameters.Add(new GenericParameter(NamingStrategy.GetGenericArgumentName(garg)) { ExtraData = { { SOURCETYPE_KEY, garg} } });
-                }                
-            }
+                    if (garg.IsGenericParameter)
+                    {
+                        result.GenericParameters.Add(new GenericParameter(NamingStrategy.GetGenericArgumentName(garg)) { ExtraData = { { SOURCETYPE_KEY, garg } } });
+                    }
+                    else
+                    {
+                        suffix.Add(NamingStrategy.GetGenericArgumentName(garg));
+                    }
+                }
+                if (suffix.Count > 0)
+                {
+                    result.Name += "_" + String.Join("_", suffix);
+                }
+            }            
+        }
 
+        protected virtual void GenerateProperties(Type type, DeclarationBase result, bool skipImplementedByInterfaces)
+        {
             //properties
             if (GenerationStrategy.ShouldGenerateProperties(result, type))
             {
@@ -271,11 +269,32 @@ namespace TypeGen.Generators
                 foreach (var pi in allProps)
                 {
                     if (!GenerationStrategy.ShouldGenerateProperty(result, pi))
-                        continue;
+                        continue;                    
+                    if (skipImplementedByInterfaces)
+                    {
+                        if (IsPropertyImplementedByAnyInterface(pi, type))
+                            continue;
+                    }
                     var p = GenerateProperty(pi);
                     result.Members.Add(p);
                 }
-            }            
+            }
+        }
+
+        private bool IsPropertyImplementedByAnyInterface(PropertyInfo pi, Type type)
+        {
+            if (type.IsInterface)
+                return false;
+            foreach (var item in GetImplementedInterfaces(type))
+            {
+                var map = type.GetInterfaceMap(item);
+                var methods = new[] { pi.GetGetMethod(), pi.GetSetMethod() }.Where(x=>x!=null).ToArray();
+                if (methods.All(m=> map.TargetMethods.Contains(m)))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public virtual DeclarationMember GenerateProperty(PropertyInfo pi)

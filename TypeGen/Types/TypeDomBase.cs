@@ -8,7 +8,7 @@ namespace TypeGen
 {
     public abstract class TypeDomBase
     {        
-        public Dictionary<string, object> ExtraData { get; private set; }
+        public Dictionary<string, object> ExtraData { get; internal set; }
         protected TypeDomBase()
         {
              ExtraData = new Dictionary<string, object>();
