@@ -17,15 +17,15 @@ namespace TypeGenTests
             o1.Generate(rg.Module);
             Assert.AreEqual(@"
 module GeneratedModule {
-    interface ITest1 {
+    interface iTest1 {
         Prop1: string;
         Prop2: number;
     }
-    interface ITest1B extends ITest1 {
+    interface iTest1B extends iTest1 {
         Prop3: boolean;
-        Ref: ITest1;
+        Ref: iTest1;
         PropArray: string[];
-        SelfArray: ITest1B[];
+        SelfArray: iTest1B[];
     }
 }
 ".Trim(), o1.Output.Trim());
@@ -38,15 +38,15 @@ module GeneratedModule {
             o.Generate(observables);
             Assert.AreEqual(@"
 module Observables {
-    interface IObservableTest1 {
+    interface IObservableITest1 {
         Prop1: KnockoutObservable<string>;
         Prop2: KnockoutObservable<number>;
     }
-    interface IObservableTest1B extends IObservableTest1 {
+    interface IObservableITest1B extends IObservableITest1 {
         Prop3: KnockoutObservable<boolean>;
-        Ref: KnockoutObservable<IObservableTest1>;
+        Ref: KnockoutObservable<IObservableITest1>;
         PropArray: KnockoutObservableArray<string>;
-        SelfArray: KnockoutObservableArray<IObservableTest1B>;
+        SelfArray: KnockoutObservableArray<IObservableITest1B>;
     }
 }".Trim(), o.Output.Trim());
 

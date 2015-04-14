@@ -29,11 +29,14 @@ namespace TypeGen.Generators
 
     public class NamingStrategy : IReflectedNamingStrategy
     {
+        public string InterfacePrefixForClasses { get; set; }
         public string InterfacePrefix { get; set; }
         public LetterCasing FirstLetterCasing { get; set; }
+        
         public NamingStrategy()
         {
             InterfacePrefix = "I";
+            InterfacePrefixForClasses = "I";
         }
 
         public virtual string GetPropertyName(PropertyInfo property)
@@ -51,7 +54,7 @@ namespace TypeGen.Generators
             }
             else
             {
-                n = "i" + NamingHelper.FirstLetter(FirstLetterCasing, n);
+                n = InterfacePrefixForClasses + NamingHelper.FirstLetter(FirstLetterCasing, n);
             }
             return n;
         }

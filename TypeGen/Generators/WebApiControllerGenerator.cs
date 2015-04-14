@@ -13,6 +13,7 @@ namespace TypeGen.Generators
         {
             public Type Source { get; set; }
             public string Name { get; set; }
+            public string Comment { get; set; }
             public List<ActionModel> Actions = new List<ActionModel>();
         }
 
@@ -48,7 +49,13 @@ namespace TypeGen.Generators
                 if (name.EndsWith("Controller"))
                     name = name.Substring(0, name.Length - 10);
                 var controllerPath = name.ToLower();
-                var cModel = new ControllerModel { Source = t, Name = t.Name, Actions = GetActionsModel(t, controllerPath) };
+                var cModel = new ControllerModel
+                {
+                    Source = t,
+                    Name = t.Name,
+                    Actions = GetActionsModel(t, controllerPath),
+                    Comment = "class "+t,
+                };
                 result.Add(cModel);
             }
             return result;
@@ -64,7 +71,8 @@ namespace TypeGen.Generators
                 {
                     Source = m,
                     Name = m.Name,
-                    HttpMethod = GetHttpMethod(m)
+                    HttpMethod = GetHttpMethod(m),
+                    Comment = "method " + m
                 };
                 if (m.ReturnType != typeof(void) && !m.ReturnType.IsTypeBaseOrSelf("System.Net.Http.HttpResponseMessage"))
                 {
@@ -176,9 +184,9 @@ namespace TypeGen.Generators
             var proxyClass = new ClassType("GeneratedProxy");
             proxyClass.Extends = new TypescriptTypeReference("base.ProxyBase");
             targetModule.Members.Add(new DeclarationModuleElement(proxyClass) { IsExporting = true });
-            foreach (var cm in controllers)
+            foreach (var controller in controllers)
             {
-                var cls = new ClassType(cm.Name + "Proxy");
+                var cls = new ClassType(controller.Name + "Proxy");
                 var proxyType = new TypescriptTypeReference("GeneratedProxy");
                 cls.Members.Add(new PropertyMember("_parent")
                 {                    
@@ -191,13 +199,14 @@ namespace TypeGen.Generators
                     Accessibility = null,
                     Parameters = { new FunctionParameter("parent") { ParameterType = proxyType } },
                 });
-                foreach (var am in cm.Actions)
+                foreach (var am in controller.Actions)
                 {
                     cls.Members.Add(GenerateAction(am, reflectionGenerator));
                 }
                 targetModule.Members.Add(cls);
+                targetModule.Members.Last().Comment = controller.Comment;
 
-                proxyClass.Members.Add(new PropertyMember(cm.Name.Replace("Controller", ""))
+                proxyClass.Members.Add(new PropertyMember(controller.Name.Replace("Controller", ""))
                 {
                     MemberType = cls,
                     Accessibility = AccessibilityEnum.Public,
@@ -221,7 +230,7 @@ namespace TypeGen.Generators
 
         private FunctionMember GenerateAction(ActionModel action, ReflectionGeneratorBase reflectionGenerator)
         {
-            var method = new FunctionMember(action.Name + "Async", null) { Accessibility = AccessibilityEnum.Public };
+            var method = new FunctionMember(action.Name + "Async", null) { Accessibility = AccessibilityEnum.Public, Comment = action.Comment };
             method.Parameters.AddRange(action.Parameters
                 .Where(p => !p.IsOptional)
                 .Select(p => new FunctionParameter(p.Name)
