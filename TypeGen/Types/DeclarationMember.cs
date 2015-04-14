@@ -9,7 +9,6 @@ namespace TypeGen
     public abstract class DeclarationMember : TypeDomBase
     {
         public string Comment { get; set; }        
-        public AccessibilityEnum? Accessibility { get; set; }
 
         public static implicit operator DeclarationMember(RawStatements from)
         {
@@ -19,6 +18,8 @@ namespace TypeGen
 
     public sealed class PropertyMember : DeclarationMember
     {
+        public AccessibilityEnum? Accessibility { get; set; }
+
         public string Name { get; set; }
 
         public TypescriptTypeReference MemberType { get; set; }
@@ -51,6 +52,7 @@ namespace TypeGen
     public abstract class FunctionMemberBase : DeclarationMember
     {
         public string Name { get; set; }
+        public AccessibilityEnum? Accessibility { get; set; }
         public List<GenericParameter> GenericParameters { get; private set; }
         public bool IsGeneric { get { return GenericParameters.Count > 0; } }
         public List<FunctionParameter> Parameters { get; private set; }

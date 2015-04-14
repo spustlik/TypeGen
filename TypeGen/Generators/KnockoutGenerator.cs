@@ -220,28 +220,20 @@ namespace TypeGen.Generators
                 if (item.ReferencedType is InterfaceType)
                 {
                     // interface inherits from another interfaces, so make this class implement them                    
-                    BeginInterfaceMapping(true);
-                    try
+                    var mapped = MapTypeToInterface(item);
+                    target.Implementations.Add(mapped);
+                    // implementation code
+                    var intf = (InterfaceType)item.ReferencedType;
+                    //target.Members.Add(new RawDeclarationMember(new RawStatements("// implementation of " + mapped)));
+                    bool commented = false;
+                    foreach (var member in intf.Members.OfType<PropertyMember>())
                     {
-                        var mapped = MapType(item);
-                        target.Implementations.Add(mapped);
-                        // implementation code
-                        var intf = (InterfaceType)item.ReferencedType;
-                        //target.Members.Add(new RawDeclarationMember(new RawStatements("// implementation of " + mapped)));
-                        bool commented = false;
-                        foreach (var member in intf.Members.OfType<PropertyMember>())
+                        GenerateObservableProperty(target, member);
+                        if (!commented)
                         {
-                            GenerateObservableProperty(target, member);
-                            if (!commented)
-                            {
-                                target.Members.Last().Comment = "implementation of " + ((DeclarationBase)mapped.ReferencedType).Name;
-                                commented = true;
-                            }
+                            target.Members.Last().Comment = "implementation of " + ((DeclarationBase)mapped.ReferencedType).Name;
+                            commented = true;
                         }
-                    }
-                    finally
-                    {
-                        EndInterfaceMapping();
                     }
                 }
                 else
@@ -260,17 +252,9 @@ namespace TypeGen.Generators
 
         private void GenerateObservableClassFromClass(ClassType src, ClassType target)
         {
-            BeginInterfaceMapping(true);
-            try
+            foreach (var item in src.Implementations)
             {
-                foreach (var item in src.Implementations)
-                {
-                    target.Implementations.Add(MapType(item));
-                }
-            }
-            finally
-            {
-                EndInterfaceMapping();
+                target.Implementations.Add(MapTypeToInterface(item));
             }
             GenerateObservableBase(src, target);
             if (Options.Enable_JsConversion_Functions)
@@ -398,6 +382,32 @@ namespace TypeGen.Generators
         {
             _interfaceMapping.Pop();
         }
+
+        private TypescriptTypeReference MapTypeToInterface(TypescriptTypeReference r)
+        {
+            BeginInterfaceMapping(isInterface: true);
+            try
+            {
+                return MapType(r);
+            }
+            finally
+            {
+                EndInterfaceMapping();
+            }
+        }
+        private TypescriptTypeReference MapTypeToClass(TypescriptTypeReference r)
+        {
+            BeginInterfaceMapping(isInterface: false);
+            try
+            {
+                return MapType(r);
+            }
+            finally
+            {
+                EndInterfaceMapping();
+            }
+        }
+
 
         private TypescriptTypeReference MapType(TypescriptTypeReference r)
         {

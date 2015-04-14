@@ -11,8 +11,7 @@ namespace TypeGen
     }
 
 
-    //TODO: generic instance
-    public class TypescriptTypeReference : TypeDomBase
+    public sealed class TypescriptTypeReference : TypeDomBase
     {
         public TypescriptTypeBase ReferencedType { get; private set; }
         public string TypeName { get; private set; }

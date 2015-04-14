@@ -33,7 +33,6 @@ namespace TypeGenTests
     }
     interface ITestingClassBase extends IMyInterface {
         Property1: number;
-        Property2: string;
     }
     interface ITestingClass extends ITestingClassBase {
         Property3: MyEnum;

@@ -190,9 +190,9 @@ module Observables {
             return rg;
         }
 
-        private static string test3reflstr(bool sourceclasses)
+        private static string test3reflstr(bool sourceClasses)
         {
-            var rg = test3refl(sourceclasses);
+            var rg = test3refl(sourceClasses);
             var o1 = new OutputGenerator();
             o1.Generate(rg.Module);
             return o1.Output;
@@ -200,6 +200,9 @@ module Observables {
         private static string test3(bool sourceClasses, bool destClasses)
         {
             var rg = test3refl(sourceClasses);
+            var o1 = new OutputGenerator();
+            o1.Generate(rg.Module);
+            var o1Output = o1.Output;
 
             var ko = new KnockoutGenerator();
             var observables = new TypescriptModule("Observables");
@@ -211,7 +214,55 @@ module Observables {
         }
 
         [TestMethod]
-        public void TestInheritance()
+        public void TestInheritance1()
+        {
+            var result = test3reflstr(sourceClasses: false);
+            Assert.AreEqual(null, Helper.StringCompare(@"
+module GeneratedModule {
+    interface ITest3A {
+        Prop1: number;
+    }
+    interface Test3A extends ITest3A {        
+    }
+    interface ITest3B extends ITest3A {
+        Prop2: string;
+    }
+    interface ITest3C extends ITest3A, ITest3B {
+        Prop3: string;
+    }
+    interface Test3 extends Test3A, ITest3C, ITest3B {
+    }
+}", result));
+        }
+
+        [TestMethod]
+        public void TestInheritance2()
+        {
+            var result = test3reflstr(sourceClasses: true);
+            Assert.AreEqual(null, Helper.StringCompare(@"
+module GeneratedModule {
+    class Test3A implements ITest3A {
+        Prop1: number;
+    }
+    class Test3 extends Test3A implements ITest3C, ITest3B {
+        Prop2: string;
+        Prop3: string;
+    }
+    class ITest3A {
+        Prop1: number;
+    }
+    class ITest3C implements ITest3A, ITest3B {
+        Prop3: string;
+    }
+    class ITest3B implements ITest3A {
+        Prop2: string;
+    }
+}
+", result));
+        }
+
+        [TestMethod]
+        public void TestInheritanceIntf()
         {
             string result = "";
             result = test3(sourceClasses: true, destClasses: false);
@@ -237,7 +288,98 @@ module Observables {
 ".Trim(), result.Trim());
 
         }
+
+        [TestMethod]
+        public void TestInheritanceClassesFromIntf()
+        {
+            string result = "";
+            result = test3(sourceClasses: false, destClasses: true);
+            Assert.AreEqual(null, Helper.StringCompare(@"
+module Observables {
+    class test3 implements IObservableTest3A, IObservableTest3C, IObservableTest3B {     
+        // implementation of IObservableTest3A   
+        Prop1 = ko.observable<number>();
+        // implementation of IObservableTest3B
+        Prop2 = ko.observable<string>();
+        // implementation of IObservableTest3C
+        Prop3 = ko.observable<string>();
     }
+    interface IObservableTest3A {
+        Prop1: KnockoutObservable<number>;
+    }
+    interface IObservableTest3B extends IObservableTest3A {
+        Prop2: KnockoutObservable<string>;
+    }
+    interface IObservableTest3C extends IObservableTest3A, IObservableTest3B {
+        Prop3: KnockoutObservable<string>;
+    }
+    class test3A implements IObservableTest3A {
+        Prop1 = ko.observable<number>();
+    }
+    class test3A {
+        Prop1 = ko.observable<number>();
+    }
+    class test3C implements IObservableTest3A, IObservableTest3B {
+        // implementation of IObservableTest3A
+        Prop1: KnockoutObservable<number>;
+        // implementation of IObservableTest3B
+        Prop2: KnockoutObservable<string>;
+        Prop3 = ko.observable<string>();
+    }
+    class test3B implements IObservableTest3A {
+        // implementation of IObservableTest3A
+        Prop1: KnockoutObservable<number>;
+        Prop2 = ko.observable<string>();
+    }
+
+////ERROR:
+    interface IObservableTest3A extends IObservableTest3A {
+        Prop1: KnockoutObservable<number>;
+    }
+
+}
+", result));
+        }
+
+        [TestMethod]
+        public void TestInheritanceClasses()
+        {
+            string result = "";
+            result = test3(sourceClasses: false, destClasses: true);
+            Assert.AreEqual(null, Helper.StringCompare(@"
+module Observables {
+    class test3 implements IObservableITest3C, IObservableITest3B {
+        Prop1 = ko.observable<number>();
+        Prop2 = ko.observable<string>();
+        Prop3 = ko.observable<string>();
+    }
+    interface IObservableITest3A {
+        Prop1: KnockoutObservable<number>;
+    }
+    interface IObservableITest3B extends IObservableITest3A {
+        Prop2: KnockoutObservable<string>;
+    }
+    interface IObservableITest3C extends IObservableITest3A, IObservableITest3B {
+        Prop3: KnockoutObservable<string>;
+    }
+    class test3A implements IObservableITest3A {
+        Prop1 = ko.observable<number>();
+    }
+    class observableITest3C implements IObservableITest3A, IObservableITest3B {
+        Prop1 = ko.observable<number>();
+        Prop2: KnockoutObservable<string>;
+        Prop3 = ko.observable<string>();
+    }
+    class observableITest3B implements IObservableITest3A {
+        Prop1 = ko.observable<number>();
+        Prop2 = ko.observable<string>();
+    }
+}
+", result));
+            // tridy typu "iTestxxx" nejsou nutne, pokud existuji jiz testxxx (viz iTest3c)
+            // implementacni tridy muzou vyuzit dedicnost, bohuzel se ztraci v reflection generatoru do intf
+        }    
+}
 
 
     class Test1
