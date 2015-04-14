@@ -27,6 +27,7 @@ class test1B extends test1 {
     SelfArray = ko.observableArray<test1B>();
 }", o.Output));
         }
+
         [TestMethod]
         public void TestKoInheritance()
         {
@@ -38,7 +39,7 @@ class test1B extends test1 {
 class test3A implements IObservableITest3A {
     Prop1 = ko.observable<number>();
 }
-class test3 extends test3A implements IObservableITest3C, IObservableITest3B {
+class test3 extends test3A implements IObservableITest3B, IObservableITest3C {
     Prop2 = ko.observable<string>();
     Prop3 = ko.observable<string>();
     Prop4 = ko.observable<IObservableITest3A>();

@@ -12,6 +12,7 @@ namespace TypeGenTests
         public void TestInterfacesToObservableInterfaces()
         {
             var rg = new ReflectionGenerator();
+            rg.NamingStrategy.InterfacePrefixForClasses = "i";
             rg.GenerateTypes(new[] { typeof(Test1B), typeof(Test1) });
             var o1 = new OutputGenerator();
             o1.Generate(rg.Module);
@@ -157,11 +158,12 @@ module Observables {
 
             var o = new OutputGenerator();
             o.Generate(observables);
-            Assert.IsNull(Helper.StringCompare(@"
+            Assert.AreEqual(null, Helper.StringCompare(@"
 module Observables {
     class test1B implements IObservableTest1 {        
-        Prop1: KnockoutObservable<string>;
-        Prop2: KnockoutObservable<number>;
+        // implementation of IObservableTest1
+        Prop1 = ko.observable<string>();
+        Prop2 = ko.observable<number>();
         Prop3 = ko.observable<boolean>();
         Ref = ko.observable<test1>();
         PropArray = ko.observableArray<string>();
@@ -185,6 +187,7 @@ module Observables {
         {
             var rg = new ReflectionGenerator();
             rg.GenerationStrategy.GenerateClasses = sourceClasses;
+            rg.NamingStrategy.InterfacePrefixForClasses = "";
             rg.NamingStrategy.InterfacePrefix = "";
             rg.GenerateTypes(new[] { typeof(Test3), typeof(Test3A) });
             return rg;
@@ -222,7 +225,7 @@ module GeneratedModule {
     class Test3A implements ITest3A {
         Prop1: number;
     }
-    class Test3 extends Test3A implements ITest3C, ITest3B {
+    class Test3 extends Test3A implements ITest3B, ITest3C {
         Prop2: string;
         Prop3: string;
     }
@@ -258,7 +261,7 @@ module Observables {
     interface IObservableITest3C extends IObservableITest3A, IObservableITest3B {
         Prop3: KnockoutObservable<string>;
     }
-    interface IObservableTest3 extends IObservableTest3A, IObservableITest3C, IObservableITest3B {
+    interface IObservableTest3 extends IObservableTest3A, IObservableITest3B, IObservableITest3C {
         Prop2: KnockoutObservable<string>;
         Prop3: KnockoutObservable<string>;
     }
@@ -274,7 +277,7 @@ module Observables {
             result = test3(sourceClasses: false, destClasses: true);
             Assert.AreEqual(null, Helper.StringCompare(@"
 module Observables {
-    class test3 implements IObservableTest3A, IObservableTest3C, IObservableTest3B {     
+    class test3 implements IObservableTest3A, IObservableTest3B, IObservableTest3C {     
         // implementation of IObservableTest3A   
         Prop1 = ko.observable<number>();
         // implementation of IObservableTest3B
@@ -299,14 +302,14 @@ module Observables {
     }
     class test3C implements IObservableTest3A, IObservableTest3B {
         // implementation of IObservableTest3A
-        Prop1: KnockoutObservable<number>;
+        Prop1 = ko.observable<number>();
         // implementation of IObservableTest3B
-        Prop2: KnockoutObservable<string>;
+        Prop2 = ko.observable<string>();
         Prop3 = ko.observable<string>();
     }
     class test3B implements IObservableTest3A {
         // implementation of IObservableTest3A
-        Prop1: KnockoutObservable<number>;
+        Prop1 = ko.observable<number>;
         Prop2 = ko.observable<string>();
     }
 
@@ -326,7 +329,7 @@ module Observables {
             result = test3(sourceClasses: false, destClasses: true);
             Assert.AreEqual(null, Helper.StringCompare(@"
 module Observables {
-    class test3 implements IObservableITest3C, IObservableITest3B {
+    class test3 implements IObservableITest3B, IObservableITest3C {
         Prop1 = ko.observable<number>();
         Prop2 = ko.observable<string>();
         Prop3 = ko.observable<string>();

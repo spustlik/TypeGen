@@ -17,6 +17,7 @@ namespace TypeGenTests
         public void TestIntf()
         {
             var rg = new ReflectionGenerator();
+            rg.NamingStrategy.InterfacePrefixForClasses = "i";
             rg.GenerateInterface(typeof(TestingClass));
 
             var g = new OutputGenerator();
@@ -52,6 +53,7 @@ module GeneratedModule {
         public void TestClassGenericToIntf()
         {
             var rg = new ReflectionGenerator();
+            rg.NamingStrategy.InterfacePrefixForClasses = "i";
             rg.GenerateInterface(typeof(PagedAminUser));
             rg.GenerateInterface(typeof(PagedCompany));
 
@@ -84,6 +86,7 @@ module GeneratedModule {
         public void TestGenerics2()
         {
             var rg = new ReflectionGenerator();
+            rg.NamingStrategy.InterfacePrefixForClasses = "i";
             //nonsense?!? rg.GenerateInterface(typeof(Test1<int>));
             rg.GenerateInterface(typeof(Test1<>));
 
@@ -111,7 +114,7 @@ module GeneratedModule {
         public void TestGenericsInstance()
         {
             var rg = new ReflectionGenerator();
-            
+            rg.NamingStrategy.InterfacePrefixForClasses = "i";
             rg.GenerateInterface(typeof(GenTest<int>));
 
             var g = new OutputGenerator();
@@ -129,6 +132,7 @@ module GeneratedModule {
         public void TestMethods()
         {
             var rg = new ReflectionGenerator();
+            rg.NamingStrategy.InterfacePrefixForClasses = "i";
             rg.GenerationStrategy.GenerateMethods = true;
             rg.GenerateInterface(typeof(TestGenMethods<>));
 

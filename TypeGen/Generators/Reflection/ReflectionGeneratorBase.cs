@@ -193,6 +193,7 @@ namespace TypeGen.Generators
                     }
                 }
             }
+            result.ExtendsTypes.Sort((x, y) => String.Compare(x.ToString(), y.ToString()));
             GenerateProperties(type, result, skipImplementedByInterfaces: true);
             GenerateMethodDeclarations(type, result);
             return result;
@@ -226,6 +227,7 @@ namespace TypeGen.Generators
                         result.Implementations.Add(GenerateFromType(intf));
                     }
                 }
+                result.Implementations.Sort((x, y) => String.Compare(x.ToString(), y.ToString()));
             }
             GenerateProperties(type, result, skipImplementedByInterfaces: false);
             GenerateMethodDeclarations(type, result);

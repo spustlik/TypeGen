@@ -95,7 +95,7 @@ namespace TypeGenTests
             var result = test(classes: false);
             Assert.AreEqual(null, Helper.StringCompare(@"
 module GeneratedModule {
-    interface iTest3 extends ITest3A, ITest3C, ITest3B {
+    interface ITest3 extends ITest3A, ITest3B, ITest3C {
     }
     interface ITest3A {
         Prop1: number;

@@ -173,13 +173,13 @@ namespace TypeGen.Generators
 
         private void GenerateObservableInterface(DeclarationBase source, InterfaceType target)
         {
-            foreach (var extends in source.GetExtends())
+            foreach (var extends in source.GetExtends().OrderBy(x=>x.ToString()))
             {
                 target.ExtendsTypes.Add(MapType(extends));
             }
             if (source is ClassType)
             {
-                foreach (var implements in ((ClassType)source).Implementations)
+                foreach (var implements in ((ClassType)source).Implementations.OrderBy(x=>x.ToString()))
                 {
                     target.ExtendsTypes.Add(MapType(implements));
                 }
@@ -209,7 +209,7 @@ namespace TypeGen.Generators
             {
                 throw new Exception("Interface " + src.Name + " cannot extend class");
             }
-            foreach (var item in src.ExtendsTypes)
+            foreach (var item in src.ExtendsTypes.OrderBy(e=>e.ToString()))
             {
                 if (item.ReferencedType is InterfaceType)
                 {
