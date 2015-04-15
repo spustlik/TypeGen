@@ -26,6 +26,13 @@ namespace TypeGen.Generators
             }
         }
 
+        public void GenerateFromTypes(params Type[] types)
+        {
+            foreach (var item in types)
+            {
+                GenerateFromType(item);
+            }
+        }
 
         public override DeclarationMember GenerateProperty(PropertyInfo pi)
         {
@@ -54,6 +61,7 @@ namespace TypeGen.Generators
                 {
                     item.Initialization = new RawStatements(item.MemberType.TypeName=="KnockoutObservable" ? "ko.observable" : "ko.observableArray", "<", item.MemberType.GenericParameters[0], ">()");
                     item.MemberType = null;
+                    item.IsOptional = false;
                 }
             }
             return result;
@@ -64,10 +72,11 @@ namespace TypeGen.Generators
             public KoNamingStrategy()
             {
                 InterfacePrefix = "IObservable";
+                FirstLetterCasing = LetterCasing.Lower;
             }
             public override string GetClassName(Type type)
             {
-                return NamingHelper.FirstLetter(LetterCasing.Lower, NamingHelper.GetNonGenericTypeName(type));
+                return NamingHelper.FirstLetter(FirstLetterCasing, NamingHelper.GetNonGenericTypeName(type));
             }
         }
     }
