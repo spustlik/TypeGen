@@ -15,9 +15,22 @@ namespace TypeGen.Generators
             var name = source.Name;
             if (source is InterfaceType)
             {
-                name = NamingHelper.RemovePrefix("I", name, LetterCasing.Upper);
+                if (name.StartsWith("I") && name.Substring(1, 1) == name.Substring(1, 1).ToUpper())
+                {
+                    //interface name like "IMyInterface" -> "IObservableMyInterface"
+                    name = "IObservable" + name.Substring(1);
+                    
+                }
+                else if (name.StartsWith("i"))
+                {
+                    //class as interface "iMyclass" -> "iObservableMyClass"
+                    name = "iObservable" + NamingHelper.FirstLetter(LetterCasing.Upper, name.Substring(1));
+                }
             }
-            name = "IObservable" + NamingHelper.FirstLetter(LetterCasing.Upper, name);
+            else
+            {
+                name = "iObservable" + NamingHelper.FirstLetter(LetterCasing.Upper, name);
+            }
             return name;
         }
         public virtual string GetClassName(DeclarationBase source)
