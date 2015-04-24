@@ -48,13 +48,13 @@ namespace TypeGen.Generators
                 var name = t.Name;
                 if (name.EndsWith("Controller"))
                     name = name.Substring(0, name.Length - 10);
-                var controllerPath = name.ToLower();
+                var controllerPath = GetRoutePrefix(t) ?? name.ToLower();
                 var cModel = new ControllerModel
                 {
                     Source = t,
                     Name = t.Name,
                     Actions = GetActionsModel(t, controllerPath),
-                    Comment = "class "+t,
+                    Comment = "class " + t + ", controllerPath=" + controllerPath,
                 };
                 result.Add(cModel);
             }
@@ -109,6 +109,8 @@ namespace TypeGen.Generators
         {
             if (Nullable.GetUnderlyingType(type) != null)
                 return IsUrlParameter(Nullable.GetUnderlyingType(type));
+            if (type.IsArray)
+                return IsUrlParameter(type.GetElementType());
             return type.IsPrimitive || type.IsEnum || type == typeof(string);
         }
 
@@ -117,6 +119,8 @@ namespace TypeGen.Generators
             a.UrlTemplate = GetRouteTemplate(m);
             if (a.UrlTemplate != null)
             {
+                if (!a.UrlTemplate.StartsWith("/"))
+                    a.UrlTemplate = controllerPath + "/" + a.UrlTemplate;
                 //teoreticky lze pouzit DirectRouteBuilder, RouteParser, HttpParsedRoute, ale vse je internal :-(
                 var parts = a.UrlTemplate.Split('/');
                 foreach (var part in parts)
@@ -154,6 +158,16 @@ namespace TypeGen.Generators
             return actionName;
         }
 
+        private static string GetRoutePrefix(MemberInfo m)
+        {
+            var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.RoutePrefixAttribute"));
+            if (routeAt != null)
+            {
+                return ((dynamic)routeAt).Prefix;
+            }
+            return null;
+        }
+
         private static string GetRouteTemplate(MethodInfo m)
         {
             var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.RouteAttribute"));
@@ -181,15 +195,17 @@ namespace TypeGen.Generators
 
         public void GenerateControllers(IEnumerable<ControllerModel> controllers, ReflectionGeneratorBase reflectionGenerator, TypescriptModule targetModule)
         {
-            var proxyClass = new ClassType("GeneratedProxy");
-            proxyClass.Extends = new TypescriptTypeReference("base.ProxyBase");
+            var proxyClass = new ClassType("GeneratedProxy")
+            {
+                Extends = new TypescriptTypeReference("base.ProxyBase")
+            };
             targetModule.Members.Add(new DeclarationModuleElement(proxyClass) { IsExporting = true });
             foreach (var controller in controllers)
             {
                 var cls = new ClassType(controller.Name + "Proxy");
                 var proxyType = new TypescriptTypeReference("GeneratedProxy");
                 cls.Members.Add(new PropertyMember("_parent")
-                {                    
+                {
                     MemberType = proxyType,
                     Accessibility = AccessibilityEnum.Private
                 });
@@ -213,19 +229,7 @@ namespace TypeGen.Generators
                     Initialization = new RawStatements("new ", cls, "(this)")
                 });
             }
-
-            //TODO: 
-            /*
-   WriteLine("import base = require('backend/ProxyBase');");
-   WriteLine("export class GeneratedProxy extends base.ProxyBase {");
-   PushIndent("\t");
-   foreach (var x in controllers)
-   {
-       WriteLine(String.Format("public {0} : {1} = new {1}(this);", x.Name, x.Name));
-   }
-   PopIndent();
-   WriteLine("}");
-            */
+            targetModule.Members.Add(new RawStatements("export var proxy = new ", proxyClass, "();"));
         }
 
         private FunctionMember GenerateAction(ActionModel action, ReflectionGeneratorBase reflectionGenerator)
@@ -301,57 +305,6 @@ namespace TypeGen.Generators
             method.Body.Statements.Add(");");
             return method;
         }
-        /*
-   var plist = new List<string>();
-   foreach (var p in action.Parameters.Where(p => !p.IsOptional))
-   {
-       plist.Add(p.Name + ": " + p.Type);
-   }
-
-   if (action.Parameters.Any(x => x.IsOptional))
-   {
-       plist.Add("opt: {" + String.Join("; ", polist) + "} = {}");
-   }
-   Write(String.Join(", ", plist));
-   
-        // call of parent
-   PushIndent("\t");
-   {
-       Write("return this._parent.call" + action.HttpMethod);
-       Write("(");
-
-       var urlVar = "'" + action.UrlTemplate.TrimEnd('/') + "'";
-       foreach (var p in action.Parameters.Where(x => x.IsUrlParam))
-       {
-           urlVar = urlVar.Replace("{" + p.Name + "}", "' + " + p.Name + " + '");
-       }
-       var EMPTYJS = " + ''";
-       while (urlVar.EndsWith(EMPTYJS))
-       {
-           urlVar = urlVar.Substring(0, urlVar.Length - EMPTYJS.Length);
-       }
-
-       Write(urlVar + ", {");
-       var pilist = new List<string>();
-       foreach (var p in action.Parameters.Where(x => !x.IsUrlParam && !x.IsData))
-       {
-           var pinvoke = "'" + p.Name + "': " + (p.IsOptional ? "opt." : "") + p.Name;
-           pilist.Add(pinvoke);
-       }
-
-       Write(String.Join(",", pilist));
-       Write("}");
-       var dataParam = action.Parameters.FirstOrDefault(p => p.IsData);
-       if (dataParam != null)
-       {
-           Write(", " + dataParam.Name);
-       }
-       WriteLine(");");
-   }
-   PopIndent();
-   WriteLine("}");
-}
-*/
 
     }
 }
