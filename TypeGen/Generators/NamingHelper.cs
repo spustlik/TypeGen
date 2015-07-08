@@ -45,5 +45,43 @@ namespace TypeGen.Generators
                 return s;
             return x;
         }
+
+        public static string CamelCaseFromString(string s)
+        {
+            s = s.Trim();
+            var i = 0;
+            bool wasLower = false;
+            bool needsUpper = true;
+            var result = new StringBuilder();
+            while(i<s.Length)
+            {
+                var c = s[i];
+                if (Char.IsLetter(c))
+                {
+                    if (Char.IsLower(c))
+                    {
+                        //if (wasLower)
+                        //    needsUpper = true;
+                        wasLower = true;
+                    }
+                    else
+                    {
+                        wasLower = false;
+                    }
+                    if (needsUpper)
+                    {
+                        c = Char.ToUpper(c);
+                        needsUpper = false;
+                    }
+                    result.Append(c);
+                }
+                else
+                {
+                    needsUpper = true;
+                }
+                i++;
+            }
+            return result.ToString();
+        }
     }
 }

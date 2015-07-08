@@ -15,5 +15,16 @@ namespace TypeGen.Generators
             throw new InvalidOperationException("Not an array type");
         }
 
+        public static Type ExtractAsyncTaskType(Type type)
+        {
+            if (type == typeof(Task))
+                return typeof(void);
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>))
+            {
+                return type.GetGenericArguments()[0];
+            }
+            return type;
+        }
+
     }
 }

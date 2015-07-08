@@ -72,18 +72,26 @@ namespace TypeGen.Generators
                     Source = m,
                     Name = m.Name,
                     HttpMethod = GetHttpMethod(m),
-                    Comment = "method " + m
+                    Comment = "method " + m,
+                    ResultType = GetActionResultType(m)
                 };
-                if (m.ReturnType != typeof(void) && !m.ReturnType.IsTypeBaseOrSelf("System.Net.Http.HttpResponseMessage"))
-                {
-                    aModel.ResultType = m.ReturnType;
-                }
                 ProcessRoute(aModel, m, controllerPath);
                 AddParameters(aModel, m);
                 aModel.MethodName = m.Name + "Async";
                 result.Add(aModel);
             }
             return result;
+        }
+
+        private Type GetActionResultType(MethodInfo m)
+        {
+            var type = m.ReturnType;
+            type = Helper.ExtractAsyncTaskType(type);
+            if (type == typeof(void))
+                return null;
+            if (type.IsTypeBaseOrSelf("System.Net.Http.HttpResponseMessage"))
+                return null;
+            return type;
         }
 
         public void AddParameters(ActionModel a, MethodInfo m)
@@ -242,6 +250,15 @@ namespace TypeGen.Generators
                     ParameterType = reflectionGenerator.GenerateFromType(p.Type),
                     IsOptional = false
                 }));
+            //consider: 
+            //  if there is only one optional parameter, or all opt. parameters are last (it must be in c# decl), 
+            //  we can generate myMethod(p1,p2,..., po1:string? = null, po2:number? = null)
+            //  but, is is needed then to call it with positional params (TypeScript doesn't know named params)
+            //  xxx.myMethod("asd","qwe",...,null, 42)
+            //compare to: call via optional properties of anonymous object
+            //  xxx.myMethod("asd","qwe",..., { po2: 42} )
+            // BUT, with current version of typescript (1.4), there is bug?, because it can be called with another object
+            //  xxx.myMethod("asd","qwe",..., "nonsense" )
             if (action.Parameters.Any(p => p.IsOptional))
             {
                 var optParams = action.Parameters

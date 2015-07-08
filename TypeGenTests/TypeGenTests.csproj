@@ -57,6 +57,7 @@
     <Compile Include="KnockoutTests.cs" />
     <Compile Include="KnockoutReflectionTests.cs" />
     <Compile Include="ReflectionTests2.cs" />
+    <Compile Include="NamingTests.cs" />
     <Compile Include="_Helper.cs" />
   </ItemGroup>
   <ItemGroup>
