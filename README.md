@@ -4,16 +4,17 @@ TypeScript generator (like CodeDom)
 ## Goal:
 It consists of following parts (or layers)
  1. (optional) Generator / Transformation
-  * generates TypeDom from (what you want)
-  * ReflectionGenerator usees reflection to generate interfaces or classes
-  * WebApiReflectionGenerator uses reflection to generate typed proxy for WebApi REST controllers 
-  * SWAGGER generator to generate typed proxy for any REST api
+  * generates TypeDom from any source, for example
+  	* ReflectionGenerator uses reflection to generate interfaces or classes
+  	* WebApiReflectionGenerator uses reflection to generate typed proxy for WebApi REST controllers 
+  	* (in future) SWAGGER generator to generate typed proxy for any REST api
  1. `TypeDom` - CodeDOM-like model of generated code
-  * structure in semantic of TypeScript language - class, interface, member, function, etc.
-  * it is only for declaration purposes, for implementation purposes (like function methods, lambdas, initial values, etc.) you can use "RawStatement" - i.e. string concatenation with possibility to reference another type
+  * structure in semantic model of TypeScript language - class, interface, member, function, etc.
+  * it is only for declaration purposes
+  * for implementation purposes (like function methods, lambdas, initial values, etc.) you can use "RawStatement" - i.e. string concatenation with possibility to reference another type
   * each model element contains ExtraData dictionary, which can contain any information about source generator
- 1. OutputGenerator - generates source files of ts
-  * it can generate modules, exports, ambiend declarations (.d.ts) files etc. 
+ 1. OutputGenerator - generates TypeScript source files
+  * it can generate modules, exports, ambient declarations (.d.ts) files etc. 
   * it can be called from T4
 
 User can 
@@ -32,3 +33,4 @@ User can
 
 ##ToDo
 * comments into model
+* SWAGGER (or another API description language) proxy generator implementation
