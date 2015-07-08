@@ -59,15 +59,28 @@ namespace TypeGen
         {
             if (String.IsNullOrEmpty(comment) || !GenerateComments)
                 return;
-            Formatter.Write("// " + comment);
-            Formatter.WriteLine();
+            var lines = comment.Split(new[] { '\n' });
+            foreach (var line in lines)
+            {
+                Formatter.Write("// " + line);
+                Formatter.WriteLine();
+            }            
         }
 
         private void GenerateInlineComment(string comment)
         {
             if (String.IsNullOrEmpty(comment) || !GenerateComments)
                 return;
-            Formatter.Write("/* " + comment + " */");
+            var lines = comment.Split(new[] { '\n' });
+            for (int i = 0; i < lines.Length; i++)
+            {
+                Formatter.Write(i == 0 ? "/* " : "   ");
+                Formatter.Write(comment);
+                if (i == lines.Length - 1)
+                {
+                    Formatter.Write(" */");
+                }
+            }
         }
 
         public void GenerateModuleContent(TypescriptModule module, Func<ModuleElement, bool> elementFilter)

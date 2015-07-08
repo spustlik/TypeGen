@@ -240,7 +240,7 @@ module testModule {
         {
             var m = new TypescriptModule("testModule") { Comment = "module" };
             var cls = new ClassType("class1");
-            cls.Members.Add(new PropertyMember("Property1") { MemberType = PrimitiveType.Boolean, Comment = "property" });
+            cls.Members.Add(new PropertyMember("Property1") { MemberType = PrimitiveType.Boolean, Comment = "property\nsecond line" });
             m.Members.Add(cls);
             m.Members.Last().Comment = "class";
             m.Members.Last().IsExporting = true;
@@ -258,13 +258,14 @@ module testModule {
             var g = new OutputGenerator();
             g.GenerateComments = true;
             g.Generate(m);
-            Assert.IsNull( 
+            Assert.AreEqual(null, 
                 Helper.StringCompare(@"
 // module
 module testModule {
     // class
     export class class1 {
         // property
+        // second line
         Property1: boolean;
         // function
         fn(/* param */x: boolean) {

@@ -38,6 +38,22 @@ namespace TypeGen.Generators
             public bool IsUrlParam { get; set; }
             public bool IsOptional { get; set; }
             public bool IsData { get; set; }
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                sb.Append(Name);
+                if (!String.IsNullOrEmpty(UrlName))
+                {
+                    sb.Append(" (" + UrlName + ")");
+                }
+                if (IsUrlParam)
+                    sb.Append(" URL");
+                if (IsOptional)
+                    sb.Append(" OPT");
+                if (IsData)
+                    sb.Append(" DATA");
+                return sb.ToString();
+            }
         }
 
         public List<ControllerModel> GetControllersModel(IEnumerable<Type> types)
@@ -77,6 +93,8 @@ namespace TypeGen.Generators
                 };
                 ProcessRoute(aModel, m, controllerPath);
                 AddParameters(aModel, m);
+                if (aModel.HttpMethod == "GET")
+                    aModel.Parameters.ForEach(p => p.IsData = false);
                 aModel.MethodName = m.Name + "Async";
                 result.Add(aModel);
             }
@@ -243,6 +261,7 @@ namespace TypeGen.Generators
         private FunctionMember GenerateAction(ActionModel action, ReflectionGeneratorBase reflectionGenerator)
         {
             var method = new FunctionMember(action.Name + "Async", null) { Accessibility = AccessibilityEnum.Public, Comment = action.Comment };
+            method.Comment+="\n parameters: " + String.Join(", ", action.Parameters.Select(p => p.ToString()));
             method.Parameters.AddRange(action.Parameters
                 .Where(p => !p.IsOptional)
                 .Select(p => new FunctionParameter(p.Name)
@@ -299,8 +318,9 @@ namespace TypeGen.Generators
             {
                 urlVar = urlVar.Substring(0, urlVar.Length - EMPTYJS.Length);
             }
+
             method.Body.Statements.Add(urlVar);
-            method.Body.Statements.Add(", {");
+            method.Body.Statements.Add(", {");            
             var pilist = new List<string>();
             foreach (var p in action.Parameters.Where(x => !x.IsUrlParam && !x.IsData))
             {
@@ -318,6 +338,7 @@ namespace TypeGen.Generators
             if (dataParam != null)
             {
                 method.Body.Statements.Add(", " + dataParam.Name);
+                method.Body.Statements.Add("/* " + dataParam.IsData + "*/");
             }
             method.Body.Statements.Add(");");
             return method;
