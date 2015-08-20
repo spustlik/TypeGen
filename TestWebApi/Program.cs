@@ -12,8 +12,9 @@ namespace TestWebApi
     {
         static void Main(string[] args)
         {
-            var model = typeof(CloudSupportApi.Model.MonitorModel);
-            
+            //var model = typeof(CloudSupportApi.Model.MonitorModel);
+            var model = typeof(SkillDriver.Api.Models.AdminUser);
+
 
             var r = new ReflectionGenerator();
             r.NamingStrategy.InterfacePrefix = "";

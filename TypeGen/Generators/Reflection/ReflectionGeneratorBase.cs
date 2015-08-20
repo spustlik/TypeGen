@@ -16,6 +16,26 @@ namespace TypeGen.Generators
         public const string SOURCETYPE_KEY = "SOURCE_TYPE";
         public const string SOURCEMEMBER_KEY = "SOURCE_PROPERTY";
 
+        public static IEnumerable<Type> ExtractGeneratedTypes(TypescriptModule module)
+        {
+            return module.Members
+                .OfType<DeclarationModuleElement>()
+                .SelectMany(d => new TypeDomBase[] { d.Declaration, d.EnumDeclaration })
+                .Where(d => d != null)
+                .Select(d => GetGeneratedType(d))
+                .Where(t => t != null)
+                .Concat(
+                    module.Members.OfType<DeclarationModuleElement>().Where(dm => dm.InnerModule != null).SelectMany(dm => ExtractGeneratedTypes(dm.InnerModule))
+                )
+                .ToArray();
+        }
+        public static Type GetGeneratedType(TypeDomBase tt)
+        {
+            object t;
+            tt.ExtraData.TryGetValue(SOURCETYPE_KEY, out t);
+            return t as Type;
+        }
+
         public IReflectedNamingStrategy NamingStrategy { get; private set; }
         public IGenerationStrategy GenerationStrategy { get; private set; }
 

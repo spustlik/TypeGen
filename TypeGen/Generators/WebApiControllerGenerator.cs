@@ -47,11 +47,11 @@ namespace TypeGen.Generators
                     sb.Append(" (" + UrlName + ")");
                 }
                 if (IsUrlParam)
-                    sb.Append(" URL");
+                    sb.Append(" [URL]");
                 if (IsOptional)
-                    sb.Append(" OPT");
+                    sb.Append(" [OPT]");
                 if (IsData)
-                    sb.Append(" DATA");
+                    sb.Append(" [DATA]");
                 return sb.ToString();
             }
         }
@@ -62,15 +62,15 @@ namespace TypeGen.Generators
             foreach (var t in types)
             {
                 var name = t.Name;
-                if (name.EndsWith("Controller"))
+                if (name.EndsWith("Controller", StringComparison.InvariantCulture))
                     name = name.Substring(0, name.Length - 10);
-                var controllerPath = GetRoutePrefix(t) ?? name.ToLower();
+                var controllerPath = GetRoutePrefix(t, name.ToLower());
                 var cModel = new ControllerModel
                 {
                     Source = t,
                     Name = t.Name,
                     Actions = GetActionsModel(t, controllerPath),
-                    Comment = "class " + t + ", controllerPath=" + controllerPath,
+                    Comment = string.Format("class {0}, controllerPath={1}", t, controllerPath),
                 };
                 result.Add(cModel);
             }
@@ -116,9 +116,9 @@ namespace TypeGen.Generators
         {
             foreach (var mparam in m.GetParameters())
             {
-                if (a.Parameters.Any(p => p.Name == mparam.Name))
+                if (a.Parameters.Any(p => p.Name == mparam.Name || p.UrlName == GetMethodParameterName(mparam)))
                     continue;
-                var pModel = new ParameterModel() { Name = mparam.Name, Type = mparam.ParameterType, IsOptional = mparam.IsOptional };
+                var pModel = new ParameterModel() { Name = mparam.Name, UrlName = GetMethodParameterName(mparam), Type = mparam.ParameterType, IsOptional = mparam.IsOptional };
                 a.Parameters.Add(pModel);
                 if (!IsUrlParameter(pModel.Type))
                 {
@@ -145,17 +145,21 @@ namespace TypeGen.Generators
             a.UrlTemplate = GetRouteTemplate(m);
             if (a.UrlTemplate != null)
             {
-                if (!a.UrlTemplate.StartsWith("/"))
+                if (!a.UrlTemplate.StartsWith("/", StringComparison.InvariantCulture))
                     a.UrlTemplate = controllerPath + "/" + a.UrlTemplate;
                 //teoreticky lze pouzit DirectRouteBuilder, RouteParser, HttpParsedRoute, ale vse je internal :-(
                 var parts = a.UrlTemplate.Split('/');
                 foreach (var part in parts)
                 {
-                    if (part.StartsWith("{"))
+                    if (part.StartsWith("{", StringComparison.InvariantCulture))
                     {
                         var pname = part.Trim(new[] { '{', '}' });
-                        var mparam = m.GetParameters().FirstOrDefault(p => p.Name == pname);
-                        a.Parameters.Add(new ParameterModel() { Name = pname, Type = mparam.ParameterType, IsOptional = false, IsUrlParam = true });
+                        var mparam = m.GetParameters().FirstOrDefault(p => GetMethodParameterName(p) == pname);
+                        if (mparam == null)
+                        {
+                            throw new Exception(string.Format("Cannot find parameter {0} of method {1} on controller {2} acquired from route '{3}'", pname, m.Name, m.ReflectedType.Name, a.UrlTemplate));
+                        }
+                        a.Parameters.Add(new ParameterModel() { Name = mparam.Name, UrlName = pname, Type = mparam.ParameterType, IsOptional = false, IsUrlParam = true });
                     }
                 }
             }
@@ -169,6 +173,16 @@ namespace TypeGen.Generators
             }
         }
 
+        private static string GetMethodParameterName(ParameterInfo p)
+        {
+            var fromUriAt = p.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.FromUriAttribute"));
+            if (fromUriAt != null)
+            {
+                return ((dynamic)fromUriAt).Name ?? p.Name;
+            }
+            return p.Name;
+        }
+
         private static string GetActionName(MethodInfo m, string httpMethod)
         {
             var actionNameAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.ActionNameAttribute"));
@@ -177,21 +191,21 @@ namespace TypeGen.Generators
                 return ((dynamic)actionNameAt).Name;
             }
             var actionName = m.Name;
-            if (actionName.ToUpper().StartsWith(httpMethod))
+            if (actionName.ToUpper().StartsWith(httpMethod, StringComparison.InvariantCulture))
             {
                 actionName = actionName.Substring(httpMethod.Length);
             }
             return actionName;
         }
 
-        private static string GetRoutePrefix(MemberInfo m)
+        private static string GetRoutePrefix(MemberInfo m, string defaultValue)
         {
             var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.RoutePrefixAttribute"));
             if (routeAt != null)
             {
                 return ((dynamic)routeAt).Prefix;
             }
-            return null;
+            return defaultValue;
         }
 
         private static string GetRouteTemplate(MethodInfo m)
@@ -304,17 +318,17 @@ namespace TypeGen.Generators
             }
             else
             {
-                method.ResultType = new TypescriptTypeReference("JQueryXHR");
+                method.ResultType = new TypescriptTypeReference("JQueryPromise") { GenericParameters = { PrimitiveType.Void } };
             }
             method.Body = new RawStatements();
             method.Body.Statements.Add("return this._parent.call" + action.HttpMethod + "(");
             var urlVar = "'" + action.UrlTemplate.TrimEnd('/') + "'";
             foreach (var p in action.Parameters.Where(x => x.IsUrlParam))
             {
-                urlVar = urlVar.Replace("{" + p.Name + "}", "' + " + p.Name + " + '");
+                urlVar = urlVar.Replace("{" + (p.UrlName??p.Name) + "}", "' + " + p.Name + " + '");
             }
             var EMPTYJS = " + ''";
-            while (urlVar.EndsWith(EMPTYJS))
+            while (urlVar.EndsWith(EMPTYJS, StringComparison.InvariantCulture))
             {
                 urlVar = urlVar.Substring(0, urlVar.Length - EMPTYJS.Length);
             }
