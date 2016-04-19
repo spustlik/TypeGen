@@ -46,6 +46,7 @@ namespace TypeGen.Generators
                 { typeof(void), PrimitiveType.Void },
                 { typeof(object), PrimitiveType.Any },
                 { typeof(int), PrimitiveType.Number },
+                { typeof(decimal), PrimitiveType.Number },
                 { typeof(double), PrimitiveType.Number },
                 { typeof(float), PrimitiveType.Number },
                 { typeof(string), PrimitiveType.String },
@@ -84,6 +85,20 @@ namespace TypeGen.Generators
             {
                 if (type.GetArrayRank() == 1)
                     return new ArrayType(GenerateFromType(type.GetElementType())) { ExtraData = { { SOURCETYPE_KEY, type } } };
+            }
+            if (typeof(IDictionary<,>).IsAssignableFrom(type) || typeof(IDictionary).IsAssignableFrom(type))
+            {
+                //if (type.IsConstructedGenericType)
+                    return new TypescriptTypeReference(
+                        new RawStatements(
+                                "{",
+                                "[ key: ",
+                                GenerateFromType(type.GetGenericArguments()[0]),
+                                "]: ",
+                                GenerateFromType(type.GetGenericArguments()[1]),
+                                "}"
+                                )
+                    ){ ExtraData = { { SOURCETYPE_KEY, type } } };
             }
             if (typeof(IEnumerable<>).IsAssignableFrom(type) || typeof(IEnumerable).IsAssignableFrom(type))
             {
@@ -213,7 +228,7 @@ namespace TypeGen.Generators
                     }
                 }
             }
-            result.ExtendsTypes.Sort((x, y) => String.Compare(x.ToString(), y.ToString()));
+            result.ExtendsTypes.Sort((x, y) => String.Compare(x.ToString(), y.ToString(), StringComparison.InvariantCulture));
             GenerateProperties(type, result, skipImplementedByInterfaces: true);
             GenerateMethodDeclarations(type, result);
             return result;
@@ -291,11 +306,18 @@ namespace TypeGen.Generators
                 foreach (var pi in allProps)
                 {
                     if (!GenerationStrategy.ShouldGenerateProperty(result, pi))
-                        continue;                    
+                    {
+                        result.Members.Add(new RawDeclarationMember(new RawStatements(string.Format("/* GenerationStrategy skipped property {0} */", pi.Name))));
+                        continue;
+                    }
                     if (skipImplementedByInterfaces)
                     {
-                        if (IsPropertyImplementedByAnyInterface(pi, type))
+                        var intf = IsPropertyImplementedByAnyInterface(pi, type);
+                        if (intf!=null)
+                        {
+                            result.Members.Add(new RawDeclarationMember(new RawStatements(string.Format("/* Property {0} skipped, because it is already implemented by interface {1}*/", pi.Name, intf.Name))));
                             continue;
+                        }
                     }
                     var p = GenerateProperty(pi);
                     result.Members.Add(p);
@@ -303,20 +325,20 @@ namespace TypeGen.Generators
             }
         }
 
-        private bool IsPropertyImplementedByAnyInterface(PropertyInfo pi, Type type)
+        private Type IsPropertyImplementedByAnyInterface(PropertyInfo pi, Type type)
         {
             if (type.IsInterface)
-                return false;
+                return null;
             foreach (var item in GetImplementedInterfaces(type))
             {
                 var map = type.GetInterfaceMap(item);
                 var methods = new[] { pi.GetGetMethod(), pi.GetSetMethod() }.Where(x=>x!=null).ToArray();
                 if (methods.All(m=> map.TargetMethods.Contains(m)))
                 {
-                    return true;
+                    return item;
                 }
             }
-            return false;
+            return null;
         }
 
         public virtual DeclarationMember GenerateProperty(PropertyInfo pi)

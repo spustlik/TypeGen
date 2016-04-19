@@ -120,13 +120,20 @@ namespace TypeGen.Generators
                     continue;
                 var pModel = new ParameterModel() { Name = mparam.Name, UrlName = GetMethodParameterName(mparam), Type = mparam.ParameterType, IsOptional = mparam.IsOptional };
                 a.Parameters.Add(pModel);
-                if (!IsUrlParameter(pModel.Type))
+                if (IsHttpBodyParam(mparam))
                 {
-                    if (a.Parameters.Any(p => p.IsData))
-                    {
-                        throw new InvalidOperationException(String.Format("Duplicate body parameter {2} ({3}), action: {0}, declaring type:{1}. ", a.Name, a.Source.DeclaringType, pModel.Name, a.Parameters.First(p=>p.IsData).Name));
-                    }
                     pModel.IsData = true;
+                }
+                else
+                {
+                    if (!IsUrlParameter(pModel.Type))
+                    {
+                        if (a.Parameters.Any(p => p.IsData))
+                        {
+                            throw new InvalidOperationException(String.Format("Duplicate body parameter {2} ({3}), action: {0}, declaring type:{1}. ", a.Name, a.Source.DeclaringType, pModel.Name, a.Parameters.First(p => p.IsData).Name));
+                        }
+                        pModel.IsData = true;
+                    }
                 }
             }
         }
@@ -198,6 +205,10 @@ namespace TypeGen.Generators
             return actionName;
         }
 
+        private static bool IsHttpBodyParam(ParameterInfo pi)
+        {
+            return pi.GetCustomAttributes(false).Any(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.FromBodyAttribute"));
+        }
         private static string GetRoutePrefix(MemberInfo m, string defaultValue)
         {
             var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.RoutePrefixAttribute"));
@@ -286,7 +297,7 @@ namespace TypeGen.Generators
             //consider: 
             //  if there is only one optional parameter, or all opt. parameters are last (it must be in c# decl), 
             //  we can generate myMethod(p1,p2,..., po1:string? = null, po2:number? = null)
-            //  but, is is needed then to call it with positional params (TypeScript doesn't know named params)
+            //  but, it is needed then to call it with positional params (TypeScript doesn't know named params)
             //  xxx.myMethod("asd","qwe",...,null, 42)
             //compare to: call via optional properties of anonymous object
             //  xxx.myMethod("asd","qwe",..., { po2: 42} )
@@ -338,7 +349,7 @@ namespace TypeGen.Generators
             var pilist = new List<string>();
             foreach (var p in action.Parameters.Where(x => !x.IsUrlParam && !x.IsData))
             {
-                var pinvoke = "'" + p.Name + "': " + (p.IsOptional ? "opt." : "") + p.Name;
+                var pinvoke = "'" + (p.UrlName ?? p.Name) + "': " + (p.IsOptional ? "opt." : "") + p.Name;
                 pilist.Add(pinvoke);
             }
             if (pilist.Count > 0)

@@ -21,6 +21,7 @@ namespace TypeGenTests
             rg.GenerateInterface(typeof(TestingClass));
 
             var g = new OutputGenerator();
+            g.GenerateComments = false;
             g.Generate(rg.GenerationStrategy.TargetModule);
 
             Assert.AreEqual(null, Helper.StringCompare(@"
@@ -30,6 +31,7 @@ module GeneratedModule {
     }
     interface iTestingClassBase extends IMyInterface {
         Property1: number;
+        /* Property Property2 skipped, because it is already implemented by interface IMyInterface*/
     }
     interface iTestingClass extends iTestingClassBase {
         Property3: MyEnum;
