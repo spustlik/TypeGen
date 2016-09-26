@@ -9,6 +9,8 @@ namespace TypeGen.Generators
 {
     public class WebApiControllerGenerator
     {
+        public bool AddAsyncSuffix { get; set; } = true;
+
         public class ControllerModel
         {
             public Type Source { get; set; }
@@ -61,44 +63,76 @@ namespace TypeGen.Generators
             var result = new List<ControllerModel>();
             foreach (var t in types)
             {
-                var name = t.Name;
-                if (name.EndsWith("Controller", StringComparison.InvariantCulture))
-                    name = name.Substring(0, name.Length - 10);
-                var controllerPath = GetRoutePrefix(t, name.ToLower());
-                var cModel = new ControllerModel
-                {
-                    Source = t,
-                    Name = t.Name,
-                    Actions = GetActionsModel(t, controllerPath),
-                    Comment = string.Format("class {0}, controllerPath={1}", t, controllerPath),
-                };
+                var cModel = CreateControllerModel(t);
                 result.Add(cModel);
             }
             return result;
         }
 
+        public ControllerModel CreateControllerModel(Type t)
+        {
+            var name = t.Name;
+            if (name.EndsWith("Controller", StringComparison.InvariantCulture))
+                name = name.Substring(0, name.Length - 10);
+            var controllerPath = GetRoutePrefix(t, name.ToLower());
+            var cModel = new ControllerModel
+            {
+                Source = t,
+                Name = t.Name,
+                Actions = GetActionsModel(t, controllerPath),
+                Comment = string.Format("class {0}, controllerPath={1}", t, controllerPath),
+            };
+            return cModel;
+        }
+
         public List<ActionModel> GetActionsModel(Type t, string controllerPath)
         {
             var result = new List<ActionModel>();
-            var methods = t.GetMethods(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var methods = t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
             foreach (var m in methods)
             {
-                var aModel = new ActionModel()
-                {
-                    Source = m,
-                    Name = m.Name,
-                    HttpMethod = GetHttpMethod(m),
-                    Comment = "method " + m,
-                    ResultType = GetActionResultType(m)
-                };
-                ProcessRoute(aModel, m, controllerPath);
-                AddParameters(aModel, m);
-                if (aModel.HttpMethod == "GET")
-                    aModel.Parameters.ForEach(p => p.IsData = false);
-                aModel.MethodName = m.Name + "Async";
+                if (!IsControllerAction(m))
+                    continue;
+                var aModel = CreateActionModel(m, controllerPath);
                 result.Add(aModel);
             }
             return result;
+        }
+
+        public ActionModel CreateActionModel(MethodInfo m, string controllerPath)
+        {
+            var aModel = new ActionModel()
+            {
+                Source = m,
+                Name = m.Name,
+                HttpMethod = GetHttpMethod(m),
+                Comment = GetActionComment(m),
+                ResultType = GetActionResultType(m)
+            };
+            ProcessRoute(aModel, m, controllerPath);
+            AddParameters(aModel, m);
+            if (aModel.HttpMethod == "GET")
+                aModel.Parameters.ForEach(p => p.IsData = false);
+
+            aModel.MethodName = m.Name;
+            if (this.AddAsyncSuffix)
+            {
+                if (!aModel.MethodName.EndsWith("Async", StringComparison.Ordinal))
+                    aModel.MethodName += "Async";
+            }
+            return aModel;
+        }
+
+        protected virtual string GetActionComment(MethodInfo m)
+        {
+            var sb = new StringBuilder();
+            var route = GetRouteTemplate(m);
+            if (!String.IsNullOrEmpty(route))
+            {
+                sb.Append("[Route(\"" + route + "\")]\n");
+            }
+            sb.Append(ReflectionHelper.MethodToString(m)+"\n");
+            return sb.ToString();
         }
 
         private Type GetActionResultType(MethodInfo m)
@@ -178,6 +212,12 @@ namespace TypeGen.Generators
                     actionPath = controllerPath + "/" + actionName;
                 a.UrlTemplate = actionPath;
             }
+        }
+
+        private static bool IsControllerAction(MethodInfo m)
+        {
+            var nonActionAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.NonActionAttribute"));
+            return nonActionAt == null;
         }
 
         private static string GetMethodParameterName(ParameterInfo p)
@@ -285,8 +325,57 @@ namespace TypeGen.Generators
 
         private FunctionMember GenerateAction(ActionModel action, ReflectionGeneratorBase reflectionGenerator)
         {
-            var method = new FunctionMember(action.Name + "Async", null) { Accessibility = AccessibilityEnum.Public, Comment = action.Comment };
-            method.Comment+="\n parameters: " + String.Join(", ", action.Parameters.Select(p => p.ToString()));
+            var method = new FunctionMember(action.Name + "Async", null)
+            {
+                Accessibility = AccessibilityEnum.Public,
+                Comment = "*" + action.Comment + "\n parameters: " + String.Join(", ", action.Parameters.Select(p => p.ToString())) + "\n"
+            };
+            GenerateMethodParametersSignature(action, method, reflectionGenerator);
+            if (action.ResultType != null)
+            {
+                method.ResultType = new TypescriptTypeReference("JQueryPromise") { GenericParameters = { reflectionGenerator.GenerateFromType(action.ResultType) } };
+            }
+            else
+            {
+                method.ResultType = new TypescriptTypeReference("JQueryPromise") { GenericParameters = { PrimitiveType.Void } };
+            }
+
+            method.Body = new RawStatements();
+            method.Body.Statements.Add("return this._parent.call" + action.HttpMethod + "(");
+            GenerateUrlParametersValue(action, method);
+            method.Body.Statements.Add(", ");
+            GenerateNamedParametersValue(action, method);
+            var dataParam = action.Parameters.FirstOrDefault(p => p.IsData);
+            if (dataParam != null)
+            {
+                method.Body.Statements.Add(", " + dataParam.Name);
+                if (dataParam.IsData)
+                {
+                    method.Body.Statements.Add("/* DATA */");
+                }
+            }
+            method.Body.Statements.Add(");");
+            return method;
+        }
+
+        private static void GenerateUrlParametersValue(ActionModel action, FunctionMember method)
+        {
+            var urlVar = "'" + action.UrlTemplate.TrimEnd('/') + "'";
+            foreach (var p in action.Parameters.Where(x => x.IsUrlParam))
+            {
+                urlVar = urlVar.Replace("{" + (p.UrlName ?? p.Name) + "}", "' + " + p.Name + " + '");
+            }
+            var EMPTYJS = " + ''";
+            while (urlVar.EndsWith(EMPTYJS, StringComparison.InvariantCulture))
+            {
+                urlVar = urlVar.Substring(0, urlVar.Length - EMPTYJS.Length);
+            }
+
+            method.Body.Statements.Add(urlVar);
+        }
+
+        private static void GenerateMethodParametersSignature(ActionModel action, FunctionMember method, ReflectionGeneratorBase reflectionGenerator)
+        {
             method.Parameters.AddRange(action.Parameters
                 .Where(p => !p.IsOptional)
                 .Select(p => new FunctionParameter(p.Name)
@@ -301,73 +390,55 @@ namespace TypeGen.Generators
             //  xxx.myMethod("asd","qwe",...,null, 42)
             //compare to: call via optional properties of anonymous object
             //  xxx.myMethod("asd","qwe",..., { po2: 42} )
-            // BUT, with current version of typescript (1.4), there is bug?, because it can be called with another object
+            // BUT, it can be called with any object, because all positional parameters are optional, so any object will match
             //  xxx.myMethod("asd","qwe",..., "nonsense" )
+            // partially solved:
+            //  positional parameters are unions of non-nullable parameter objects (see code)
+            //  but this approach will still validate only one of parameters, others are than ignored (because at least one matched)
             if (action.Parameters.Any(p => p.IsOptional))
             {
                 var optParams = action.Parameters
                     .Where(p => p.IsOptional)
-                    .Select(p => new RawStatements(p.Name, "?: ", reflectionGenerator.GenerateFromType(p.Type)))
+                    .Select(p => new RawStatements("{ ", p.Name, ": ", reflectionGenerator.GenerateFromType(p.Type), " }"))
                     .ToArray();
                 var raw = new RawStatements();
-                raw.Add("{ ");
                 foreach (var item in optParams)
                 {
                     raw.Add(item);
                     if (item != optParams.Last())
                     {
-                        raw.Add(";");
+                        raw.Add(" | ");
                     }
                     raw.Add(" ");
                 }
-                raw.Add("} = {}");
+                raw.Add(" = <any>{}");
                 method.Parameters.Add(new FunctionParameter("opt") { ParameterType = new TypescriptTypeReference(raw) });
             }
-            if (action.ResultType != null)
-            {
-                method.ResultType = new TypescriptTypeReference("JQueryPromise") { GenericParameters = { reflectionGenerator.GenerateFromType(action.ResultType) } };
-            }
-            else
-            {
-                method.ResultType = new TypescriptTypeReference("JQueryPromise") { GenericParameters = { PrimitiveType.Void } };
-            }
-            method.Body = new RawStatements();
-            method.Body.Statements.Add("return this._parent.call" + action.HttpMethod + "(");
-            var urlVar = "'" + action.UrlTemplate.TrimEnd('/') + "'";
-            foreach (var p in action.Parameters.Where(x => x.IsUrlParam))
-            {
-                urlVar = urlVar.Replace("{" + (p.UrlName??p.Name) + "}", "' + " + p.Name + " + '");
-            }
-            var EMPTYJS = " + ''";
-            while (urlVar.EndsWith(EMPTYJS, StringComparison.InvariantCulture))
-            {
-                urlVar = urlVar.Substring(0, urlVar.Length - EMPTYJS.Length);
-            }
-
-            method.Body.Statements.Add(urlVar);
-            method.Body.Statements.Add(", {");            
-            var pilist = new List<string>();
-            foreach (var p in action.Parameters.Where(x => !x.IsUrlParam && !x.IsData))
-            {
-                var pinvoke = "'" + (p.UrlName ?? p.Name) + "': " + (p.IsOptional ? "opt." : "") + p.Name;
-                pilist.Add(pinvoke);
-            }
-            if (pilist.Count > 0)
-            {
-                method.Body.Statements.Add(" ");
-                method.Body.Statements.Add(String.Join(", ", pilist));
-                method.Body.Statements.Add(" ");
-            }
-            method.Body.Statements.Add("}");
-            var dataParam = action.Parameters.FirstOrDefault(p => p.IsData);
-            if (dataParam != null)
-            {
-                method.Body.Statements.Add(", " + dataParam.Name);
-                method.Body.Statements.Add("/* " + dataParam.IsData + "*/");
-            }
-            method.Body.Statements.Add(");");
-            return method;
         }
 
+        private static void GenerateNamedParametersValue(ActionModel action, FunctionMember method)
+        {
+            var namedParameters = action.Parameters.Where(x => !x.IsUrlParam && !x.IsData).ToArray();
+            if (namedParameters.Length == 0)
+            {
+                method.Body.Statements.Add("{}");
+                return;
+            }
+            if (namedParameters.All(p => p.IsOptional))
+            {
+                method.Body.Statements.Add("opt");
+                return;
+            }
+            var pilist = new List<string>();
+            foreach (var p in namedParameters)
+            {
+                var pinvoke = "'" + (p.UrlName ?? p.Name) + "': ";
+                pinvoke += p.IsOptional ? ("opt['" + p.Name + "']") : p.Name;
+                pilist.Add(pinvoke);
+            }
+            method.Body.Statements.Add("{ ");
+            method.Body.Statements.Add(String.Join(", ", pilist));
+            method.Body.Statements.Add(" }");
+        }
     }
 }

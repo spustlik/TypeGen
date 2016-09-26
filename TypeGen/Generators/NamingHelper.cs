@@ -38,7 +38,7 @@ namespace TypeGen.Generators
 
         public static string RemovePrefix(string prefix, string s, LetterCasing nextLetterCasing = LetterCasing.Upper)
         {
-            if (!s.StartsWith(prefix))
+            if (!s.StartsWith(prefix, StringComparison.Ordinal))
                 return s;
             var x = s.Substring(prefix.Length);
             if (x != FirstLetter(nextLetterCasing, x))

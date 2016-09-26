@@ -260,21 +260,22 @@ module testModule {
             g.Generate(m);
             Assert.AreEqual(null, 
                 Helper.StringCompare(@"
-// module
+/* module */
 module testModule {
-    // class
+    /* class */
     export class class1 {
-        // property
-        // second line
+        /* property
+         * second line 
+         */
         Property1: boolean;
-        // function
+        /* function */
         fn(/* param */x: boolean) {
             /*comment*/
             dosomething();
             //comment
         }
     }
-    // raw
+    /* raw */
     function test() : class1 { return null; }
 }
 ", g.Output));

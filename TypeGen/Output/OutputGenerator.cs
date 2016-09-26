@@ -59,28 +59,41 @@ namespace TypeGen
         {
             if (String.IsNullOrEmpty(comment) || !GenerateComments)
                 return;
-            var lines = comment.Split(new[] { '\n' });
-            foreach (var line in lines)
+            var lines = ParseComment(comment);
+            Formatter.Write("/*");
+            for (int i = 0; i < lines.Length; i++)
             {
-                Formatter.Write("// " + line);
-                Formatter.WriteLine();
-            }            
+                if (i != 0)               
+                    Formatter.Write(" * ");
+                Formatter.Write(lines[i]);
+                if (lines.Length>1)
+                    Formatter.WriteLine();
+            }
+            Formatter.Write(" */");
+            Formatter.WriteLine();
         }
 
         private void GenerateInlineComment(string comment)
         {
             if (String.IsNullOrEmpty(comment) || !GenerateComments)
                 return;
-            var lines = comment.Split(new[] { '\n' });
+            var lines = ParseComment(comment);
+            Formatter.Write("/*");
             for (int i = 0; i < lines.Length; i++)
             {
-                Formatter.Write(i == 0 ? "/* " : "   ");
-                Formatter.Write(comment);
-                if (i == lines.Length - 1)
-                {
-                    Formatter.Write(" */");
-                }
+                if (i!=0)
+                    Formatter.Write("  ");
+                Formatter.Write(lines[i]);
             }
+            Formatter.Write("*/");
+        }
+
+        private static string[] ParseComment(string comment)
+        {
+            comment = comment.Replace("\xa\xd", "\xa").Replace("\xd\xa", "\xa").Replace("\xd","\xa");
+            if (!comment.StartsWith("*", StringComparison.Ordinal))
+                comment = " " + comment + " ";
+            return comment.Split(new[] { '\xa' });
         }
 
         public void GenerateModuleContent(TypescriptModule module, Func<ModuleElement, bool> elementFilter)
