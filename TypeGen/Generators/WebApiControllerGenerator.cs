@@ -152,7 +152,7 @@ namespace TypeGen.Generators
             {
                 if (a.Parameters.Any(p => p.Name == mparam.Name || p.UrlName == GetMethodParameterName(mparam)))
                     continue;
-                var pModel = new ParameterModel() { Name = mparam.Name, UrlName = GetMethodParameterName(mparam), Type = mparam.ParameterType, IsOptional = mparam.IsOptional };
+                var pModel = new ParameterModel() { Source = mparam, Name = mparam.Name, UrlName = GetMethodParameterName(mparam), Type = mparam.ParameterType, IsOptional = mparam.IsOptional };
                 a.Parameters.Add(pModel);
                 if (IsHttpBodyParam(mparam))
                 {
@@ -195,12 +195,28 @@ namespace TypeGen.Generators
                     if (part.StartsWith("{", StringComparison.InvariantCulture))
                     {
                         var pname = part.Trim(new[] { '{', '}' });
+                        var isOptional = pname.EndsWith("?", StringComparison.Ordinal);
+                        if (isOptional)
+                            pname = pname.TrimEnd('?');
                         var mparam = m.GetParameters().FirstOrDefault(p => GetMethodParameterName(p) == pname);
                         if (mparam == null)
                         {
                             throw new Exception(string.Format("Cannot find parameter {0} of method {1} on controller {2} acquired from route '{3}'", pname, m.Name, m.ReflectedType.Name, a.UrlTemplate));
                         }
-                        a.Parameters.Add(new ParameterModel() { Name = mparam.Name, UrlName = pname, Type = mparam.ParameterType, IsOptional = false, IsUrlParam = true });
+                        var pmodel = new ParameterModel()
+                        {
+                            Source = mparam,
+                            Name = mparam.Name,
+                            UrlName = pname,
+                            Type = mparam.ParameterType,
+                            IsOptional = isOptional || mparam.HasDefaultValue || mparam.IsOptional,
+                            IsUrlParam = true
+                        };
+                        if (pmodel.IsOptional)
+                        {
+                            throw new Exception(String.Format("Optional url parameters are not supported: parameter {0} of method {1} on controller {2}", pname, m.Name, m.ReflectedType.Name));
+                        }
+                        a.Parameters.Add(pmodel);
                     }
                 }
             }
@@ -328,7 +344,7 @@ namespace TypeGen.Generators
             var method = new FunctionMember(action.Name + "Async", null)
             {
                 Accessibility = AccessibilityEnum.Public,
-                Comment = "*" + action.Comment + "\n parameters: " + String.Join(", ", action.Parameters.Select(p => p.ToString())) + "\n"
+                Comment = GenerateActionComment(action)
             };
             GenerateMethodParametersSignature(action, method, reflectionGenerator);
             if (action.ResultType != null)
@@ -358,12 +374,21 @@ namespace TypeGen.Generators
             return method;
         }
 
+        private static string GenerateActionComment(ActionModel action)
+        {
+            var parameters = action.Parameters;
+            //.Select(p => p.ToString() + " ( " + p.Source.Attributes + " - " + string.Join("|", p.Source.CustomAttributes) +")");
+            return "*" + action.Comment + "\n" + 
+                   " parameters: " + String.Join(", ", parameters) + "\n";
+        }
+
         private static void GenerateUrlParametersValue(ActionModel action, FunctionMember method)
         {
             var urlVar = "'" + action.UrlTemplate.TrimEnd('/') + "'";
             foreach (var p in action.Parameters.Where(x => x.IsUrlParam))
             {
-                urlVar = urlVar.Replace("{" + (p.UrlName ?? p.Name) + "}", "' + " + p.Name + " + '");
+                var paramName = p.UrlName ?? p.Name;
+                urlVar = urlVar.Replace("{" + paramName + "}", "' + " + p.Name + " + '");
             }
             var EMPTYJS = " + ''";
             while (urlVar.EndsWith(EMPTYJS, StringComparison.InvariantCulture))
@@ -424,11 +449,12 @@ namespace TypeGen.Generators
                 method.Body.Statements.Add("{}");
                 return;
             }
-            if (namedParameters.All(p => p.IsOptional))
-            {
-                method.Body.Statements.Add("opt");
-                return;
-            }
+            //this optimalization cannot be done due to renaming params signature=>urlName
+            //if (namedParameters.All(p => p.IsOptional))
+            //{
+            //    method.Body.Statements.Add("opt");
+            //    return;
+            //}
             var pilist = new List<string>();
             foreach (var p in namedParameters)
             {
