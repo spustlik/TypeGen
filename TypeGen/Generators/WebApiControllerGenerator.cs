@@ -9,6 +9,10 @@ namespace TypeGen.Generators
 {
     public class WebApiControllerGenerator
     {
+        public string PromiseTypeName = "JQueryPromise";
+        public string GeneratedClassName = "GeneratedProxy";
+        public string ProxyBaseName = "base.ProxyBase";
+
         public bool AddAsyncSuffix { get; set; } = true;
 
         public class ControllerModel
@@ -302,15 +306,16 @@ namespace TypeGen.Generators
 
         public void GenerateControllers(IEnumerable<ControllerModel> controllers, ReflectionGeneratorBase reflectionGenerator, TypescriptModule targetModule)
         {
-            var proxyClass = new ClassType("GeneratedProxy")
+            var proxyClass = new ClassType("GeneratedProxy");
+            if (!String.IsNullOrEmpty(ProxyBaseName))
             {
-                Extends = new TypescriptTypeReference("base.ProxyBase")
-            };
+                proxyClass.Extends = new TypescriptTypeReference(ProxyBaseName);
+            }
             targetModule.Members.Add(new DeclarationModuleElement(proxyClass) { IsExporting = true });
             foreach (var controller in controllers)
             {
                 var cls = new ClassType(controller.Name + "Proxy");
-                var proxyType = new TypescriptTypeReference("GeneratedProxy");
+                var proxyType = new TypescriptTypeReference(GeneratedClassName);
                 cls.Members.Add(new PropertyMember("_parent")
                 {
                     MemberType = proxyType,
@@ -349,11 +354,11 @@ namespace TypeGen.Generators
             GenerateMethodParametersSignature(action, method, reflectionGenerator);
             if (action.ResultType != null)
             {
-                method.ResultType = new TypescriptTypeReference("JQueryPromise") { GenericParameters = { reflectionGenerator.GenerateFromType(action.ResultType) } };
+                method.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { reflectionGenerator.GenerateFromType(action.ResultType) } };
             }
             else
             {
-                method.ResultType = new TypescriptTypeReference("JQueryPromise") { GenericParameters = { PrimitiveType.Void } };
+                method.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { PrimitiveType.Void } };
             }
 
             method.Body = new RawStatements();

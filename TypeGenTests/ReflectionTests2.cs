@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TypeGen.Generators;
 using TypeGen;
+using Newtonsoft.Json;
 
 namespace TypeGenTests
 {
@@ -32,12 +33,15 @@ namespace TypeGenTests
         {
             public string Prop2 { get; set; }
             public ITest3A Prop2b { get; set; }
-            public string Prop3 { get; set; }            
+            public string Prop3 { get; set; }
+            [JsonIgnore]
+            public string IgnoredProperty { get; set; }
         }
 
         private string test(bool classes)
         {
             var rg = new ReflectionGenerator();
+            rg.GenerationStrategy.CommentSource = false;
             rg.GenerationStrategy.GenerateClasses = classes;
             rg.GenerateFromType(typeof(Test3));
             var module = rg.Module;

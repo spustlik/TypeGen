@@ -131,6 +131,8 @@ namespace TypeGen.Generators
         {
             if (propertyInfo.GetGetMethod().IsStatic)
                 return false;
+            if (propertyInfo.GetCustomAttributes().Count(at => at.GetType().IsTypeBaseOrSelf("Newtonsoft.Json.JsonIgnoreAttribute")) >0 )
+                return false;
             return true;
         }
 

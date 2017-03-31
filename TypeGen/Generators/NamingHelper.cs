@@ -50,7 +50,7 @@ namespace TypeGen.Generators
         {
             s = s.Trim();
             var i = 0;
-            bool wasLower = false;
+            //bool wasLower = false;
             bool needsUpper = true;
             var result = new StringBuilder();
             while(i<s.Length)
@@ -62,11 +62,11 @@ namespace TypeGen.Generators
                     {
                         //if (wasLower)
                         //    needsUpper = true;
-                        wasLower = true;
+                        //wasLower = true;
                     }
                     else
                     {
-                        wasLower = false;
+                        //wasLower = false;
                     }
                     if (needsUpper)
                     {
