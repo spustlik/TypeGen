@@ -25,6 +25,14 @@ namespace TypeGen.Generators
                 GenerateFromType(t);
             }
         }
+        protected override TypescriptTypeReference TypeGenerator(Type type, TypescriptTypeBase result)
+        {
+            if (type.IsTypeBaseOrSelf("Newtonsoft.Json.Linq.JArray"))
+                return new ArrayType(new AnyType()) { ExtraData = { { SOURCETYPE_KEY, type } } };
+            if (type.Namespace.StartsWith("Newtonsoft.", StringComparison.InvariantCulture))
+                return new AnyType() { ExtraData = { { SOURCETYPE_KEY, type } } };
+            return base.TypeGenerator(type, result);
+        }
     }
 
     public class NamingStrategy : IReflectedNamingStrategy
@@ -41,6 +49,12 @@ namespace TypeGen.Generators
 
         public virtual string GetPropertyName(PropertyInfo property)
         {
+            var jsonAt = property.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("Newtonsoft.Json.JsonPropertyAttribute"));
+            if (jsonAt != null)
+            {
+                var name = ((dynamic)jsonAt).PropertyName ?? property.Name;
+                return name;
+            }
             return NamingHelper.FirstLetter(FirstLetterCasing, property.Name);
         }
 
@@ -112,6 +126,7 @@ namespace TypeGen.Generators
             TargetModule = new TypescriptModule("GeneratedModule");
         }
 
+        
         public virtual bool ShouldGenerateClass(Type type)
         {
             return GenerateClasses;
