@@ -164,7 +164,8 @@ namespace TypeGen.Generators
                 }
                 else
                 {
-                    if (!IsUrlParameter(pModel.Type))
+                    string name;
+                    if (!IsFromUriParam(mparam, out name) && !CanBeInUrl(pModel.Type))
                     {
                         if (a.Parameters.Any(p => p.IsData))
                         {
@@ -176,12 +177,12 @@ namespace TypeGen.Generators
             }
         }
 
-        private bool IsUrlParameter(Type type)
+        private bool CanBeInUrl(Type type)
         {
             if (Nullable.GetUnderlyingType(type) != null)
-                return IsUrlParameter(Nullable.GetUnderlyingType(type));
+                return CanBeInUrl(Nullable.GetUnderlyingType(type));
             if (type.IsArray)
-                return IsUrlParameter(type.GetElementType());
+                return CanBeInUrl(type.GetElementType());
             return type.IsPrimitive || type.IsEnum || type == typeof(string);
         }
 
@@ -240,13 +241,22 @@ namespace TypeGen.Generators
             return nonActionAt == null;
         }
 
-        private static string GetMethodParameterName(ParameterInfo p)
+        private static bool IsFromUriParam(ParameterInfo p, out string name)
         {
             var fromUriAt = p.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.FromUriAttribute"));
             if (fromUriAt != null)
             {
-                return ((dynamic)fromUriAt).Name ?? p.Name;
+                name = ((dynamic)fromUriAt).Name ?? p.Name;
+                return true;
             }
+            name = null;
+            return false;
+        }
+        private static string GetMethodParameterName(ParameterInfo p)
+        {
+            string name;
+            if (IsFromUriParam(p, out name))
+                return name;
             return p.Name;
         }
 

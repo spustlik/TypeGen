@@ -1,16 +1,16 @@
 ﻿!!!Generating observable classes
 
-goal: when developer already defined shape of api models, it should be great to help him with 
+**goal**: when developer already defined shape of api models, it should be great to help him with 
 pre-generated models with observable properties and arrays
 
 when api is declared using *interfaces*, it will generate
-a] proxy with *interfaces* used as models
-b] classes representing "implementation" of this interfaces. 
+ 1. proxy with *interfaces* used as models
+ 2. classes representing "implementation" of this interfaces. 
 Inheritance of interfaces should be implemented as ("observable") interface implementation, class inheritance cannot be simply acquired from source.
 
 when api is declared using *classes*, it will generate
-a] proxy with *interfaces* used as models
-b] classes representing "implementation" of this classes.
+ 1. proxy with *interfaces* used as models
+ 2. classes representing "implementation" of this classes.
 Class inheritance is copied into output, 
 Inheritance of interfaces should be implemented as ("observable") interface implementation.
 
