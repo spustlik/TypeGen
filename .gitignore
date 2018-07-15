@@ -11,4 +11,4 @@ obj/
 *.csproj.user
 packages/
 test1/
-/TypeGen/.vs/config/applicationhost.config
+.vs/
