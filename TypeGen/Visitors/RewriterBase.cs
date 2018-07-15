@@ -215,8 +215,7 @@ namespace TypeGen.Visitors
                 Accessibility = RewriteAccessibility(fn.Accessibility),
                 Comment = RewriteComment(fn.Comment),
                 ExtraData = RewriteExtraData(fn),
-                ResultType = RewriteTypeReference(fn.ResultType),
-                
+                ResultType = RewriteTypeReference(fn.ResultType),                
             };
             result.GenericParameters.AddRange(fn.GenericParameters.Select(RewriteGenericParameter).Where(x => x != null));
             result.Parameters.AddRange(fn.Parameters.Select(RewriteFunctionParameter).Where(x => x != null));
@@ -227,6 +226,7 @@ namespace TypeGen.Visitors
         {
             var result = new FunctionParameter(par.Name)
             {
+                Accessibility = RewriteAccessibility(par.Accessibility),
                 Comment = RewriteComment(par.Comment),
                 DefaultValue = RewriteRaw(par.DefaultValue),
                 ExtraData = RewriteExtraData(par),

@@ -67,6 +67,7 @@ namespace TypeGen
 
     public sealed class FunctionParameter : TypeDomBase
     {
+        public AccessibilityEnum? Accessibility { get; set; }
         public string Comment { get; set; }
         public string Name { get; set; }
         public FunctionParameter(string name)

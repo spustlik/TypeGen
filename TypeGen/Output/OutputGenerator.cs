@@ -380,6 +380,7 @@ namespace TypeGen
             {
                 Formatter.Write("...");
             }
+            Generate(par.Accessibility);
             Formatter.Write(par.Name);
             if (par.IsOptional)
             {
