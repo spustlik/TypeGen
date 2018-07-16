@@ -6,7 +6,7 @@ namespace TypeGen.Generators
     public interface IGenerationStrategy
     {
         bool ShouldGenerateBaseClass(DeclarationBase decl, Type type, Type baseType);
-        bool ShouldGenerateGenericTypeArgument(TypescriptTypeBase result, Type genericTypeArgument);
+        bool ShouldGenerateGenericTypeArgument(Type genericTypeArgument);
         bool ShouldGenerateClass(Type type);
         bool ShouldGenerateImplementedInterfaces(DeclarationBase decl, Type type);
         bool ShouldGenerateImplementedInterface(DeclarationBase decl, Type interfaceType);

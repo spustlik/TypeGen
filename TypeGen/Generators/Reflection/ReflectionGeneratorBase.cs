@@ -11,7 +11,7 @@ namespace TypeGen.Generators
 {
     public class ReflectionGeneratorBase
     {
-        private Dictionary<Type, TypescriptTypeBase> _typeMap = new Dictionary<Type, TypescriptTypeBase>();
+        private Dictionary<Type, TypescriptTypeReference> _typeMap = new Dictionary<Type, TypescriptTypeReference>();
 
         public const string SOURCETYPE_KEY = "SOURCE_TYPE";
         public const string SOURCEMEMBER_KEY = "SOURCE_PROPERTY";
@@ -41,7 +41,7 @@ namespace TypeGen.Generators
 
         public ReflectionGeneratorBase(IReflectedNamingStrategy naming, IGenerationStrategy generation)
         {
-            _typeMap = new Dictionary<Type, TypescriptTypeBase>()
+            _typeMap = new Dictionary<Type, TypescriptTypeReference>()
             {
                 { typeof(void), PrimitiveType.Void },
                 { typeof(object), PrimitiveType.Any },
@@ -57,15 +57,18 @@ namespace TypeGen.Generators
             GenerationStrategy = generation;
         }
 
+        public void AddMap(Type type, TypescriptTypeReference reference)
+        {
+            _typeMap[type] = reference;
+        }
         public TypescriptTypeReference GenerateFromType(Type type)
         {
-            TypescriptTypeBase result;
-            if (_typeMap.TryGetValue(type, out result))
+            if (_typeMap.TryGetValue(type, out var result))
                 return result;
-            return TypeGenerator(type, result);
+            return TypeGenerator(type);
         }
 
-        protected virtual TypescriptTypeReference TypeGenerator(Type type, TypescriptTypeBase result)
+        protected virtual TypescriptTypeReference TypeGenerator(Type type)
         {
             if (Nullable.GetUnderlyingType(type) != null)
             {
@@ -116,7 +119,7 @@ namespace TypeGen.Generators
                     var tref = GenerateFromType(type.GetGenericTypeDefinition());
                     foreach (var genericTypeArgument in type.GenericTypeArguments)
                     {
-                        if (GenerationStrategy.ShouldGenerateGenericTypeArgument(result, genericTypeArgument))
+                        if (GenerationStrategy.ShouldGenerateGenericTypeArgument(genericTypeArgument))
                         {
                             tref.GenericParameters.Add(GenerateFromType(genericTypeArgument));
                         }

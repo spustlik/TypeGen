@@ -25,13 +25,13 @@ namespace TypeGen.Generators
                 GenerateFromType(t);
             }
         }
-        protected override TypescriptTypeReference TypeGenerator(Type type, TypescriptTypeBase result)
+        protected override TypescriptTypeReference TypeGenerator(Type type)
         {
             if (type.IsTypeBaseOrSelf("Newtonsoft.Json.Linq.JArray"))
                 return new ArrayType(new AnyType()) { ExtraData = { { SOURCETYPE_KEY, type } } };
             if (type.Namespace.StartsWith("Newtonsoft.", StringComparison.InvariantCulture))
                 return new AnyType() { ExtraData = { { SOURCETYPE_KEY, type } } };
-            return base.TypeGenerator(type, result);
+            return base.TypeGenerator(type);
         }
     }
 
@@ -158,7 +158,7 @@ namespace TypeGen.Generators
             return true;
         }
 
-        public bool ShouldGenerateGenericTypeArgument(TypescriptTypeBase result, Type genericTypeArgument)
+        public bool ShouldGenerateGenericTypeArgument(Type genericTypeArgument)
         {
             return true;
         }

@@ -119,7 +119,7 @@ namespace TypeGen.Generators
             return true;
         }
 
-        public bool ShouldGenerateGenericTypeArgument(TypescriptTypeBase result, Type genericTypeArgument)
+        public bool ShouldGenerateGenericTypeArgument(Type genericTypeArgument)
         {
             return true;
         }
