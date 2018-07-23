@@ -117,6 +117,9 @@ namespace TypeGen.Generators
                 if (type.IsGenericType && !type.IsGenericTypeDefinition)
                 {
                     var tref = GenerateFromType(type.GetGenericTypeDefinition());
+                    if (tref.ReferencedType == null)
+                        throw new ApplicationException($"Cannot create generic type instance of {tref} from non-referenced type");
+                    tref = new TypescriptTypeReference(tref.ReferencedType);
                     foreach (var genericTypeArgument in type.GenericTypeArguments)
                     {
                         if (GenerationStrategy.ShouldGenerateGenericTypeArgument(genericTypeArgument))
