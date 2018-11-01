@@ -14,7 +14,7 @@ namespace TypeGen.Generators
         public string ProxyBaseName = "base.ProxyBase";
 
         public bool AddAsyncSuffix { get; set; } = true;
-
+        public bool StripHttpMethodPrefixes { get; set; } = false;
         public class ControllerModel
         {
             public Type Source { get; set; }
@@ -260,7 +260,7 @@ namespace TypeGen.Generators
             return p.Name;
         }
 
-        private static string GetActionName(MethodInfo m, string httpMethod)
+        private string GetActionName(MethodInfo m, string httpMethod)
         {
             var actionNameAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.ActionNameAttribute"));
             if (actionNameAt != null)
@@ -268,9 +268,12 @@ namespace TypeGen.Generators
                 return ((dynamic)actionNameAt).Name;
             }
             var actionName = m.Name;
-            if (actionName.ToUpper().StartsWith(httpMethod, StringComparison.InvariantCulture))
+            if (this.StripHttpMethodPrefixes)
             {
-                actionName = actionName.Substring(httpMethod.Length);
+                if (actionName.ToUpper().StartsWith(httpMethod, StringComparison.InvariantCulture))
+                {
+                    actionName = actionName.Substring(httpMethod.Length);
+                }
             }
             return actionName;
         }
