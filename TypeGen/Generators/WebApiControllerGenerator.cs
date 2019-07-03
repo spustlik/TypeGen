@@ -7,14 +7,17 @@ using System.Threading.Tasks;
 
 namespace TypeGen.Generators
 {
+    [Obsolete("Use WebApi.WebApiModelReflection and WebApi.WebApiProxyGenerator")]
     public class WebApiControllerGenerator
     {
-        public string PromiseTypeName = "JQueryPromise";
+        public string PromiseTypeName = "Promise";
         public string GeneratedClassName = "GeneratedProxy";
         public string ProxyBaseName = "base.ProxyBase";
 
         public bool AddAsyncSuffix { get; set; } = true;
         public bool StripHttpMethodPrefixes { get; set; } = false;
+        public bool SkipParamsCheck { get; set; } = false;
+
         public class ControllerModel
         {
             public Type Source { get; set; }
@@ -35,15 +38,24 @@ namespace TypeGen.Generators
             public List<ParameterModel> Parameters = new List<ParameterModel>();
         }
 
+        public enum ParamSourceType
+        {
+            Template,
+            MethodParam,
+            MethodParamBody,
+            MethodParamUri,
+        }
         public class ParameterModel
         {
             public ParameterInfo Source { get; set; }
+            public ParamSourceType SourceType { get; set; }
             public string Name { get; set; }
             public string UrlName { get; set; }
             public Type Type { get; set; }
             public bool IsUrlParam { get; set; }
             public bool IsOptional { get; set; }
             public bool IsData { get; set; }
+
             public override string ToString()
             {
                 var sb = new StringBuilder();
@@ -115,9 +127,29 @@ namespace TypeGen.Generators
             };
             ProcessRoute(aModel, m, controllerPath);
             AddParameters(aModel, m);
-            if (aModel.HttpMethod == "GET")
-                aModel.Parameters.ForEach(p => p.IsData = false);
-
+            var dataParams = aModel.Parameters.Where(x => x.IsData).ToArray();
+            if (aModel.HttpMethod == "GET" )
+            {
+                if (!SkipParamsCheck && dataParams.Length > 0)
+                {
+                    throw new Exception($"GET method {m.DeclaringType.Name}.{m.Name} cannot have [FromBody] parameter");
+                }
+                foreach (var p in dataParams)
+                {
+                    p.IsData = false;
+                }
+            }
+            if (aModel.HttpMethod == "POST")
+            {
+                if (!SkipParamsCheck && dataParams.Length>1)
+                {
+                    throw new Exception($"POST method {m.DeclaringType.Name}.{m.Name} cannot have more than 1 [FromBody] parameter");
+                }
+                if (!SkipParamsCheck && dataParams.Length == 0 && aModel.Parameters.Count(p => p.SourceType == ParamSourceType.MethodParam) > 0)
+                {
+                    throw new Exception($"POST method {m.DeclaringType.Name}.{m.Name} have parameters without specifying source, but no [FromBody] parameter. Mark it with [FromUri] or [FromBody]");
+                }
+            }
             aModel.MethodName = m.Name;
             if (this.AddAsyncSuffix)
             {
@@ -156,23 +188,32 @@ namespace TypeGen.Generators
             {
                 if (a.Parameters.Any(p => p.Name == mparam.Name || p.UrlName == GetMethodParameterName(mparam)))
                     continue;
-                var pModel = new ParameterModel() { Source = mparam, Name = mparam.Name, UrlName = GetMethodParameterName(mparam), Type = mparam.ParameterType, IsOptional = mparam.IsOptional };
+                var pModel = new ParameterModel()
+                {
+                    Source = mparam,
+                    SourceType = ParamSourceType.MethodParam,
+                    Name = mparam.Name,
+                    UrlName = GetMethodParameterName(mparam),
+                    Type = mparam.ParameterType,
+                    IsOptional = mparam.IsOptional
+                };
                 a.Parameters.Add(pModel);
                 if (IsHttpBodyParam(mparam))
                 {
+                    pModel.SourceType = ParamSourceType.MethodParamBody;
                     pModel.IsData = true;
                 }
-                else
+                else if (IsFromUriParam(mparam, out _))
                 {
-                    string name;
-                    if (!IsFromUriParam(mparam, out name) && !CanBeInUrl(pModel.Type))
+                    pModel.SourceType = ParamSourceType.MethodParamUri;
+                }
+                else if (!CanBeInUrl(pModel.Type))
+                {
+                    if (a.Parameters.Any(p => p.IsData))
                     {
-                        if (a.Parameters.Any(p => p.IsData))
-                        {
-                            throw new InvalidOperationException(String.Format("Duplicate body parameter {2} ({3}), action: {0}, declaring type:{1}. ", a.Name, a.Source.DeclaringType, pModel.Name, a.Parameters.First(p => p.IsData).Name));
-                        }
-                        pModel.IsData = true;
+                        throw new InvalidOperationException(String.Format("Duplicate body parameter {2} ({3}), action: {0}, declaring type:{1}. ", a.Name, a.Source.DeclaringType, pModel.Name, a.Parameters.First(p => p.IsData).Name));
                     }
+                    pModel.IsData = true;
                 }
             }
         }
@@ -211,6 +252,7 @@ namespace TypeGen.Generators
                         var pmodel = new ParameterModel()
                         {
                             Source = mparam,
+                            SourceType = ParamSourceType.Template,
                             Name = mparam.Name,
                             UrlName = pname,
                             Type = mparam.ParameterType,
@@ -254,8 +296,7 @@ namespace TypeGen.Generators
         }
         private static string GetMethodParameterName(ParameterInfo p)
         {
-            string name;
-            if (IsFromUriParam(p, out name))
+            if (IsFromUriParam(p, out var name))
                 return name;
             return p.Name;
         }

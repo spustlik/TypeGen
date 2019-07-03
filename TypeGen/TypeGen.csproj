@@ -38,13 +38,18 @@
   <ItemGroup>
     <Compile Include="Generators\Helper.cs" />
     <Compile Include="Generators\KnockoutReflectionGenerator.cs" />
+    <Compile Include="Generators\KnockoutMappedGenerator.cs" />
     <Compile Include="Generators\NamingHelper.cs" />
     <Compile Include="Generators\Optimizer.cs" />
     <Compile Include="Generators\Reflection\IReflectionGenerationStrategy.cs" />
     <Compile Include="Generators\Reflection\IReflectedNamingStrategy.cs" />
     <Compile Include="Generators\KnockoutGenerator.cs" />
     <Compile Include="Generators\Reflection\ReflectionGenerator.cs" />
+    <Compile Include="Generators\WebApiModelReflection.cs" />
     <Compile Include="Generators\WebApiControllerGenerator.cs" />
+    <Compile Include="Generators\WebApiModelReflection.Reflection.cs" />
+    <Compile Include="Generators\WebApiProxyGenerator2.cs" />
+    <Compile Include="Generators\WebApiProxyGenerator.cs" />
     <Compile Include="Output\INameResolver.cs" />
     <Compile Include="Output\OutputGenerator.cs" />
     <Compile Include="Output\OutputGeneratorNew.cs" />
@@ -78,7 +83,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy $(TargetDir)*.* D:\SkillDriver\Source\Main\_bin /Y
-xcopy $(TargetDir)typegen.* D:\Cleverlance\CSOB_FINAL\libs /Y</PostBuildEvent>
+xcopy $(TargetDir)typegen.* D:\Cleverlance\CSOB_FINAL\libs /Y
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

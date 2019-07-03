@@ -44,7 +44,7 @@ namespace TypeGen
 
         public override string ToString()
         {
-            return "(Raw " + Statements.Count + ")" + String.Join("", Statements.Select(s => s.ToString()));
+            return $"(Raw {Statements.Count}){String.Join("", Statements.Select(s => s.ToString()))}";
         }
     }
 
