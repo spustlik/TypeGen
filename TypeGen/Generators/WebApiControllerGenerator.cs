@@ -55,8 +55,9 @@ namespace TypeGen.Generators
             public bool IsUrlParam { get; set; }
             public bool IsOptional { get; set; }
             public bool IsData { get; set; }
+			public bool CanBeInUrl { get; set; }
 
-            public override string ToString()
+			public override string ToString()
             {
                 var sb = new StringBuilder();
                 sb.Append(Name);
@@ -145,9 +146,12 @@ namespace TypeGen.Generators
                 {
                     throw new Exception($"POST method {m.DeclaringType.Name}.{m.Name} cannot have more than 1 [FromBody] parameter");
                 }
-                if (!SkipParamsCheck && dataParams.Length == 0 && aModel.Parameters.Count(p => p.SourceType == ParamSourceType.MethodParam) > 0)
+                if (!SkipParamsCheck && dataParams.Length == 0 && aModel.Parameters.Count(p => p.SourceType == ParamSourceType.MethodParam && !p.CanBeInUrl) > 0)
                 {
-                    throw new Exception($"POST method {m.DeclaringType.Name}.{m.Name} have parameters without specifying source, but no [FromBody] parameter. Mark it with [FromUri] or [FromBody]");
+					throw new Exception(
+						$"POST method {m.DeclaringType.Name}.{m.Name} have parameters without specifying source, but no [FromBody] parameter.\n" +
+						$"Mark it with [FromUri] or [FromBody]\n" +
+						$"Params = {String.Join(", ", aModel.Parameters.Select(p => $"{p.Name}[CanBeInUrl={p.CanBeInUrl}]"))}");
                 }
             }
             aModel.MethodName = m.Name;
@@ -207,13 +211,17 @@ namespace TypeGen.Generators
                 {
                     pModel.SourceType = ParamSourceType.MethodParamUri;
                 }
-                else if (!CanBeInUrl(pModel.Type))
+                else 
                 {
-                    if (a.Parameters.Any(p => p.IsData))
-                    {
-                        throw new InvalidOperationException(String.Format("Duplicate body parameter {2} ({3}), action: {0}, declaring type:{1}. ", a.Name, a.Source.DeclaringType, pModel.Name, a.Parameters.First(p => p.IsData).Name));
-                    }
-                    pModel.IsData = true;
+					pModel.CanBeInUrl = CanBeInUrl(pModel.Type);
+					if (!pModel.CanBeInUrl)
+					{
+						if (a.Parameters.Any(p => p.IsData))
+						{
+							throw new InvalidOperationException(String.Format("Duplicate body parameter {2} ({3}), action: {0}, declaring type:{1}. ", a.Name, a.Source.DeclaringType, pModel.Name, a.Parameters.First(p => p.IsData).Name));
+						}
+						pModel.IsData = true;
+					}
                 }
             }
         }
