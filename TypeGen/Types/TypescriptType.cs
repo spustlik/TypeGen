@@ -13,25 +13,27 @@ namespace TypeGen
 
     public sealed class TypescriptTypeReference : TypeDomBase
     {
-        public TypescriptTypeBase ReferencedType { get; private set; }
-        public string TypeName { get; private set; }
-        public RawStatements Raw { get; private set; }
-        public List<TypescriptTypeReference> GenericParameters { get; private set; }
-        private TypescriptTypeReference()
-        {
-            GenericParameters = new List<TypescriptTypeReference>();
-        }
-        public TypescriptTypeReference(TypescriptTypeBase type) : this()
+        public TypescriptTypeBase ReferencedType { get; }
+        public string TypeName { get; }
+        public RawStatements Raw { get;  }
+        public List<TypescriptTypeReference> GenericParameters { get; } = new List<TypescriptTypeReference>();
+        public AnonymousDeclaration Inline { get; }
+
+        public TypescriptTypeReference(TypescriptTypeBase type) 
         {
             ReferencedType = type;
         }
-        public TypescriptTypeReference(string typeName) : this()
+        public TypescriptTypeReference(string typeName) 
         {
             TypeName = typeName;
         }
-        public TypescriptTypeReference(RawStatements raw) : this()
+        public TypescriptTypeReference(RawStatements raw) 
         {
             Raw = raw;
+        }
+        public TypescriptTypeReference(AnonymousDeclaration inline) 
+        {
+            Inline = inline;
         }
 
         public override string ToString()

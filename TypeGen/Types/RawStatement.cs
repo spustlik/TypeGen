@@ -58,6 +58,10 @@ namespace TypeGen
         {
             return new RawStatementTypeReference(type);
         }
+        public static implicit operator RawStatementBase(AnonymousDeclaration type)
+        {
+            return new RawStatementTypeReference(type);
+        }
         public static implicit operator RawStatementBase(InterfaceType type)
         {
             return new RawStatementTypeReference(type);

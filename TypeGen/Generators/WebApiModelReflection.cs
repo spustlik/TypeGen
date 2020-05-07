@@ -13,6 +13,7 @@ namespace TypeGen.Generators.WebApi
         public bool StripHttpMethodPrefixes { get; set; } = false;
         public bool SkipParamsCheck { get; set; } = false;
         public bool AddAsyncSuffix { get; set; } = true;
+        public bool UseControlerNameWithoutRoutePrefix { get; set; } = true;
 
 
         public List<ControllerModel> GetControllersModel(IEnumerable<Type> types)
@@ -32,7 +33,7 @@ namespace TypeGen.Generators.WebApi
             var name = t.Name;
             if (name.EndsWith("Controller", StringComparison.InvariantCulture))
                 name = name.Substring(0, name.Length - 10);
-            var controllerPath = Reflection.GetRoutePrefixAttribute(t, name.ToLower());
+            var controllerPath = Reflection.GetRoutePrefixAttribute(t, UseControlerNameWithoutRoutePrefix  ? name.ToLower() : null);
             var cModel = new ControllerModel
             {
                 Source = t,
@@ -109,14 +110,14 @@ namespace TypeGen.Generators.WebApi
 
         protected virtual string GetActionComment(MethodInfo m)
         {
-            var sb = new StringBuilder();
+            var lines = new List<String>();
             var route = Reflection.GetRouteTemplateAttribute(m);
             if (!String.IsNullOrEmpty(route))
             {
-                sb.AppendLine($"[Route(\"{route}\")]");
+                lines.Add($"[Route(\"{route}\")]");
             }
-            sb.AppendLine(ReflectionHelper.MethodToString(m));
-            return sb.ToString();
+            lines.Add(ReflectionHelper.MethodToString(m, useFullTypeName: false));
+            return String.Join("\n", lines);
         }
 
         protected virtual Type GetActionResultType(MethodInfo m)
@@ -191,12 +192,12 @@ namespace TypeGen.Generators.WebApi
                 var actionPath = controllerPath;
                 var actionName = GetActionName(m, a.HttpMethod);
                 if (!String.IsNullOrEmpty(actionName))
-                    actionPath = controllerPath + "/" + actionName;
+                    actionPath = CombinePath(controllerPath, actionName);
                 a.UrlTemplate = actionPath;
                 return;
             }
             if (!a.UrlTemplate.StartsWith("/", StringComparison.InvariantCulture))
-                a.UrlTemplate = controllerPath + "/" + a.UrlTemplate;
+                a.UrlTemplate = CombinePath(controllerPath, a.UrlTemplate);
             //theoretically, DirectRouteBuilder, RouteParser, HttpParsedRoute can be used, but it is marked as internal :-(
             var parts = a.UrlTemplate.Split('/');
 
@@ -209,6 +210,15 @@ namespace TypeGen.Generators.WebApi
                         a.Parameters.Add(pmodel);
                 }
             }
+        }
+
+        private string CombinePath(string p1, string p2)
+        {
+            if (String.IsNullOrEmpty(p1))
+                return p2;
+            if (String.IsNullOrEmpty(p2))
+                return p1;
+            return p1 + "/" + p2;
         }
 
         protected virtual ParameterModel CreateTemplateParameter(ActionModel a, MethodInfo m, string part)
@@ -309,10 +319,8 @@ namespace TypeGen.Generators.WebApi
         {
             var sb = new StringBuilder();
             sb.Append(Name);
-            if (!String.IsNullOrEmpty(UrlName))
-            {
+            if (!String.IsNullOrEmpty(UrlName) && UrlName!=Name)
                 sb.Append(" (" + UrlName + ")");
-            }
             if (IsUrlParam)
                 sb.Append(" [URL]");
             if (IsOptional)

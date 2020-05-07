@@ -35,85 +35,55 @@ namespace TypeGen.Generators.WebApi
 
         protected virtual void GenerateController(TypescriptModule targetModule, ClassType proxyClass, ControllerModel controller)
         {
-            /*
-            var cls = new ClassType(controller.Name + "Proxy");
-            var proxyType = new TypescriptTypeReference(GeneratedClassName);
-            cls.Members.Add(new PropertyMember("_parent")
-            {
-                MemberType = proxyType,
-                Accessibility = AccessibilityEnum.Private
-            });
-            //cls.Members.Add(new RawStatements("constructor(parent: ", proxyType, ") {\n\tthis._parent = parent;\n}"));
-            cls.Members.Add(new FunctionMember("constructor", new RawStatements("this._parent = parent;"))
-            {
-                Accessibility = null,
-                Parameters = { new FunctionParameter("parent") { ParameterType = proxyType } },
-            });
-            foreach (var am in controller.Actions)
-            {
-                cls.Members.Add(GenerateAction(am));
-            }
-            targetModule.Members.Add(cls);
-            targetModule.Members.Last().Comment = controller.Comment;
-
-            proxyClass.Members.Add(new PropertyMember(controller.Name.Replace("Controller", ""))
-            {
-                MemberType = cls,
-                Accessibility = AccessibilityEnum.Public,
-                Initialization = new RawStatements("new ", cls, "(this)")
-            });
-            */
-
             var actions = controller.Actions.Select(x => GenerateAction(x)).ToArray();
-            var content = new RawStatements();
-            content.Add("{\n");
+            var obj = new AnonymousDeclaration();
             foreach (var item in actions)
             {
-                content.Add(item);
-                content.Add(",\n");
+                obj.Members.Add(item);
             }
-            content.Add("}\n");
             proxyClass.Members.Add(new PropertyMember(controller.Name.Replace("Controller", ""))
             {
                 Accessibility = AccessibilityEnum.Public,
                 Comment = controller.Comment,
-                Initialization = content
+                Initialization = new RawStatements(obj)
             });
         }
 
-        protected virtual RawStatements GenerateAction(ActionModel action)
+        protected virtual FunctionMember GenerateAction(ActionModel action)
         {
-            var method = new FunctionMember(action.Name + "Async", null)
+            var fn = new FunctionMember(action.Name + "Async", null)
             {
                 Accessibility = AccessibilityEnum.Public,
-                Comment = GenerateActionComment(action)
+                Comment = GenerateActionComment(action),
+                Style = FunctionStyle.Function
             };
-            GenerateMethodParametersSignature(action, method);
+            GenerateMethodParametersSignature(action, fn);
             if (action.ResultType != null)
             {
-                method.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { _reflectionGenerator.GenerateFromType(action.ResultType) } };
+                fn.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { _reflectionGenerator.GenerateFromType(action.ResultType) } };
             }
             else
             {
-                method.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { PrimitiveType.Void } };
+                fn.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { PrimitiveType.Void } };
             }
 
-            method.Body = new RawStatements();
-            method.Body.Statements.Add("this.call" + action.HttpMethod + "(");
-            GenerateUrlParametersValue(action, method);
-            method.Body.Statements.Add(", ");
-            GenerateNamedParametersValue(action, method);
+            fn.Body = new RawStatements();
+            fn.Body.Statements.Add("return this.call" + action.HttpMethod + "(");
+            GenerateUrlParametersValue(action, fn);
+            fn.Body.Statements.Add(", ");
+            GenerateNamedParametersValue(action, fn);
             var dataParam = action.Parameters.FirstOrDefault(p => p.IsData);
             if (dataParam != null)
             {
-                method.Body.Statements.Add(", " + dataParam.Name);
+                fn.Body.Statements.Add(", " + dataParam.Name);
                 if (dataParam.IsData)
                 {
-                    method.Body.Statements.Add("/* DATA */");
+                    fn.Body.Statements.Add("/* DATA */");
                 }
             }
-            method.Body.Statements.Add(")");
-            return FunctionToDelegate(method);
+            fn.Body.Statements.Add(")");
+            //return FunctionToDelegate(method);
+            return fn;
         }
 
         private RawStatements FunctionToDelegate(FunctionMember method)
@@ -154,10 +124,13 @@ namespace TypeGen.Generators.WebApi
 
         protected virtual string GenerateActionComment(ActionModel action)
         {
-            var parameters = action.Parameters;
-            //.Select(p => p.ToString() + " ( " + p.Source.Attributes + " - " + string.Join("|", p.Source.CustomAttributes) +")");
-            return "*" + action.Comment + "\n" +
-                   " parameters: " + String.Join(", ", parameters) + "\n";
+            var sb = new StringBuilder();
+            sb.Append("*");
+            sb.Append(action.Comment);
+            if (!sb.ToString().EndsWith("\n"))
+                sb.Append("\n");
+            sb.Append(" parameters: ").Append(String.Join(", ", action.Parameters));
+            return sb.ToString();
         }
 
         protected virtual void GenerateUrlParametersValue(ActionModel action, FunctionMember method)

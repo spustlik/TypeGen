@@ -158,17 +158,17 @@ namespace TypeGen
         private void Generate(ModuleElement element)
         {
             GenerateLineComment(element.Comment);
-            if (element is DeclarationModuleElement)
+            if (element is DeclarationModuleElement declaration)
             {
                 if (element.IsExporting)
                 {
                     Formatter.Write("export ");
                 }
-                Generate((DeclarationModuleElement)element);
+                Generate(declaration);
             }
-            else if (element is RawModuleElement)
+            else if (element is RawModuleElement raw)
             {
-                Generate((RawModuleElement)element);
+                Generate(raw);
             }
             else
             {
@@ -228,14 +228,14 @@ namespace TypeGen
 
         public void Generate(DeclarationBase decl)
         {
-            if (decl is ClassType)
+            if (decl is ClassType cls)
             {
-                Generate((ClassType)decl);
+                Generate(cls);
             }
-            else if (decl is InterfaceType)
+            else if (decl is InterfaceType intf)
             {
-                Generate((InterfaceType)decl);
-            }
+                Generate(intf);
+            }            
             else
             {
                 throw new ArgumentOutOfRangeException();
@@ -305,17 +305,17 @@ namespace TypeGen
         private void Generate(DeclarationMember m)
         {
             GenerateLineComment(m.Comment);
-            if (m is PropertyMember)
+            if (m is PropertyMember prop)
             {
-                Generate((PropertyMember)m);
+                Generate(prop);
             }   
-            else if (m is FunctionMemberBase)
+            else if (m is FunctionMemberBase fun)
             {
-                Generate((FunctionMemberBase)m);
+                Generate(fun);
             }
-            else if (m is RawDeclarationMember)
+            else if (m is RawDeclarationMember raw)
             {
-                Generate((RawDeclarationMember)m);
+                Generate(raw);
             }
             else
             {
@@ -331,37 +331,44 @@ namespace TypeGen
             }
         }
 
-        private void Generate(FunctionMemberBase fn)
-        {            
-            Generate(fn.Accessibility);
-            Formatter.Write(fn.Name);
-            if (fn.IsGeneric)
+        private void Generate(FunctionMemberBase f)
+        {
+            //style
+            // public name<T>(args):result { body }
+            // name: function(args):result {body} cannot be generic, cannot have access
+            if (f.Style == FunctionStyle.Method)
+                Generate(f.Accessibility);
+            Formatter.Write(f.Name);
+            if (f.Style == FunctionStyle.Method && f.IsGeneric)
             {
                 Formatter.Write("<");
-                Formatter.WriteSeparated(", ", fn.GenericParameters, Generate);
+                Formatter.WriteSeparated(", ", f.GenericParameters, Generate);
                 Formatter.Write(">");
             }
+            if (f.Style == FunctionStyle.Function)
+            {
+                Formatter.Write(": function ");
+            }
             Formatter.Write("(");
-            Formatter.WriteSeparated(", ", fn.Parameters, Generate);
+            Formatter.WriteSeparated(", ", f.Parameters, Generate);
             Formatter.Write(")");
-            if (fn.ResultType != null)
+            if (f.ResultType != null)
             {
                 Formatter.Write(": ");
-                Generate(fn.ResultType);
+                Generate(f.ResultType);
             }            
-            if (fn is FunctionDeclarationMember)
+            if (f is FunctionDeclarationMember)
             {
                 Formatter.Write(";");
             }
-            else if (fn is FunctionMember)
+            else if (f is FunctionMember member)
             {
                 Formatter.Write(" {");
                 Formatter.WriteLine();
                 Formatter.PushIndent();
-                var fnm = (FunctionMember)fn;
-                if (fnm.Body != null)
+                if (member.Body != null)
                 {
-                    Generate(fnm.Body);
+                    Generate(member.Body);
                 }
                 Formatter.PopIndent();
                 Formatter.WriteEndOfLine();
@@ -450,26 +457,41 @@ namespace TypeGen
 
         private void GenerateReference(TypescriptTypeBase referencedType)
         {
-            if (referencedType is ArrayType)
+            if (referencedType is ArrayType arr)
             {
-                GenerateReference((ArrayType)referencedType);
+                GenerateReference(arr);
             }
-            else if (referencedType is PrimitiveType)
+            else if (referencedType is PrimitiveType primitive)
             {
-                GenerateReference((PrimitiveType)referencedType);
+                GenerateReference(primitive);
             }
-            else if (referencedType is EnumType)
+            else if (referencedType is EnumType enm)
             {
-                GenerateReference((EnumType)referencedType);
+                GenerateReference(enm);
             }
-            else if (referencedType is DeclarationBase)
+            else if (referencedType is DeclarationBase declaration)
             {
-                GenerateReference((DeclarationBase)referencedType);
+                GenerateReference(declaration);
+            }
+            else if (referencedType is AnonymousDeclaration anonymous)
+            {
+                Generate(anonymous);
             }
             else
             {
                 throw new ArgumentOutOfRangeException("Cannot generate reference "+referencedType);
             }            
+        }
+
+        private void Generate(AnonymousDeclaration anonymous)
+        {
+            Formatter.Write("{");
+            Formatter.WriteLine();
+            Formatter.PushIndent();
+            Formatter.WriteSeparated(",\n", anonymous.Members, Generate);
+            Formatter.WriteLine();
+            Formatter.PopIndent();
+            Formatter.Write("}");
         }
 
         private void GenerateReference(DeclarationBase type)

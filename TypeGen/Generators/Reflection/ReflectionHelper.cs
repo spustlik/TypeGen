@@ -54,7 +54,7 @@ namespace TypeGen
             return result;
         }
 
-        public static string MethodToString(MethodInfo m)
+        public static string MethodToString(MethodInfo m, bool useFullTypeName = true)
         {
             var sb = new StringBuilder();
             //if (m.ReturnType == typeof(Task) || m.ReturnType.IsGenericType && m.ReturnType.GetGenericTypeDefinition()==typeof(Task<>))
@@ -69,7 +69,7 @@ namespace TypeGen
             //}
             //else
             //{
-                sb.Append(TypeToString(m.ReturnType));
+                sb.Append(TypeToString(m.ReturnType, useFullTypeName));
             //}
             sb.Append(" ");
             sb.Append(m.Name);
@@ -78,7 +78,7 @@ namespace TypeGen
             {
                 if (p != m.GetParameters().First())
                     sb.Append(", ");
-                sb.Append(TypeToString(p.ParameterType));
+                sb.Append(TypeToString(p.ParameterType, useFullTypeName));
                 sb.Append(" ");
                 sb.Append(p.Name);
                 if (p.HasDefaultValue)
@@ -91,26 +91,26 @@ namespace TypeGen
             return sb.ToString();
         }
 
-        public static string TypeToString(Type type)
+        public static string TypeToString(Type type, bool useFullTypeName = true)
         {
             if (!type.IsGenericType)
-                return ShortenTypeName(type);
+                return ShortenTypeName(type, useFullTypeName);
             if (type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                return ShortenTypeName(type.GetGenericArguments()[0]) + "?";
+                return ShortenTypeName(type.GetGenericArguments()[0], useFullTypeName) + "?";
             }
             var sb = new StringBuilder();
-            sb.Append(ShortenTypeName(type.GetGenericTypeDefinition()));
+            sb.Append(ShortenTypeName(type.GetGenericTypeDefinition(), useFullTypeName));
             sb.Append("<");
             foreach (var ga in type.GetGenericArguments())
             {
-                sb.Append(TypeToString(ga));
+                sb.Append(TypeToString(ga, useFullTypeName));
             }
             sb.Append(">");
             return sb.ToString();
         }
 
-        private static string ShortenTypeName(Type type)
+        private static string ShortenTypeName(Type type, bool useFullTypeName = true)
         {
             if (type == typeof(string))
                 return "string";
@@ -118,11 +118,11 @@ namespace TypeGen
                 return "bool";
             if (type == typeof(int))
                 return "int";
-            if (type.Namespace=="System" || type.Namespace.StartsWith("System.", StringComparison.Ordinal))
+            if (type.Namespace == "System" || type.Namespace.StartsWith("System.", StringComparison.Ordinal))
             {
                 return Generators.NamingHelper.GetNonGenericTypeName(type);
             }
-            return type.Namespace + "." + Generators.NamingHelper.GetNonGenericTypeName(type);
+            return (useFullTypeName ? (type.Namespace + ".") : "") + Generators.NamingHelper.GetNonGenericTypeName(type);
         }
     }
 }

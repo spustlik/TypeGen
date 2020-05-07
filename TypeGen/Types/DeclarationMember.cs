@@ -49,10 +49,17 @@ namespace TypeGen
         }
     }
 
+    public enum FunctionStyle
+    {
+        Method,
+        Function
+    }
+
     public abstract class FunctionMemberBase : DeclarationMember
     {
         public string Name { get; set; }
         public AccessibilityEnum? Accessibility { get; set; }
+        public FunctionStyle Style { get; set; } = FunctionStyle.Method;
         public List<GenericParameter> GenericParameters { get; private set; }
         public bool IsGeneric { get { return GenericParameters.Count > 0; } }
         public List<FunctionParameter> Parameters { get; private set; }
@@ -89,6 +96,7 @@ namespace TypeGen
 
     public sealed class FunctionMember : FunctionMemberBase
     {
+        
         public RawStatements Body { get; set; }
         public FunctionMember(string name, RawStatements body) : base(name)
         {

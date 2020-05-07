@@ -158,14 +158,22 @@ namespace TypeGen
             if (decl.IsGeneric)
             {
                 Formatter.Write("<");
-                base.VisitGenericParameters(decl);
+                for (int i = 0; i < decl.GenericParameters.Count; i++)
+                {
+                    if (i!=0)
+                        Formatter.Write(", ");
+                    VisitGenericParameter(decl.GenericParameters[i]);
+                }                
                 Formatter.Write(">");
             }
         }
         public override void VisitGenericParameter(GenericParameter obj)
         {
             base.VisitGenericParameter(obj);
-            Formatter.Write(", ");
+        }
+        public override void VisitTypeReference(TypescriptTypeReference obj)
+        {
+            base.VisitTypeReference(obj);
         }
         /*
         public void Generate(ClassType cls)
