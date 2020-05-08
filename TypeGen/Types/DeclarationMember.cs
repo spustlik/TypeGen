@@ -52,7 +52,8 @@ namespace TypeGen
     public enum FunctionStyle
     {
         Method,
-        Function
+        Function,
+        ArrowFunction //warning, another meaning of "this"
     }
 
     public abstract class FunctionMemberBase : DeclarationMember

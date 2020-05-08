@@ -55,7 +55,8 @@ namespace TypeGen.Generators.WebApi
             {
                 Accessibility = AccessibilityEnum.Public,
                 Comment = GenerateActionComment(action),
-                Style = FunctionStyle.Function
+                //arrow function is used to simplify usage of "this"
+                Style = FunctionStyle.ArrowFunction
             };
             GenerateMethodParametersSignature(action, fn);
             if (action.ResultType != null)
@@ -68,7 +69,7 @@ namespace TypeGen.Generators.WebApi
             }
 
             fn.Body = new RawStatements();
-            fn.Body.Statements.Add("return this.call" + action.HttpMethod + "(");
+            fn.Body.Statements.Add("this.call" + action.HttpMethod + "(");
             GenerateUrlParametersValue(action, fn);
             fn.Body.Statements.Add(", ");
             GenerateNamedParametersValue(action, fn);

@@ -285,19 +285,22 @@ module testModule {
         public void TestNewStatements()
         {
             var m = new TypescriptModule("testModule") { Comment = "module" };
+            var cls = new ClassType("class1");
+
             var fn = new FunctionMember("inlinedFunction",
                 new RawStatements("return false;"));
             fn.Style = FunctionStyle.Function;
             fn.ResultType = PrimitiveType.Boolean;
             fn.Parameters.Add(new FunctionParameter("name") { ParameterType = PrimitiveType.String });
+            
             var complex = new AnonymousDeclaration();
             complex.Members.Add(fn);
 
             var prop = new PropertyMember("complexProperty") { Accessibility = AccessibilityEnum.Public };
             //prop.MemberType = complex;
             prop.Initialization = new RawStatements(complex);
-            var cls = new ClassType("class1");
-            cls.Members.Add(prop);
+            cls.Members.Add(prop);            
+            
             m.Members.Add(cls);
             m.Members.Last().IsExporting = true;
             var g = new OutputGenerator();

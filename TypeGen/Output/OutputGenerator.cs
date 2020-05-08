@@ -15,9 +15,10 @@ namespace TypeGen
         public string Output { get { return Formatter.Output.ToString(); } }
         public INameResolver NameResolver { get; set; }
         public bool GenerateComments { get; set; }
-
+        private Stack<bool> _anonymousMembers = new Stack<bool>();
         public OutputGenerator(INameResolver nameResolver = null)
         {
+            _anonymousMembers.Push(false);
             GenerateComments = true;
             Formatter = new TextFormatter();
             if (nameResolver == null)
@@ -243,7 +244,7 @@ namespace TypeGen
         }
 
         public void Generate(ClassType cls)
-        {            
+        {
             Formatter.Write("class ");
             Formatter.Write(cls.Name);
             if (cls.IsGeneric)
@@ -265,11 +266,13 @@ namespace TypeGen
             Formatter.Write(" {");
             Formatter.WriteLine();
             Formatter.PushIndent();
+            _anonymousMembers.Push(false);
             foreach (var m in cls.Members)
             {                
                 Generate(m);
                 Formatter.WriteEndOfLine();
             }
+            _anonymousMembers.Pop();
             Formatter.PopIndent();
             Formatter.WriteEndOfLine();
             Formatter.Write("}");
@@ -293,11 +296,13 @@ namespace TypeGen
             Formatter.Write(" {");
             Formatter.WriteLine();
             Formatter.PushIndent();
+            _anonymousMembers.Push(false);
             foreach (var m in cls.Members)
             {
                 Generate(m);
                 Formatter.WriteEndOfLine();
             }
+            _anonymousMembers.Pop();
             Formatter.PopIndent();
             Formatter.Write("}");
         }
@@ -333,10 +338,17 @@ namespace TypeGen
 
         private void Generate(FunctionMemberBase f)
         {
-            //style
+            var anonymousMembers = _anonymousMembers.Peek();
+            //anonymous:
+            // no access
+            // name<T>(args):result { body }
+            // name: function(args):result {body} cannot be generic
+            // name: (args):result => {body} cannot be generic
+            //non-anonymous
             // public name<T>(args):result { body }
-            // name: function(args):result {body} cannot be generic, cannot have access
-            if (f.Style == FunctionStyle.Method)
+            // name = function(args):result {body} cannot be generic
+            // name = (args):result => {body} cannot be generic
+            if (!anonymousMembers)
                 Generate(f.Accessibility);
             Formatter.Write(f.Name);
             if (f.Style == FunctionStyle.Method && f.IsGeneric)
@@ -347,7 +359,12 @@ namespace TypeGen
             }
             if (f.Style == FunctionStyle.Function)
             {
-                Formatter.Write(": function ");
+                Formatter.Write(anonymousMembers ? ": " : "= ");
+                Formatter.Write("function ");
+            }
+            if (f.Style == FunctionStyle.ArrowFunction)
+            {
+                Formatter.Write(anonymousMembers ? ": " : "= ");
             }
             Formatter.Write("(");
             Formatter.WriteSeparated(", ", f.Parameters, Generate);
@@ -363,16 +380,24 @@ namespace TypeGen
             }
             else if (f is FunctionMember member)
             {
-                Formatter.Write(" {");
-                Formatter.WriteLine();
-                Formatter.PushIndent();
-                if (member.Body != null)
+                if (f.Style == FunctionStyle.ArrowFunction)
                 {
+                    Formatter.Write(" => ");
                     Generate(member.Body);
                 }
-                Formatter.PopIndent();
-                Formatter.WriteEndOfLine();
-                Formatter.Write("}");
+                else
+                {
+                    Formatter.Write(" {");
+                    Formatter.WriteLine();
+                    Formatter.PushIndent();
+                    if (member.Body != null)
+                    {
+                        Generate(member.Body);
+                    }
+                    Formatter.PopIndent();
+                    Formatter.WriteEndOfLine();
+                    Formatter.Write("}");
+                }
             }
             else
             {
@@ -488,7 +513,9 @@ namespace TypeGen
             Formatter.Write("{");
             Formatter.WriteLine();
             Formatter.PushIndent();
+            _anonymousMembers.Push(true);
             Formatter.WriteSeparated(",\n", anonymous.Members, Generate);
+            _anonymousMembers.Pop();
             Formatter.WriteLine();
             Formatter.PopIndent();
             Formatter.Write("}");
