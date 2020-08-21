@@ -98,7 +98,7 @@ namespace TypeGen
         }
         public override string ToString()
         {
-            return TypeReference + "";
+            return TypeReference?.ToString();
         }
     }
 }
