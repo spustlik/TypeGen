@@ -48,7 +48,7 @@ namespace TypeGen
                 }
                 catch (Exception ex)
                 {
-                    throw new ApplicationException("Error when acquiring interfaces map from " + type + ", interface:" + intf, ex);
+                    throw new ApplicationException($"Error when acquiring interfaces map from {type}, interface:{intf}", ex);
                 }
             }
             return result;

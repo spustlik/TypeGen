@@ -112,6 +112,28 @@ module GeneratedModule {
 }".Trim(), g.Output.Trim());
         }
 
+
+        [TestMethod]
+        public void TestDictionary()
+        {
+            var rg = new ReflectionGenerator();
+            rg.NamingStrategy.InterfacePrefixForClasses = "";
+            rg.GenerateInterface(typeof(GenDictionary));
+            var g = new OutputGenerator();
+            g.Generate(rg.GenerationStrategy.TargetModule);
+            Assert.AreEqual(null, Helper.StringCompare(
+@"
+module GeneratedModule {
+    interface GenDictionary {
+        Users: {[ key: string]: AdminUser[]};
+    }
+    interface AdminUser {
+        Name: string;
+        Login: string;
+    }
+}
+", g.Output));
+        }
         [TestMethod]
         public void TestGenericsInstance()
         {
@@ -256,6 +278,10 @@ module GeneratedModule {
     public class GenList<TI>
     {
         public IEnumerable<GenTest<TI>> Values { get; set; }
+    }
+    public class GenDictionary
+    {
+        public Dictionary<string, AdminUser[]> Users { get; set; }
     }
 
     public class Test1<T>

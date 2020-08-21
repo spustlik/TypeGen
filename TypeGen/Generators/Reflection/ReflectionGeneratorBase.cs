@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -31,8 +32,7 @@ namespace TypeGen.Generators
         }
         public static Type GetGeneratedType(TypeDomBase tt)
         {
-            object t;
-            tt.ExtraData.TryGetValue(SOURCETYPE_KEY, out t);
+            tt.ExtraData.TryGetValue(SOURCETYPE_KEY, out var t);
             return t as Type;
         }
 
@@ -89,19 +89,9 @@ namespace TypeGen.Generators
                 if (type.GetArrayRank() == 1)
                     return new ArrayType(GenerateFromType(type.GetElementType())) { ExtraData = { { SOURCETYPE_KEY, type } } };
             }
-            if (typeof(IDictionary<,>).IsAssignableFrom(type) || typeof(IDictionary).IsAssignableFrom(type))
+            if (IsDictionaryType(type))
             {
-                //if (type.IsConstructedGenericType)
-                    return new TypescriptTypeReference(
-                        new RawStatements(
-                                "{",
-                                "[ key: ",
-                                GenerateFromType(type.GetGenericArguments()[0]),
-                                "]: ",
-                                GenerateFromType(type.GetGenericArguments()[1]),
-                                "}"
-                                )
-                    ){ ExtraData = { { SOURCETYPE_KEY, type } } };
+                return GenerateDictionaryType(type);
             }
             if (typeof(IEnumerable<>).IsAssignableFrom(type) || typeof(IEnumerable).IsAssignableFrom(type))
             {
@@ -133,6 +123,55 @@ namespace TypeGen.Generators
             }
 
             return new AnyType() { ExtraData = { { SOURCETYPE_KEY, type } } };
+        }
+
+        private static bool IsDictionaryType(Type type)
+        {
+            return typeof(IDictionary<,>).IsAssignableFrom(type) || typeof(IDictionary).IsAssignableFrom(type);
+        }
+
+        private TypescriptTypeReference GenerateDictionaryType(Type type)
+        {
+            TypescriptTypeReference result = null;
+            //if (type.IsAssignableFrom(typeof(IDictionary<,>)))
+            {
+                //if (type.IsConstructedGenericType)
+                var interfaces = type.GetImplementedInterfaces();
+                var found = interfaces.FirstOrDefault(intf => intf.IsGenericType && intf.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                if (found != null)
+                {
+                    var keyType = found.GetGenericArguments()[0];
+                    var valueType = found.GetGenericArguments()[1];
+                    result = GenerateDictionaryType(keyType, valueType);
+                }
+            }
+            if (result == null)
+            {
+                result = GenerateDictionaryType(PrimitiveType.String, PrimitiveType.Any);
+            }
+            result.ExtraData[SOURCETYPE_KEY] = type;
+            return result;
+        }
+
+        public TypescriptTypeReference GenerateDictionaryType(Type keyType, Type valueType)
+        {
+            var keyTypeRef = GenerateFromType(keyType);
+            var valueTypeRef = GenerateFromType(valueType);
+            return GenerateDictionaryType(keyTypeRef, valueTypeRef);
+        }
+
+        public static TypescriptTypeReference GenerateDictionaryType(TypescriptTypeReference keyTypeRef, TypescriptTypeReference valueTypeRef)
+        {
+            return new TypescriptTypeReference(
+                new RawStatements(
+                        "{",
+                        "[ key: ",
+                        keyTypeRef,
+                        "]: ",
+                        valueTypeRef,
+                        "}"
+                        )
+            );            
         }
 
         protected virtual DeclarationBase GenerateObjectDeclaration(Type type)
