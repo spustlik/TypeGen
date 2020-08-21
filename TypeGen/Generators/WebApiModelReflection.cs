@@ -38,6 +38,7 @@ namespace TypeGen.Generators.WebApi
             {
                 Source = t,
                 Name = t.Name,
+                Description = Reflection.GetTypeGenDescription(t),
                 Actions = GetActionsModel(t, controllerPath),
                 Comment = string.Format("class {0}, controllerPath={1}", t, controllerPath),
             };
@@ -67,6 +68,7 @@ namespace TypeGen.Generators.WebApi
                 MethodName = GetActionMethodName(m),
                 HttpMethod = Reflection.GetHttpMethodAttribute(m) ?? "GET",
                 Comment = GetActionComment(m),
+                Description = Reflection.GetTypeGenDescription(m),
                 ResultType = GetActionResultType(m)
             };
             ProcessRoute(aModel, m, controllerPath);
@@ -282,14 +284,17 @@ namespace TypeGen.Generators.WebApi
         public Type Source { get; set; }
         public string Name { get; set; }
         public string Comment { get; set; }
+        public string Description { get; set; }
+
         public List<ActionModel> Actions = new List<ActionModel>();
     }
 
     public class ActionModel
     {
         public MethodInfo Source { get; set; }
-        public string Comment { get; set; }
         public string Name { get; set; }
+        public string Comment { get; set; }
+        public string Description { get; set; }
         public string MethodName { get; set; }
         public string HttpMethod { get; set; }
         public string UrlTemplate { get; set; }

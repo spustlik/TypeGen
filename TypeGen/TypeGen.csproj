@@ -64,6 +64,7 @@
     <Compile Include="Types\DeclarationMember.cs" />
     <Compile Include="Types\EnumType.cs" />
     <Compile Include="Types\EqualityExtensions.cs" />
+    <Compile Include="Types\ExtraDataExtensions.cs" />
     <Compile Include="Types\TypescriptModule.cs" />
     <Compile Include="Types\PrimitiveTypes.cs" />
     <Compile Include="Types\RawStatement.cs" />

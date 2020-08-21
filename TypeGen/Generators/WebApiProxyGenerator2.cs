@@ -30,7 +30,7 @@ namespace TypeGen.Generators.WebApi
             {
                 GenerateController(targetModule, proxyClass, controller);
             }
-            targetModule.Members.Add(new RawStatements("export var proxy = new ", proxyClass, "();"));
+            //targetModule.Members.Add(new RawStatements("export var proxy = new ", proxyClass, "();"));
         }
 
         protected virtual void GenerateController(TypescriptModule targetModule, ClassType proxyClass, ControllerModel controller)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 
@@ -60,6 +61,26 @@ namespace TypeGen.Generators.WebApi
                     return ((dynamic)routeAt).Template;
                 }
                 return null;
+            }
+
+            public static string GetTypeGenDescription(Type t)
+            {
+                return GetTypeGenDescription(t.GetCustomAttribute<DescriptionAttribute>());
+            }
+            public static string GetTypeGenDescription(MethodInfo m)
+            {
+                return GetTypeGenDescription(m.GetCustomAttribute<DescriptionAttribute>());
+            }
+
+            public static string GetTypeGenDescription(DescriptionAttribute at)
+            {
+                if (at == null)
+                    return null;
+                var s = at.Description?.Trim();
+                const string PREFIX = "TYPEGEN:";
+                if (!s.StartsWith(PREFIX, StringComparison.OrdinalIgnoreCase))
+                    return null;
+                return s.Substring(PREFIX.Length);
             }
 
             public static string GetHttpMethodAttribute(MethodInfo m)
