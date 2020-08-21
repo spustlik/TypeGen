@@ -556,13 +556,13 @@ namespace TypeGen
         {
             foreach (var item in raw.Statements)
             {
-                if (item is RawStatement)
+                if (item is RawStatement statement)
                 {
-                    Formatter.Write(((RawStatement)item).Content);
+                    Formatter.Write(statement.Content);
                 }
-                else if (item is RawStatementTypeReference)
+                else if (item is RawStatementTypeReference typeRef)
                 {
-                    Generate(((RawStatementTypeReference)item).TypeReference);
+                    Generate(typeRef.TypeReference);
                 }
                 else
                 {

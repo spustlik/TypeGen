@@ -60,8 +60,7 @@ namespace TypeGen
 
         public string GetReferencedName(EnumType type)
         {
-            string result;
-            if (_cache.TryGetValue(type, out result))
+            if (_cache.TryGetValue(type, out string result))
                 return result;
             var m = FindModule(type);
             if (m != null)
@@ -81,21 +80,22 @@ namespace TypeGen
 
         public string GetReferencedName(DeclarationBase type)
         {
-            string result;
-            if (_cache.TryGetValue(type, out result))
+            if (_cache.TryGetValue(type, out string result))
                 return result;
             var m = FindModule(type);
+            var sb = new StringBuilder();
             if (m != null)
             {
-                result = m.Item1;
-                if (!String.IsNullOrEmpty(result))
-                    result = result + ".";
-                result = result + type.Name;
+                sb.Append(m.Item1);
+                if (!String.IsNullOrEmpty(m.Item1))
+                    sb.Append(".");
+                sb.Append(type.Name);
             }
             else
             {
-                result = GetFailedName(type.Name);
+                sb.Append(GetFailedName(type.Name));
             }
+            result = sb.ToString();
             _cache[type] = result;
             return result;
         }
