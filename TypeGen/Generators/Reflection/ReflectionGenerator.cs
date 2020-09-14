@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace TypeGen.Generators
 {
-    public class ReflectionGenerator : ReflectionGeneratorBase
+    public partial class ReflectionGenerator : ReflectionGeneratorBase
     {
         public new NamingStrategy NamingStrategy { get { return (NamingStrategy)base.NamingStrategy; } }
         public new GenerationStrategy GenerationStrategy { get { return (GenerationStrategy)base.GenerationStrategy; } }
@@ -31,16 +30,41 @@ namespace TypeGen.Generators
                 return new ArrayType(new AnyType()) { ExtraData = { { SOURCETYPE_KEY, type } } };
             if (type.Namespace.StartsWith("Newtonsoft.", StringComparison.InvariantCulture))
                 return new AnyType() { ExtraData = { { SOURCETYPE_KEY, type } } };
+            if (type.IsEnum && NewtonsoftJsonHelper.IsNewtonsoftStringEnum(type))
+                return GenerateStringUnion(type);
             return base.TypeGenerator(type);
         }
+
+        protected virtual TypescriptTypeReference GenerateStringUnion(Type type)
+        {
+            var name = NamingStrategy.GetEnumName(type);
+            var stringEnumType = new RawStatements("type ", name, " = ") { ExtraData = { { SOURCETYPE_KEY, type } } };
+
+            GenerationStrategy.TargetModule.Members.Add(stringEnumType);
+            //if (GenerationStrategy.CommentSource)
+            //    stringEnumType.Comment = "generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY];
+            var tref = new TypescriptTypeReference(name);
+            AddMap(type, tref);
+            var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
+            for (int i = 0; i < fields.Length; i++)
+            {
+                if (i != 0)
+                    stringEnumType.Add(" | ");
+                var field = fields[i];
+                stringEnumType.Add("'" + field.Name + "'");
+            }
+            stringEnumType.Add(";");
+            return tref;
+        }
     }
+
 
     public class NamingStrategy : IReflectedNamingStrategy
     {
         public string InterfacePrefixForClasses { get; set; }
         public string InterfacePrefix { get; set; }
         public LetterCasing FirstLetterCasing { get; set; }
-        
+
         public NamingStrategy()
         {
             InterfacePrefix = "I";
@@ -49,12 +73,8 @@ namespace TypeGen.Generators
 
         public virtual string GetPropertyName(PropertyInfo property)
         {
-            var jsonAt = property.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("Newtonsoft.Json.JsonPropertyAttribute"));
-            if (jsonAt != null)
-            {
-                var name = ((dynamic)jsonAt).PropertyName ?? property.Name;
+            if (NewtonsoftJsonHelper.IsNewtonsoftProperty(property, out var name))
                 return name;
-            }
             return NamingHelper.FirstLetter(FirstLetterCasing, property.Name);
         }
 
@@ -115,7 +135,7 @@ namespace TypeGen.Generators
         /// enable generation of interfaces implemented in System namespace
         /// </summary>
         public bool GenerateSystemInterfaces { get; set; }
-        
+
         /// <summary>
         /// add comment with source name
         /// </summary>
@@ -126,7 +146,7 @@ namespace TypeGen.Generators
             TargetModule = new TypescriptModule("GeneratedModule");
         }
 
-        
+
         public virtual bool ShouldGenerateClass(Type type)
         {
             return GenerateClasses;
@@ -146,7 +166,7 @@ namespace TypeGen.Generators
         {
             if (propertyInfo.GetGetMethod().IsStatic)
                 return false;
-            if (propertyInfo.GetCustomAttributes().Count(at => at.GetType().IsTypeBaseOrSelf("Newtonsoft.Json.JsonIgnoreAttribute")) >0 )
+            if (NewtonsoftJsonHelper.IsIgnored(propertyInfo))
                 return false;
             return true;
         }
@@ -199,14 +219,14 @@ namespace TypeGen.Generators
             //can use JsonConvert.Serialize object (with casting to target type)
             if (value is string)
                 return new RawStatements("'" + value.ToString().Replace("'", "''") + "'");
-            if (value is bool)
-                return new RawStatements((bool)value ? "true" : "false");
-            if (value is float)
-                return GenerateRawLiteral((double)(float)value, targetType);
-            if (value is int)
-                return GenerateRawLiteral((double)(int)value, targetType);
-            if (value is double)
-                return new RawStatements(((double)value).ToString(CultureInfo.InvariantCulture));
+            if (value is bool b)
+                return new RawStatements(b ? "true" : "false");
+            if (value is float f)
+                return GenerateRawLiteral((double)f, targetType);
+            if (value is int i)
+                return GenerateRawLiteral((double)i, targetType);
+            if (value is double d)
+                return new RawStatements(d.ToString(CultureInfo.InvariantCulture));
             return null;
         }
 
@@ -219,6 +239,7 @@ namespace TypeGen.Generators
         {
             return GenerateMethods;
         }
+
     }
 
 }

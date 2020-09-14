@@ -216,6 +216,26 @@ module GeneratedModule {
 }
 ".Trim(), g.Output.Trim());
         }
+
+
+        [TestMethod]
+        public void TestStringEnum()
+        {
+            var rg = new ReflectionGenerator();
+            rg.GenerationStrategy.GenerateClasses = true;
+            rg.GenerateClass(typeof(TestEnumClass));
+
+            var g = new OutputGenerator();
+            g.Generate(rg.GenerationStrategy.TargetModule);
+            Assert.AreEqual(@"
+module GeneratedModule {
+    class TestEnumClass {
+        Test: StrEnum;
+    }
+    type StrEnum = 'A' | 'B' | 'Test' | 'TEST';
+}
+".Trim(), g.Output.Trim());
+        }
     }
 
     public class SystemTypesClass<T> : IDisposable
@@ -342,5 +362,18 @@ module GeneratedModule {
         {
             throw new NotImplementedException();
         }
+    }
+
+    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+    public enum StrEnum
+    {
+        A,
+        B,
+        Test,
+        TEST
+    }
+    public class TestEnumClass
+    {
+        public StrEnum Test { get; set; }
     }
 }

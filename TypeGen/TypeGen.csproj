@@ -45,6 +45,7 @@
     <Compile Include="Generators\Reflection\IReflectionGenerationStrategy.cs" />
     <Compile Include="Generators\Reflection\IReflectedNamingStrategy.cs" />
     <Compile Include="Generators\KnockoutGenerator.cs" />
+    <Compile Include="Generators\Reflection\NewtonsoftJsonHelper.cs" />
     <Compile Include="Generators\Reflection\ReflectionGenerator.cs" />
     <Compile Include="Generators\WebApiModelReflection.cs" />
     <Compile Include="Generators\WebApiControllerGenerator.cs" />
