@@ -43,7 +43,7 @@ namespace TypeGen.Generators
             GenerationStrategy.TargetModule.Members.Add(stringEnumType);
             //if (GenerationStrategy.CommentSource)
             //    stringEnumType.Comment = "generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY];
-            var tref = new TypescriptTypeReference(name);
+            var tref = new TypescriptTypeReference(GenerationStrategy.TargetModule.Name + "." + name);
             AddMap(type, tref);
             var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
             for (int i = 0; i < fields.Length; i++)
