@@ -18,6 +18,9 @@ namespace TypeGen.Generators
         public bool StripHttpMethodPrefixes { get; set; } = false;
         public bool SkipParamsCheck { get; set; } = false;
 
+        public WebApi.IWebApiReflection Reflection = new WebApi.NetApiReflection();
+
+
         public class ControllerModel
         {
             public Type Source { get; set; }
@@ -91,7 +94,7 @@ namespace TypeGen.Generators
             var name = t.Name;
             if (name.EndsWith("Controller", StringComparison.InvariantCulture))
                 name = name.Substring(0, name.Length - 10);
-            var controllerPath = GetRoutePrefix(t, name.ToLower());
+            var controllerPath = Reflection.GetRoutePrefixAttribute(t, name.ToLower());
             var cModel = new ControllerModel
             {
                 Source = t,
@@ -108,7 +111,7 @@ namespace TypeGen.Generators
             var methods = t.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
             foreach (var m in methods)
             {
-                if (!IsControllerAction(m))
+                if (Reflection.HasNonActionAttribute(m))
                     continue;
                 var aModel = CreateActionModel(m, controllerPath);
                 result.Add(aModel);
@@ -122,7 +125,7 @@ namespace TypeGen.Generators
             {
                 Source = m,
                 Name = m.Name,
-                HttpMethod = GetHttpMethod(m),
+                HttpMethod = Reflection.GetHttpMethodAttribute(m) ?? "GET",
                 Comment = GetActionComment(m),
                 ResultType = GetActionResultType(m)
             };
@@ -166,7 +169,7 @@ namespace TypeGen.Generators
         protected virtual string GetActionComment(MethodInfo m)
         {
             var sb = new StringBuilder();
-            var route = GetRouteTemplate(m);
+            var route = Reflection.GetRouteTemplateAttribute(m);
             if (!String.IsNullOrEmpty(route))
             {
                 sb.Append("[Route(\"" + route + "\")]\n");
@@ -202,12 +205,12 @@ namespace TypeGen.Generators
                     IsOptional = mparam.IsOptional
                 };
                 a.Parameters.Add(pModel);
-                if (IsHttpBodyParam(mparam))
+                if (Reflection.HasHttpBodyParamAttribute(mparam))
                 {
                     pModel.SourceType = ParamSourceType.MethodParamBody;
                     pModel.IsData = true;
                 }
-                else if (IsFromUriParam(mparam, out _))
+                else if (Reflection.GetFromUriAttribute(mparam, out _))
                 {
                     pModel.SourceType = ParamSourceType.MethodParamUri;
                 }
@@ -237,7 +240,7 @@ namespace TypeGen.Generators
 
         public void ProcessRoute(ActionModel a, MethodInfo m, string controllerPath)
         {
-            a.UrlTemplate = GetRouteTemplate(m);
+            a.UrlTemplate = Reflection.GetRouteTemplateAttribute(m);
             if (a.UrlTemplate != null)
             {
                 if (!a.UrlTemplate.StartsWith("/", StringComparison.InvariantCulture))
@@ -285,38 +288,19 @@ namespace TypeGen.Generators
             }
         }
 
-        private static bool IsControllerAction(MethodInfo m)
+        private string GetMethodParameterName(ParameterInfo p)
         {
-            var nonActionAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.NonActionAttribute"));
-            return nonActionAt == null;
-        }
-
-        private static bool IsFromUriParam(ParameterInfo p, out string name)
-        {
-            var fromUriAt = p.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.FromUriAttribute"));
-            if (fromUriAt != null)
-            {
-                name = ((dynamic)fromUriAt).Name ?? p.Name;
-                return true;
-            }
-            name = null;
-            return false;
-        }
-        private static string GetMethodParameterName(ParameterInfo p)
-        {
-            if (IsFromUriParam(p, out var name))
+            if (Reflection.GetFromUriAttribute(p, out var name))
                 return name;
             return p.Name;
         }
 
         private string GetActionName(MethodInfo m, string httpMethod)
         {
-            var actionNameAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.ActionNameAttribute"));
-            if (actionNameAt != null)
-            {
-                return ((dynamic)actionNameAt).Name;
-            }
-            var actionName = m.Name;
+            var actionName = Reflection.GetActionNameAttribute(m);
+            if (!String.IsNullOrEmpty(actionName))
+                return actionName;
+            actionName = m.Name;
             if (this.StripHttpMethodPrefixes)
             {
                 if (actionName.ToUpper().StartsWith(httpMethod, StringComparison.InvariantCulture))
@@ -325,44 +309,6 @@ namespace TypeGen.Generators
                 }
             }
             return actionName;
-        }
-
-        private static bool IsHttpBodyParam(ParameterInfo pi)
-        {
-            return pi.GetCustomAttributes(false).Any(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.FromBodyAttribute"));
-        }
-        private static string GetRoutePrefix(MemberInfo m, string defaultValue)
-        {
-            var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.RoutePrefixAttribute"));
-            if (routeAt != null)
-            {
-                return ((dynamic)routeAt).Prefix;
-            }
-            return defaultValue;
-        }
-
-        private static string GetRouteTemplate(MethodInfo m)
-        {
-            var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf("System.Web.Http.RouteAttribute"));
-            if (routeAt != null)
-            {
-                return ((dynamic)routeAt).Template;
-            }
-            return null;
-        }
-
-        private static string GetHttpMethod(MethodInfo m)
-        {
-            var httpMethodAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeImplementingInterface("System.Web.Http.Controllers.IActionHttpMethodProvider"));
-            if (httpMethodAt != null)
-            {
-                var at = (dynamic)httpMethodAt;
-                if (at.HttpMethods.Count > 0)
-                {
-                    return at.HttpMethods[0].Method;
-                }
-            }
-            return "GET";
         }
 
 

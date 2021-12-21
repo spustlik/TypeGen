@@ -29,13 +29,13 @@ namespace TypeGen.Visitors
 
         public virtual void Visit(ModuleElement element)
         {
-            if (element is DeclarationModuleElement)
+            if (element is DeclarationModuleElement decl)
             {
-                Visit((DeclarationModuleElement)element);
+                Visit(decl);
             }
-            else if (element is RawModuleElement)
+            else if (element is RawModuleElement raw)
             {
-                VisitRawModuleElement((RawModuleElement)element);
+                VisitRawModuleElement(raw);
             }
             else
             {
@@ -56,6 +56,10 @@ namespace TypeGen.Visitors
             else if (element.InnerModule != null)
             {
                 Visit(element.InnerModule);
+            }
+            else if (element.TypeDef != null)
+            {
+                Visit(element.TypeDef);
             }
             else
             {
@@ -84,15 +88,19 @@ namespace TypeGen.Visitors
             }
         }
 
+        public virtual void Visit(TypeDefType typeDef)
+        {
+
+        }
         public virtual void Visit(DeclarationBase decl)
         {
-            if (decl is ClassType)
+            if (decl is ClassType cls)
             {
-                VisitClassType((ClassType)decl);
+                VisitClassType(cls);
             }
-            else if (decl is InterfaceType)
+            else if (decl is InterfaceType intf)
             {
-                VisitInterfaceType((InterfaceType)decl);
+                VisitInterfaceType(intf);
             }
             else
             {
@@ -151,17 +159,17 @@ namespace TypeGen.Visitors
 
         public virtual void Visit(DeclarationMember m)
         {
-            if (m is PropertyMember)
+            if (m is PropertyMember prop)
             {
-                VisitPropertyMember((PropertyMember)m);
-            }   
-            else if (m is FunctionMemberBase)
-            {
-                Visit((FunctionMemberBase)m);
+                VisitPropertyMember(prop);
             }
-            else if (m is RawDeclarationMember)
+            else if (m is FunctionMemberBase fn)
             {
-                VisitRawDeclarationMember((RawDeclarationMember)m);
+                Visit(fn);
+            }
+            else if (m is RawDeclarationMember raw)
+            {
+                VisitRawDeclarationMember(raw);
             }
             else
             {
@@ -179,13 +187,13 @@ namespace TypeGen.Visitors
 
         public virtual void Visit(FunctionMemberBase fn)
         {
-            if (fn is FunctionDeclarationMember)
+            if (fn is FunctionDeclarationMember fndec)
             {
-                VisitFunctionDeclarationMember((FunctionDeclarationMember)fn);
+                VisitFunctionDeclarationMember(fndec);
             }
-            else if (fn is FunctionMember)
+            else if (fn is FunctionMember fun)
             {
-                VisitFunctionMember((FunctionMember)fn);
+                VisitFunctionMember(fun);
             }
             else
             {
@@ -292,26 +300,35 @@ namespace TypeGen.Visitors
 
         public virtual void VisitReference(TypescriptTypeBase referencedType)
         {
-            if (referencedType is ArrayType)
+            if (referencedType is ArrayType arr)
             {
-                VisitReference((ArrayType)referencedType);
+                VisitReference(arr);
             }
-            else if (referencedType is PrimitiveType)
+            else if (referencedType is PrimitiveType pri)
             {
-                VisitReference((PrimitiveType)referencedType);
+                VisitReference(pri);
             }
-            else if (referencedType is EnumType)
+            else if (referencedType is EnumType enm)
             {
-                VisitReference((EnumType)referencedType);
+                VisitReference(enm);
             }
-            else if (referencedType is DeclarationBase)
+            else if (referencedType is DeclarationBase decl)
             {
-                VisitReference((DeclarationBase)referencedType);
+                VisitReference(decl);
+            }
+            else if (referencedType is AnonymousDeclaration an)
+            {
+                VisitReference(an);
             }
             else
             {
                 NonVisitable(referencedType, "referenced type {0}");
             }            
+        }
+
+        protected virtual void VisitReference(AnonymousDeclaration an)
+        {
+            
         }
 
         public virtual void VisitReference(DeclarationBase type)

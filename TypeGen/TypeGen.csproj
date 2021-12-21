@@ -47,9 +47,11 @@
     <Compile Include="Generators\KnockoutGenerator.cs" />
     <Compile Include="Generators\Reflection\NewtonsoftJsonHelper.cs" />
     <Compile Include="Generators\Reflection\ReflectionGenerator.cs" />
+    <Compile Include="Generators\WebApiModelReflection.CoreApiReflection.cs" />
     <Compile Include="Generators\WebApiModelReflection.cs" />
     <Compile Include="Generators\WebApiControllerGenerator.cs" />
-    <Compile Include="Generators\WebApiModelReflection.Reflection.cs" />
+    <Compile Include="Generators\WebApiModelReflection.IWebApiReflection.cs" />
+    <Compile Include="Generators\WebApiModelReflection.NetApiReflection.cs" />
     <Compile Include="Generators\WebApiProxyGenerator2.cs" />
     <Compile Include="Generators\WebApiProxyGenerator.cs" />
     <Compile Include="Output\INameResolver.cs" />
@@ -66,6 +68,8 @@
     <Compile Include="Types\EnumType.cs" />
     <Compile Include="Types\EqualityExtensions.cs" />
     <Compile Include="Types\ExtraDataExtensions.cs" />
+    <Compile Include="Types\ModuleElement.cs" />
+    <Compile Include="Types\TypeDefType.cs" />
     <Compile Include="Types\TypescriptModule.cs" />
     <Compile Include="Types\PrimitiveTypes.cs" />
     <Compile Include="Types\RawStatement.cs" />
@@ -86,7 +90,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy $(TargetDir)*.* D:\SkillDriver\Source\Main\_bin /Y
-xcopy $(TargetDir)typegen.* D:\Cleverlance\CSOB_FINAL\libs /Y
+xcopy $(TargetDir)*.* D:\SkillDriver\Source\SimCreator\SimCreator\_libs /Y
+rem xcopy $(TargetDir)typegen.* D:\Cleverlance\CSOB_FINAL\libs /Y
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

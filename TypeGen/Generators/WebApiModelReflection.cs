@@ -9,7 +9,7 @@ namespace TypeGen.Generators.WebApi
 {
     public partial class WebApiModelReflection
     {
-
+        public IWebApiReflection Reflection = new NetApiReflection();        
         public bool StripHttpMethodPrefixes { get; set; } = false;
         public bool SkipParamsCheck { get; set; } = false;
         public bool AddAsyncSuffix { get; set; } = true;

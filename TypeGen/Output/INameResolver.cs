@@ -14,6 +14,7 @@ namespace TypeGen
     {
         string GetReferencedName(DeclarationBase type);
         string GetReferencedName(EnumType type);
+        string GetReferencedName(TypeDefType type);
     }
 
     /// <summary>
@@ -80,6 +81,15 @@ namespace TypeGen
 
         public string GetReferencedName(DeclarationBase type)
         {
+            return GetRefName(type, x=>x.Name);
+        }
+        public string GetReferencedName(TypeDefType type)
+        {
+            return GetRefName(type, x=>x.Name);
+        }
+
+        private string GetRefName<T>(T type, Func<T,string> getName) where T:TypescriptTypeBase
+        {
             if (_cache.TryGetValue(type, out string result))
                 return result;
             var m = FindModule(type);
@@ -89,11 +99,11 @@ namespace TypeGen
                 sb.Append(m.Item1);
                 if (!String.IsNullOrEmpty(m.Item1))
                     sb.Append(".");
-                sb.Append(type.Name);
+                sb.Append(getName(type));
             }
             else
             {
-                sb.Append(GetFailedName(type.Name));
+                sb.Append(GetFailedName(getName(type)));
             }
             result = sb.ToString();
             _cache[type] = result;

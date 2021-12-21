@@ -17,7 +17,7 @@ namespace TypeGen
         }
         public override string ToString()
         {
-            return "enum " + Name + " (" + Members.Count + " members)";
+            return $"enum {Name} ({Members.Count} members)";
         }
     }
 

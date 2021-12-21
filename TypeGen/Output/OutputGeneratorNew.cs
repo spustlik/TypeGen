@@ -72,8 +72,7 @@ namespace TypeGen
             int i = 0;
             while (i < ordered.Count)
             {
-                var md = ordered[i] as DeclarationModuleElement;
-                if (md != null)
+                if (ordered[i] is DeclarationModuleElement md)
                 {
                     if (md.Declaration != null)
                     {
@@ -101,13 +100,12 @@ namespace TypeGen
 
         private int GetIndexInModule(List<ModuleElement> ordered, TypescriptTypeBase type)
         {
-            return ordered.FindIndex(x => (x is DeclarationModuleElement) && (((DeclarationModuleElement)x).Declaration == type));
+            return ordered.FindIndex(x => (x is DeclarationModuleElement decl) && (decl.Declaration == type));
         }
 
         private bool CanGenerateInAmbientModule(ModuleElement moduleElement)
-        {
-            var de = moduleElement as DeclarationModuleElement;
-            if (de == null)
+        {            
+            if (!(moduleElement is DeclarationModuleElement de))
                 return true;
             return de.EnumDeclaration == null;
         }

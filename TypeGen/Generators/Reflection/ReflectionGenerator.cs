@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -38,22 +39,15 @@ namespace TypeGen.Generators
         protected virtual TypescriptTypeReference GenerateStringUnion(Type type)
         {
             var name = NamingStrategy.GetEnumName(type);
-            var stringEnumType = new RawStatements("type ", name, " = ") { ExtraData = { { SOURCETYPE_KEY, type } } };
+            var senumType = new TypeDefType(name) { ExtraData = { { SOURCETYPE_KEY, type } } };
 
-            GenerationStrategy.TargetModule.Members.Add(stringEnumType);
-            //if (GenerationStrategy.CommentSource)
-            //    stringEnumType.Comment = "generated from " + decl.ExtraData[ReflectionGeneratorBase.SOURCETYPE_KEY];
-            var tref = new TypescriptTypeReference(GenerationStrategy.TargetModule.Name + "." + name);
-            AddMap(type, tref);
+            GenerationStrategy.TargetModule.Members.Add(senumType);
             var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
-            for (int i = 0; i < fields.Length; i++)
-            {
-                if (i != 0)
-                    stringEnumType.Add(" | ");
-                var field = fields[i];
-                stringEnumType.Add("'" + field.Name + "'");
-            }
-            stringEnumType.Add(";");
+            senumType.RawStatements.Add(
+                String.Join(" | ", fields.Select(field => $"'{field.Name}'"))
+                );
+            var tref = new TypescriptTypeReference(senumType);
+            AddMap(type, tref);
             return tref;
         }
     }

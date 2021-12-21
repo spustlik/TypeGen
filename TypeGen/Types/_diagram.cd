@@ -10,6 +10,7 @@
   <Class Name="TypeGen.TypescriptTypeReference" Collapsed="true">
     <Position X="3.75" Y="1.75" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAACAAEAAgAAAAAAAEAABAAAAAAAABAAAA=</HashCode>
       <FileName>Types\TypescriptType.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -28,7 +29,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.GenericParameter" Collapsed="true">
-    <Position X="7.75" Y="1.75" Width="1.5" />
+    <Position X="5.5" Y="1.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAEAAAAAAAEAAAAAAQAAAAAAAAAACAAAAAAAAA=</HashCode>
       <FileName>Types\DeclarationBase.cs</FileName>
@@ -51,6 +52,7 @@
   <Class Name="TypeGen.DeclarationMember" Collapsed="true">
     <Position X="24.5" Y="1.75" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>AAABAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Types\DeclarationMember.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -90,7 +92,7 @@
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.EnumMember" Collapsed="true">
-    <Position X="11.5" Y="1.75" Width="1.5" />
+    <Position X="9.25" Y="1.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAEAAAAAAAEAAAAAAQAAAAAAAAAAAAgAAAAAAA=</HashCode>
       <FileName>Types\EnumType.cs</FileName>
@@ -146,27 +148,28 @@
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.RawStatements" Collapsed="true">
-    <Position X="9.75" Y="1.75" Width="1.5" />
+    <Position X="7.5" Y="1.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAIAAAAAAAAAAAAEAAAAAAAAAAAABAAAAAAAAAAAAAA=</HashCode>
       <FileName>Types\RawStatement.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.RawStatementBase" Collapsed="true">
-    <Position X="14.75" Y="1.75" Width="1.5" />
+    <Position X="11.25" Y="1.75" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Types\RawStatement.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.RawStatement" Collapsed="true">
-    <Position X="13.75" Y="3.25" Width="1.5" />
+    <Position X="10.25" Y="3.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAgAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Types\RawStatement.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.RawStatementTypeReference" Collapsed="true">
-    <Position X="16" Y="3.25" Width="1.5" />
+    <Position X="12.5" Y="3.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAIAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Types\RawStatement.cs</FileName>
@@ -182,14 +185,14 @@
   <Class Name="TypeGen.FunctionMemberBase" Collapsed="true">
     <Position X="24.5" Y="3.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAgAAAAAAAAAAgAAAQAARAAAAAAAIAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAgAAAAAAAAAAgAAAQAARAAAAAABIAAAAAAAAA=</HashCode>
       <FileName>Types\DeclarationMember.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.FunctionParameter" Collapsed="true">
     <Position X="1" Y="1.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAEAABAAAAAAAAAAAQAAEBAAAAAIAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAkAABAAAAAAAAAAAQAAEBAAAAAIAAAAAAAAAA=</HashCode>
       <FileName>Types\DeclarationMember.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -208,30 +211,41 @@
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.TypescriptModule" Collapsed="true">
-    <Position X="5.75" Y="1.75" Width="1.5" />
+    <Position X="15.75" Y="1.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AQAAAAAEAAAAAAAEAAAAAAQAAAAAAAAAAAAEAAAAAAA=</HashCode>
       <FileName>Types\TypescriptModule.cs</FileName>
     </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="Members" />
+    </ShowAsCollectionAssociation>
   </Class>
   <Class Name="TypeGen.ModuleElement" Collapsed="true">
     <Position X="19.5" Y="1.75" Width="1.5" />
     <TypeIdentifier>
-      <FileName>Types\TypescriptModule.cs</FileName>
+      <HashCode>AIAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>Types\ModuleElement.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.DeclarationModuleElement" Collapsed="true">
     <Position X="18.25" Y="3.25" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAQAAAAABEAAAAAAAAAAAAAAAAAAAAAAAAQAA=</HashCode>
-      <FileName>Types\TypescriptModule.cs</FileName>
+      <HashCode>AAQAAAAAQAAAAABEAAAAAAAAAAAAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>Types\ModuleElement.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TypeGen.RawModuleElement" Collapsed="true">
     <Position X="20.5" Y="3.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAACAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>Types\TypescriptModule.cs</FileName>
+      <FileName>Types\ModuleElement.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TypeGen.TypeDefType" Collapsed="true">
+    <Position X="9.5" Y="10.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Types\TypeDefType.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Enum Name="TypeGen.AccessibilityEnum" Collapsed="true">

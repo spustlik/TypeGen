@@ -159,12 +159,12 @@ namespace TypeGen
         private void Generate(ModuleElement element)
         {
             GenerateLineComment(element.Comment);
+            if (element.IsExporting)
+            {
+                Formatter.Write("export ");
+            }
             if (element is DeclarationModuleElement declaration)
             {
-                if (element.IsExporting)
-                {
-                    Formatter.Write("export ");
-                }
                 Generate(declaration);
             }
             else if (element is RawModuleElement raw)
@@ -191,12 +191,23 @@ namespace TypeGen
             {
                 Generate(element.InnerModule);
             }
+            else if (element.TypeDef != null)
+            {
+                Generate(element.TypeDef);
+            }
             else
             {
                 throw new ArgumentOutOfRangeException("Cannot generate declaration module element " + element);
             }
         }
 
+        private void Generate(TypeDefType element)
+        {
+            Formatter.Write("type ");
+            Formatter.Write(element.Name);
+            Formatter.Write(" = ");
+            Generate(element.RawStatements);
+        }
         private void Generate(RawModuleElement element)
         {            
             Generate(element.Raw);
@@ -498,6 +509,10 @@ namespace TypeGen
             {
                 GenerateReference(declaration);
             }
+            else if (referencedType is TypeDefType typeDef)
+            {
+                GenerateReference(typeDef);
+            }
             else if (referencedType is AnonymousDeclaration anonymous)
             {
                 Generate(anonymous);
@@ -521,6 +536,10 @@ namespace TypeGen
             Formatter.Write("}");
         }
 
+        private void GenerateReference(TypeDefType type)
+        {
+            Formatter.Write(NameResolver.GetReferencedName(type));
+        }
         private void GenerateReference(DeclarationBase type)
         {            
             Formatter.Write(NameResolver.GetReferencedName(type));
