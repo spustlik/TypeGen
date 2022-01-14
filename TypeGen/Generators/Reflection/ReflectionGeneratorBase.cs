@@ -17,6 +17,7 @@ namespace TypeGen.Generators
         public const string SOURCETYPE_KEY = "SOURCE_TYPE";
         public const string SOURCEMEMBER_KEY = "SOURCE_PROPERTY";
 
+        public bool SkipComments { get; set; } = true;
         public static IEnumerable<Type> ExtractGeneratedTypes(TypescriptModule module)
         {
             return module.Members
@@ -352,7 +353,8 @@ namespace TypeGen.Generators
                 {
                     if (!GenerationStrategy.ShouldGenerateProperty(result, pi))
                     {
-                        result.Members.Add(new RawDeclarationMember(new RawStatements(string.Format("/* GenerationStrategy skipped property {0} */", pi.Name))));
+                        if (SkipComments)
+                            result.Members.Add(new RawDeclarationMember(new RawStatements(string.Format("/* GenerationStrategy skipped property {0} */", pi.Name))));
                         continue;
                     }
                     if (skipImplementedByInterfaces)
@@ -360,7 +362,8 @@ namespace TypeGen.Generators
                         var intf = IsPropertyImplementedByAnyInterface(pi, type);
                         if (intf!=null)
                         {
-                            result.Members.Add(new RawDeclarationMember(new RawStatements(string.Format("/* Property {0} skipped, because it is already implemented by interface {1}*/", pi.Name, intf.Name))));
+                            if (SkipComments)
+                                result.Members.Add(new RawDeclarationMember(new RawStatements(string.Format("/* Property {0} skipped, because it is already implemented by interface {1}*/", pi.Name, intf.Name))));
                             continue;
                         }
                     }

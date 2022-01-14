@@ -96,13 +96,7 @@ namespace TypeGen.Generators.WebApi
         protected virtual string GenerateActionComment(ActionModel action)
         {
             var parameters = action.Parameters;
-            var sb = new StringBuilder();
-            sb.Append("*");
-            //.Select(p => p.ToString() + " ( " + p.Source.Attributes + " - " + string.Join("|", p.Source.CustomAttributes) +")");
-            return "*" + action.Comment + "\n" +
-                   " parameters: " + String.Join(", ", parameters) + "\n";
-
-            return sb.ToString();
+            return $"*{action.Comment}\n parameters: {String.Join(", ", parameters)}\n";
         }
 
         protected virtual void GenerateUrlParametersValue(ActionModel action, FunctionMember method)

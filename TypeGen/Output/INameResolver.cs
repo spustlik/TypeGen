@@ -28,7 +28,9 @@ namespace TypeGen
 
         private static bool ContainsItem<T>(TypescriptModule m, T item) where T : class
         {
-            return m.Members.OfType<DeclarationModuleElement>().Any(d => d.Declaration == item || d.EnumDeclaration == item);
+            return m.Members
+                .OfType<DeclarationModuleElement>()
+                .Any(d => d.Declaration == item || d.EnumDeclaration == item || d.TypeDef == item);
         }
 
         private static Tuple<string, TypescriptModule> FindModule<T>(T item) where T : class
@@ -61,51 +63,36 @@ namespace TypeGen
 
         public string GetReferencedName(EnumType type)
         {
-            if (_cache.TryGetValue(type, out string result))
-                return result;
-            var m = FindModule(type);
-            if (m != null)
-            {
-                result = m.Item1;
-                if (!String.IsNullOrEmpty(result))
-                    result = result + ".";
-                result = result + type.Name;
-            }
-            else
-            {
-                result = GetFailedName(type.Name);
-            }
-            _cache[type] = result;
-            return result;
+            return GetRefName(type, x => x.Name);
         }
 
         public string GetReferencedName(DeclarationBase type)
         {
-            return GetRefName(type, x=>x.Name);
+            return GetRefName(type, x => x.Name);
         }
         public string GetReferencedName(TypeDefType type)
         {
-            return GetRefName(type, x=>x.Name);
+            return GetRefName(type, x => x.Name);
         }
 
-        private string GetRefName<T>(T type, Func<T,string> getName) where T:TypescriptTypeBase
+        private string GetRefName<T>(T type, Func<T, string> getName) where T : TypescriptTypeBase
         {
             if (_cache.TryGetValue(type, out string result))
                 return result;
             var m = FindModule(type);
-            var sb = new StringBuilder();
             if (m != null)
             {
+                var sb = new StringBuilder();
                 sb.Append(m.Item1);
                 if (!String.IsNullOrEmpty(m.Item1))
                     sb.Append(".");
                 sb.Append(getName(type));
+                result = sb.ToString();
             }
             else
             {
-                sb.Append(GetFailedName(getName(type)));
+                result = GetFailedName(getName(type));
             }
-            result = sb.ToString();
             _cache[type] = result;
             return result;
         }

@@ -267,12 +267,12 @@ namespace TypeGen
             if (cls.Extends!=null)
             {
                 Formatter.Write(" extends ");
-                Generate(cls.Extends);
+                GenerateReference(cls.Extends);
             }
             if (cls.IsImplementing)
             {
                 Formatter.Write(" implements ");
-                Formatter.WriteSeparated(", ", cls.Implementations, Generate);
+                Formatter.WriteSeparated(", ", cls.Implementations, GenerateReference);
             }
             Formatter.Write(" {");
             Formatter.WriteLine();
@@ -302,7 +302,7 @@ namespace TypeGen
             if (cls.IsExtending)
             {
                 Formatter.Write(" extends ");
-                Formatter.WriteSeparated(", ", cls.ExtendsTypes, Generate);
+                Formatter.WriteSeparated(", ", cls.ExtendsTypes, GenerateReference);
             }
             Formatter.Write(" {");
             Formatter.WriteLine();
@@ -383,7 +383,7 @@ namespace TypeGen
             if (f.ResultType != null)
             {
                 Formatter.Write(": ");
-                Generate(f.ResultType);
+                GenerateReference(f.ResultType);
             }            
             if (f is FunctionDeclarationMember)
             {
@@ -432,7 +432,7 @@ namespace TypeGen
             if (par.ParameterType != null)
             {
                 Formatter.Write(": ");
-                Generate(par.ParameterType);
+                GenerateReference(par.ParameterType);
             }
             if (par.DefaultValue != null)
             {
@@ -450,7 +450,7 @@ namespace TypeGen
             if (m.MemberType != null)
             {
                 Formatter.Write(": ");
-                Generate(m.MemberType);
+                GenerateReference(m.MemberType);
             }
             if (m.Initialization != null)
             {
@@ -469,7 +469,7 @@ namespace TypeGen
             }
         }
 
-        private void Generate(TypescriptTypeReference obj)
+        private void GenerateReference(TypescriptTypeReference obj)
         {
             if (!String.IsNullOrEmpty(obj.TypeName))
             {
@@ -479,19 +479,25 @@ namespace TypeGen
             {
                 Generate(obj.Raw);
             }
+            else if (obj.Inline != null)
+            {
+                Formatter.Write("(");
+                Generate(obj.Inline);
+                Formatter.Write(")");
+            }
             else
             {
-                GenerateReference(obj.ReferencedType);
+                GenerateReferencedType(obj.ReferencedType);
             }
             if (obj.GenericParameters.Count > 0)
             {
                 Formatter.Write("<");
-                Formatter.WriteSeparated(", ", obj.GenericParameters, Generate);
+                Formatter.WriteSeparated(", ", obj.GenericParameters, GenerateReference);
                 Formatter.Write(">");
             }
         }
 
-        private void GenerateReference(TypescriptTypeBase referencedType)
+        private void GenerateReferencedType(TypescriptTypeBase referencedType)
         {
             if (referencedType is ArrayType arr)
             {
@@ -556,7 +562,7 @@ namespace TypeGen
 
         private void GenerateReference(ArrayType t)
         {
-            Generate(t.ElementType);
+            GenerateReference(t.ElementType);
             Formatter.Write("[]");
         }
 
@@ -567,7 +573,7 @@ namespace TypeGen
             if (obj.Constraint != null)
             {
                 Formatter.Write(" extends ");
-                Generate(obj.Constraint);
+                GenerateReference(obj.Constraint);
             }
         }
 
@@ -581,7 +587,7 @@ namespace TypeGen
                 }
                 else if (item is RawStatementTypeReference typeRef)
                 {
-                    Generate(typeRef.TypeReference);
+                    GenerateReference(typeRef.TypeReference);
                 }
                 else
                 {
