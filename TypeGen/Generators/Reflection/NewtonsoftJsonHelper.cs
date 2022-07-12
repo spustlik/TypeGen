@@ -19,9 +19,9 @@ namespace TypeGen.Generators
             return converter != null;
 
         }
-        public static bool IsNewtonsoftStringEnum(Type type)
+        public static bool IsNewtonsoftStringEnum(ICustomAttributeProvider info)
         {
-            if (!HasNewtonsoftConverter(type.GetCustomAttributes(true), out var converter))
+            if (!HasNewtonsoftConverter(info.GetCustomAttributes(true), out var converter))
                 return false;
             return converter.IsTypeBaseOrSelf("Newtonsoft.Json.Converters.StringEnumConverter");
         }
@@ -36,6 +36,16 @@ namespace TypeGen.Generators
             }
             name = null;
             return false;
+        }
+
+        public static bool IsFromNewton(Type type)
+        {
+            return type.Namespace.StartsWith("Newtonsoft.", StringComparison.InvariantCulture);
+        }
+
+        public static bool IsJArray(Type type)
+        {
+            return type.IsTypeBaseOrSelf("Newtonsoft.Json.Linq.JArray");
         }
 
         public static bool IsIgnored(PropertyInfo propertyInfo)

@@ -4,6 +4,9 @@
     {
         public string Comment { get; set; }
         public bool IsExporting { get; set; }
+
+        public bool IsDeclaring { get; set; }
+
         public static implicit operator ModuleElement(TypeDefType from)
         {
             return new DeclarationModuleElement(from);
@@ -52,7 +55,9 @@
 
         public override string ToString()
         {
-            return (IsExporting ? "export " : "") + 
+            return 
+                (IsDeclaring ? "declare " : "") +
+                (IsExporting ? "export " : "") + 
                 (Declaration ?? EnumDeclaration ?? InnerModule ?? (object)TypeDef).ToString();
         }
     }

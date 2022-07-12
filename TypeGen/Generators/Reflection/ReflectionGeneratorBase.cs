@@ -17,6 +17,7 @@ namespace TypeGen.Generators
         public const string SOURCETYPE_KEY = "SOURCE_TYPE";
         public const string SOURCEMEMBER_KEY = "SOURCE_PROPERTY";
 
+        //use comments when something is skipped
         public bool SkipComments { get; set; } = true;
         public static IEnumerable<Type> ExtractGeneratedTypes(TypescriptModule module)
         {
@@ -395,9 +396,14 @@ namespace TypeGen.Generators
             {
                 ExtraData = { { SOURCEMEMBER_KEY, pi } },
                 IsOptional = Nullable.GetUnderlyingType(pi.PropertyType) != null,
-                MemberType = GenerateFromType(pi.PropertyType)
+                MemberType = GenerateTypeFromProperty(pi)
             };
             return pm;
+        }
+
+        protected virtual TypescriptTypeReference GenerateTypeFromProperty(PropertyInfo pi)
+        {
+            return GenerateFromType(pi.PropertyType);
         }
 
         public virtual TypescriptTypeReference GenerateEnum(Type type)

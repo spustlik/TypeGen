@@ -15,12 +15,12 @@ namespace TypeGen.Generators.WebApi
             ACTIONNAME_AT = "Microsoft.AspNetCore.Mvc.ActionNameAttribute";
             FROMBODY_AT = "Microsoft.AspNetCore.Mvc.FromBodyAttribute";
             ROUTE_AT = "Microsoft.AspNetCore.Mvc.RouteAttribute";
-
-            //non-exists ! FROMURI_AT = "Microsoft.AspNetCore.Mvc.FromUriAttribute";
+            FROMURI_AT = "Microsoft.AspNetCore.Mvc.FromQueryAttribute";
+            
             //non-exists ! ROUTEPREFIX_AT = "Microsoft.AspNetCore.Mvc.RoutePrefixAttribute";
         }
 
-        public new string GetHttpMethodAttribute(MethodInfo m)
+        public override string GetHttpMethodAttribute(MethodInfo m)
         {
             var httpMethodAt = m.GetCustomAttributes(true)
                 .FirstOrDefault(at => at.GetType().IsTypeImplementingInterface(HTTPMETHOD_AT));

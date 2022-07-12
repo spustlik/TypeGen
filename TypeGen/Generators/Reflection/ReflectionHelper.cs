@@ -9,9 +9,14 @@ namespace TypeGen
 {
     public static class ReflectionHelper
     {
-        public static IEnumerable<Type> NamespaceTypes(Type type)
+        public static IEnumerable<Type> NamespaceTypes(Type type, bool childNamespaces = false)
         {
-            return type.Assembly.GetTypes().Where(t => t.Namespace == type.Namespace).OrderBy(t=>t.Name);
+            var types = type.Assembly.GetTypes().AsEnumerable();
+            if (!childNamespaces)
+                types = types.Where(t => t.Namespace == type.Namespace);
+            else
+                types = types.Where(t => t.Namespace.StartsWith(type.Namespace));
+            return types.OrderBy(t => t.Name);
         }
 
         public static bool IsTypeBaseOrSelf(this Type type, string fullTypeName)

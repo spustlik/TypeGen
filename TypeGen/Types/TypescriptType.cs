@@ -10,7 +10,6 @@ namespace TypeGen
     {
     }
 
-
     public sealed class TypescriptTypeReference : TypeDomBase
     {
         public TypescriptTypeBase ReferencedType { get; }

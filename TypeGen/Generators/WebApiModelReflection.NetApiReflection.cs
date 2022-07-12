@@ -90,7 +90,7 @@ namespace TypeGen.Generators.WebApi
             return s.Substring(PREFIX.Length);
         }
 
-        public string GetHttpMethodAttribute(MethodInfo m)
+        public virtual string GetHttpMethodAttribute(MethodInfo m)
         {
             var httpMethodAt = m.GetCustomAttributes(true)
                 .FirstOrDefault(at => at.GetType().IsTypeImplementingInterface(HTTPMETHOD_AT));

@@ -13,7 +13,7 @@ namespace TypeGen.Generators.WebApi
         public string PromiseTypeName = "Promise";
         public string GeneratedClassName = "GeneratedProxy";
         public string ProxyBaseName = "base.ProxyBase";
-
+        public string CallInstance = "this.";
         public WebApiProxyGenerator2(ReflectionGeneratorBase reflectionGenerator)
         {
             _reflectionGenerator = reflectionGenerator;
@@ -69,7 +69,7 @@ namespace TypeGen.Generators.WebApi
             }
 
             fn.Body = new RawStatements();
-            fn.Body.Statements.Add("this.call" + action.HttpMethod + "(");
+            fn.Body.Statements.Add($"{CallInstance}call{action.HttpMethod}(");
             GenerateUrlParametersValue(action, fn);
             fn.Body.Statements.Add(", ");
             GenerateNamedParametersValue(action, fn);
@@ -176,7 +176,7 @@ namespace TypeGen.Generators.WebApi
             {
                 var optParams = action.Parameters
                     .Where(p => p.IsOptional)
-                    .Select(p => new RawStatements("{ ", p.Name, ": ", _reflectionGenerator.GenerateFromType(p.Type), " }"))
+                    .Select(p => new RawStatements("{ ", p.Name, "?: ", _reflectionGenerator.GenerateFromType(p.Type), " }"))
                     .ToArray();
                 var raw = new RawStatements();
                 foreach (var item in optParams)
@@ -188,7 +188,7 @@ namespace TypeGen.Generators.WebApi
                     }
                     raw.Add(" ");
                 }
-                raw.Add(" = <any>{}");
+                raw.Add(" = {}");
                 method.Parameters.Add(new FunctionParameter("opt") { ParameterType = new TypescriptTypeReference(raw) });
             }
         }
@@ -210,8 +210,16 @@ namespace TypeGen.Generators.WebApi
             var pilist = new List<string>();
             foreach (var p in namedParameters)
             {
-                var pinvoke = $"'{(p.UrlName ?? p.Name)}': ";
-                pinvoke += p.IsOptional ? ($"opt['{p.Name}']") : p.Name;
+                var uname = QuoteIdent(p.UrlName ?? p.Name);
+                var pname = p.Name;
+
+                var pinvoke = $"{uname}";
+                //optimized { ident } instead of { ident: ident }
+                if (p.IsOptional || pname != uname)
+                {
+                    pinvoke += ": ";
+                    pinvoke += p.IsOptional ? ($"opt['{pname}']") : pname;
+                }
                 pilist.Add(pinvoke);
             }
             method.Body.Statements.Add("{ ");
@@ -219,5 +227,13 @@ namespace TypeGen.Generators.WebApi
             method.Body.Statements.Add(" }");
         }
 
+        private string QuoteIdent(string ident)
+        {
+            if (ident.All(c => Char.IsLetterOrDigit(c)))
+            {
+                return ident;                
+            }
+            return "'" + ident + "'";
+        }
     }
 }

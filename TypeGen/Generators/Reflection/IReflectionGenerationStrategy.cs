@@ -14,7 +14,7 @@ namespace TypeGen.Generators
         bool ShouldGenerateMethods(DeclarationBase decl, Type type);
         bool ShouldGenerateProperties(DeclarationBase decl, Type type);
         bool ShouldGenerateProperty(DeclarationBase decl, PropertyInfo propertyInfo);
-
+        bool IsStringEnum(MemberInfo info);
         void AddDeclaration(EnumType decl);
         void AddDeclaration(DeclarationBase decl);
         RawStatements GenerateLiteral(object value, TypescriptTypeReference targetType);

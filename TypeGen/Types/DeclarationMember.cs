@@ -8,7 +8,8 @@ namespace TypeGen
 {
     public abstract class DeclarationMember : TypeDomBase
     {
-        public string Comment { get; set; }        
+        public string Comment { get; set; }
+        
 
         public static implicit operator DeclarationMember(RawStatements from)
         {

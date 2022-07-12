@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,11 +16,23 @@ namespace TypeGen.Generators
     {
         public static string KO_TYPE = "knockout_type";
         public static string KO_ITEMTYPE = "knockout_itemtype";
+        public static string OPTIMIZE_ENTER =
+            //"var o = ko.observable;\n" +
+            //"var a = ko.observableArray;\n" +
+            "function addMembers(obj, members:string[], arrays:string[]) {\n" +
+            "  for(var i=0;i<members.length;i++){\n" +
+            "     obj[members[i]] = ko.observable();\n" +
+            "  }\n" +
+            "  for(var i=0;i<arrays.length;i++){\n" +
+            "     obj[arrays[i]] = ko.observableArray();\n" +
+            "  }\n" +
+            "}\n";
         private List<InterfaceType> _toGenerate = new List<InterfaceType>();
         private HashSet<ClassType> _generated = new HashSet<ClassType>();
         private Dictionary<InterfaceType, DeclarationBase> _map = new Dictionary<InterfaceType, DeclarationBase>();
         private TypescriptModule _targetModule;
 
+        public bool Optimized { get; set; }
         public KnockoutMappedGenerator(TypescriptModule targetModule)
         {
             this._targetModule = targetModule;
@@ -43,6 +56,10 @@ namespace TypeGen.Generators
 
         public void GenerateClasses(IEnumerable<InterfaceType> interfaces)
         {
+            if (Optimized)
+            {
+                _targetModule.Members.Add(new RawStatements(OPTIMIZE_ENTER));
+            }
             foreach (var item in interfaces)
             {
                 AddToQueue(item);
@@ -69,7 +86,43 @@ namespace TypeGen.Generators
                     //cls.Comment+="WARNING: interface is extending "+String.Join(",", intf.ExtendsTypes);
                 }
             }
+            if (Optimized)
+            {
+                GenerateOptimizedMembers(cls, intf);
+                return;
+            }
             GenerateMembers(cls, intf);
+        }
+
+        protected virtual void GenerateOptimizedMembers(ClassType targetClass, DeclarationBase source)
+        {
+            var members = new List<string>();
+            var arrays = new List<string>();
+            foreach (var prop in source.Members.OfType<PropertyMember>())
+            {
+                var obsType = MapReference(prop.MemberType, out var koType, out var isArray);
+                if (!isArray)
+                    members.Add(prop.Name);
+                else
+                    arrays.Add(prop.Name);
+                var clsMember = new PropertyMember(prop.Name);
+                clsMember.MemberType = new TypescriptTypeReference(isArray ? "KnockoutObservableArray" : "KnockoutObservable") { GenericParameters = { obsType } };
+                clsMember.ExtraData.Merge(prop.ExtraData);
+                clsMember.ExtraData[KO_ITEMTYPE] = obsType;
+                clsMember.ExtraData[KO_TYPE] = koType;
+                targetClass.Members.Add(clsMember);
+            }
+            var ctor = new RawStatements("constructor() {\n");
+            if (targetClass.Extends != null)
+                ctor.Add("    super();\n");
+            ctor.Add("    addMembers(this, ");
+            ctor.Add("[");
+            ctor.Add(String.Join(", ", members.Select(x => "'" + x + "'")));
+            ctor.Add("], [");
+            ctor.Add(String.Join(", ", arrays.Select(x => "'" + x + "'")));
+            ctor.Add("]");
+            ctor.Add(");\n", "}");
+            targetClass.Members.Add(ctor);
         }
 
         protected virtual void GenerateMembers(ClassType targetClass, DeclarationBase source)
@@ -90,24 +143,26 @@ namespace TypeGen.Generators
         protected virtual PropertyMember CreateMember(PropertyMember prop)
         {
             var clsMember = new PropertyMember(prop.Name);
-            var koParam = MapReference(prop.MemberType, out var koType);
-            clsMember.Initialization = new RawStatements(koType, "<", koParam, ">()");
+            var obsType = MapReference(prop.MemberType, out var koType, out _);
+            clsMember.Initialization = new RawStatements(koType, "<", obsType, ">()");
             //clsMember.Comment =  ReflectionGeneratorBase.GetGeneratedType(prop.MemberType) + "";
             clsMember.ExtraData.Merge(prop.ExtraData);
-            clsMember.ExtraData[KO_ITEMTYPE] = koParam;
+            clsMember.ExtraData[KO_ITEMTYPE] = obsType;
             clsMember.ExtraData[KO_TYPE] = koType;
 
             return clsMember;
         }
 
-        protected virtual TypescriptTypeReference MapReference(TypescriptTypeReference typeRef, out string koType)
+        protected virtual TypescriptTypeReference MapReference(TypescriptTypeReference typeRef, out string koType, out bool isArray)
         {
             koType = "ko.observable";
             if (typeRef.ReferencedType is ArrayType arr)
             {
-                koType = "ko.observableArray";                
-                return MapReference(arr.ElementType, out _);
+                koType = "ko.observableArray";
+                isArray = true;
+                return MapReference(arr.ElementType, out _, out _);
             }
+            isArray = false;
             if (typeRef.ReferencedType is InterfaceType intf)
             {
                 return Remap(intf, typeRef);
@@ -148,7 +203,7 @@ namespace TypeGen.Generators
 
         public void AddMap(InterfaceType intf, DeclarationBase target)
         {
-            _map[intf] = target;            
+            _map[intf] = target;
         }
 
         protected virtual string GetClassName(InterfaceType intf)

@@ -112,6 +112,10 @@ namespace TypeGen
 
         public override void Visit(ModuleElement element)
         {
+            if (element.IsDeclaring)
+            {
+                Formatter.Write("declare ");
+            }
             if (element.IsExporting)
             {
                 Formatter.Write("export ");

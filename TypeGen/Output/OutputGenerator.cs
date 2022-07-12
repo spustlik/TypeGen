@@ -159,6 +159,10 @@ namespace TypeGen
         private void Generate(ModuleElement element)
         {
             GenerateLineComment(element.Comment);
+            if (element.IsDeclaring)
+            {
+                Formatter.Write("declare ");
+            }
             if (element.IsExporting)
             {
                 Formatter.Write("export ");

@@ -91,13 +91,13 @@ namespace TypeGen
     {
         public static IEnumerable<TypescriptTypeReference> GetExtends(this DeclarationBase decl)
         {
-            if (decl is InterfaceType)
+            if (decl is InterfaceType intf)
             {
-                return ((InterfaceType)decl).ExtendsTypes;
+                return intf.ExtendsTypes;
             }
-            else if (decl is ClassType)
+            else if (decl is ClassType cls)
             {
-                return (new[] { ((ClassType)decl).Extends }).Where(x => x != null);
+                return (new[] { cls.Extends }).Where(x => x != null);
             }
             else
             {
