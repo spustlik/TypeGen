@@ -27,7 +27,7 @@ namespace TypeGen.Generators.WebApi
             if (httpMethodAt != null)
             {
                 var at = (dynamic)httpMethodAt;
-                if (at.HttpMethods.Length > 0)
+                if (at.HttpMethods.Count > 0)
                 {
                     return at.HttpMethods[0];
                 }
