@@ -10,7 +10,7 @@ namespace TypeGen
     {
         public string Name { get; set; }
         public RawStatements RawStatements { get; } = new RawStatements();
-        public TypeDefType(string name, params RawStatement[] statements)
+        public TypeDefType(string name, params RawStatementContent[] statements)
         {
             Name = name;
             RawStatements.Add(statements);

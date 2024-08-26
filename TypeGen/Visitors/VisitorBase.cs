@@ -366,7 +366,7 @@ namespace TypeGen.Visitors
 
         public virtual void Visit(RawStatements raw, RawStatementBase item)
         {
-            if (item is RawStatement)
+            if (item is RawStatementContent)
             {
                 VisitRawStatement(item);
             }

@@ -585,7 +585,7 @@ namespace TypeGen
         {
             foreach (var item in raw.Statements)
             {
-                if (item is RawStatement statement)
+                if (item is RawStatementContent statement)
                 {
                     Formatter.Write(statement.Content);
                 }

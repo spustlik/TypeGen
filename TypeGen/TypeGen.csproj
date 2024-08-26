@@ -75,7 +75,7 @@
     <Compile Include="Types\TypeDefType.cs" />
     <Compile Include="Types\TypescriptModule.cs" />
     <Compile Include="Types\PrimitiveTypes.cs" />
-    <Compile Include="Types\RawStatement.cs" />
+    <Compile Include="Types\RawStatementContent.cs" />
     <Compile Include="Types\TypeDomBase.cs" />
     <Compile Include="Types\TypescriptType.cs" />
     <Compile Include="Visitors\RewriterBase.cs" />

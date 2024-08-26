@@ -349,9 +349,9 @@ namespace TypeGen.Visitors
 
         public virtual RawStatementBase RewriteStatement(RawStatementBase item)
         {
-            if (item is RawStatement)
+            if (item is RawStatementContent)
             {
-                return RewriteRawStatement((RawStatement)item);
+                return RewriteRawStatement((RawStatementContent)item);
             }
             else if (item is RawStatementTypeReference)
             {
@@ -372,9 +372,9 @@ namespace TypeGen.Visitors
             return result;
         }
 
-        public virtual RawStatement RewriteRawStatement(RawStatement item)
+        public virtual RawStatementContent RewriteRawStatement(RawStatementContent item)
         {
-            var result = new RawStatement(item.Content) { ExtraData = RewriteExtraData(item) };
+            var result = new RawStatementContent(item.Content) { ExtraData = RewriteExtraData(item) };
             return result;
         }
     }

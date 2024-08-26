@@ -174,9 +174,9 @@ namespace TypeGen
             {
                 return IsSame((RawStatementTypeReference)r1, (RawStatementTypeReference)r2);
             }
-            else if (r1 is RawStatement)
+            else if (r1 is RawStatementContent)
             {
-                return IsSame((RawStatement)r1, (RawStatement)r2);
+                return IsSame((RawStatementContent)r1, (RawStatementContent)r2);
             }
             else
             {
@@ -184,7 +184,7 @@ namespace TypeGen
             }
         }
 
-        public static bool IsSame(this RawStatement r1, RawStatement r2)
+        public static bool IsSame(this RawStatementContent r1, RawStatementContent r2)
         {
             if (r1 == null || r2 == null)
                 return r1 == r2;
