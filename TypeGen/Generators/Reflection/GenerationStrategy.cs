@@ -58,7 +58,7 @@ namespace TypeGen.Generators
                 return false;
             if (NewtonsoftJsonHelper.IsIgnored(propertyInfo))
                 return false;
-            
+
             return true;
         }
 
