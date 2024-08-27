@@ -70,22 +70,33 @@ namespace TypeGen.Generators
         }
         public virtual TypescriptTypeReference GenerateStringUnionWithAll(Type type)
         {
+            var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
             var name = NamingStrategy.GetEnumName(type);
-            //[export] const {enumName}_All = ['Field1', 'Field2', ...]
+            var baseEnumType = new TypeDefType("_" + name) { ExtraData = { { SOURCETYPE_KEY, type } } };
+
+            //type _{enumName} = 'val1' | 'val2' | ...
+            GenerationStrategy.TargetModule.Members.Add(baseEnumType);
+            baseEnumType.RawStatements.Add(
+                String.Join(" | ", fields.Select(field => $"'{field.Name}'"))
+                );
+
+            //[export] const {enumName}_All: _{enumName}[] = ['val1', 'val2', ...]
             var nameAll = name + "_All";
             var strAllType = new RawStatements() { ExtraData = { { SOURCETYPE_KEY, type } } };
             GenerationStrategy.TargetModule.Members.Add(strAllType);
-            var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
-            strAllType.Add("const ", nameAll, " = ");
+            strAllType.Add("const ", nameAll, ": ");
+            strAllType.Add(baseEnumType);
+            strAllType.Add("[]");
+            strAllType.Add(" = ");
             strAllType.Add("[");
             strAllType.Add(String.Join(", ", fields.Select(field => $"'{field.Name}'")));
             strAllType.Add("]");
 
             //[export] type {enumName} = (typeof {enumName}_All)[number]
-            var strEnumType = new TypeDefType(name) { ExtraData = { { SOURCETYPE_KEY, type } } };
-            GenerationStrategy.TargetModule.Members.Add(strEnumType);
-            strEnumType.RawStatements.Add("(", "typeof ", nameAll, ")", "[number]");
-            var tref = new TypescriptTypeReference(strEnumType);
+            var resultEnumType = new TypeDefType(name) { ExtraData = { { SOURCETYPE_KEY, type } } };
+            GenerationStrategy.TargetModule.Members.Add(resultEnumType);
+            resultEnumType.RawStatements.Add("(", "typeof ", nameAll, ")", "[number]");
+            var tref = new TypescriptTypeReference(resultEnumType);
             AddMap(type, tref);
             return tref;
         }
