@@ -50,6 +50,7 @@
     <Compile Include="Generators\KnockoutGenerator.cs" />
     <Compile Include="Generators\Reflection\NewtonsoftJsonHelper.cs" />
     <Compile Include="Generators\Reflection\ReflectionGenerator.cs" />
+    <Compile Include="Generators\RegexExtensions.cs" />
     <Compile Include="Generators\WebApiModelReflection.CoreApiReflection.cs" />
     <Compile Include="Generators\WebApiModelReflection.cs" />
     <Compile Include="Generators\WebApiControllerGenerator.cs" />

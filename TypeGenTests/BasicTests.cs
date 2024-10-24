@@ -176,11 +176,11 @@ class testFunctions {
 
             var c = new ClassType("test");
 
-            var x2 = "a" + new RawStatement("b");
-            var x3 = new RawStatement("a") + "b";            
+            var x2 = "a" + new RawStatements("b");
+            var x3 = new RawStatements("a") + "b";            
 
             var s1 = new RawStatements() { Statements = { "xxx" } };
-            var s2 = new RawStatements("asd", new RawStatement("tttt"));
+            var s2 = new RawStatements("asd", "tttt");
             s1.Add(s2);
             s1.Add(new TypescriptTypeReference(c));
             s1.Add(":");

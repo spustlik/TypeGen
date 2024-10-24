@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TypeGen
 {
@@ -14,7 +12,7 @@ namespace TypeGen
             Statements = new List<RawStatementBase>();
         }
         public RawStatements(IEnumerable<RawStatementBase> values) : this()
-        {            
+        {
             Add(values);
         }
         public RawStatements(params RawStatementBase[] values) : this()
@@ -23,7 +21,7 @@ namespace TypeGen
         }
         public void Add(IEnumerable<RawStatementBase> values)
         {
-            if (values!=null)
+            if (values != null)
                 Statements.AddRange(values);
         }
         public void Add(params RawStatementBase[] values)
@@ -45,6 +43,19 @@ namespace TypeGen
         public override string ToString()
         {
             return $"(Raw {Statements.Count}){String.Join("", Statements.Select(s => s.ToString()))}";
+        }
+
+        public static RawStatements Join(IEnumerable<RawStatements> values, RawStatementBase separator)
+        {
+            var statements = values
+                .SelectMany((s, i) => i == 0 ? s.Statements : new[] { separator }.Concat(s.Statements));
+            return new RawStatements(statements);
+        }
+        public static RawStatements Join(IEnumerable<RawStatementBase> values, RawStatementBase separator)
+        {
+            var statements = values
+                .SelectMany((s, i) => i == 0 ? new[] { s } : new[] { separator, s });
+            return new RawStatements(statements);
         }
     }
 
@@ -92,7 +103,7 @@ namespace TypeGen
     public sealed class RawStatementTypeReference : RawStatementBase
     {
         public TypescriptTypeReference TypeReference { get; set; }
-        public RawStatementTypeReference(TypescriptTypeReference typeRef = null) 
+        public RawStatementTypeReference(TypescriptTypeReference typeRef = null)
         {
             TypeReference = typeRef;
         }

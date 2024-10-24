@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TypeGen.Generators.WebApi
@@ -14,6 +15,10 @@ namespace TypeGen.Generators.WebApi
         public string GeneratedClassName = "GeneratedProxy";
         public string ProxyBaseName = "base.ProxyBase";
         public string CallInstance = "this.";
+        public bool UseOptionalRecord = true;
+        public bool UseJsTemplates = true;
+        public bool UseDirectParams = true;
+        public bool UseOptParamsShortcut = true;
         public WebApiProxyGenerator2(ReflectionGeneratorBase reflectionGenerator)
         {
             _reflectionGenerator = reflectionGenerator;
@@ -70,7 +75,7 @@ namespace TypeGen.Generators.WebApi
 
             fn.Body = new RawStatements();
             fn.Body.Statements.Add($"{CallInstance}call{action.HttpMethod}(");
-            GenerateUrlParametersValue(action, fn);
+            GenerateUrlWithParameters(action, fn);
             fn.Body.Statements.Add(", ");
             GenerateNamedParametersValue(action, fn);
             var dataParam = action.Parameters.FirstOrDefault(p => p.IsData);
@@ -134,21 +139,46 @@ namespace TypeGen.Generators.WebApi
             return sb.ToString();
         }
 
-        protected virtual void GenerateUrlParametersValue(ActionModel action, FunctionMember method)
+        protected virtual void GenerateUrlWithParameters(ActionModel action, FunctionMember method)
         {
-            var urlVar = $"'{action.UrlTemplate.TrimEnd('/')}'";
-            foreach (var p in action.Parameters.Where(x => x.IsUrlParam))
+            //replaces {paramName} in UrlTemplate like '/urlbase' + paramName + '/more/' + param2
+            if (!UseJsTemplates)
             {
-                var paramName = p.UrlName ?? p.Name;
-                urlVar = urlVar.Replace("{" + paramName + "}", $"' + {p.Name} + '");
-            }
-            const string EMPTYJS = " + ''";
-            while (urlVar.EndsWith(EMPTYJS, StringComparison.InvariantCulture))
-            {
-                urlVar = urlVar.Substring(0, urlVar.Length - EMPTYJS.Length);
+                var urlVar = $"'{action.UrlTemplate.TrimEnd('/')}'";
+                foreach (var p in action.Parameters.Where(x => x.IsUrlParam))
+                {
+                    var paramName = p.UrlName ?? p.Name;
+                    urlVar = urlVar.Replace("{" + paramName + "}", $"' + {p.Name} + '");
+                }
+                const string EMPTYJS = " + ''";
+                while (urlVar.EndsWith(EMPTYJS, StringComparison.InvariantCulture))
+                {
+                    urlVar = urlVar.Substring(0, urlVar.Length - EMPTYJS.Length);
+                }
+                method.Body.Statements.Add(urlVar);
+                return;
             }
 
-            method.Body.Statements.Add(urlVar);
+            //using js template strings like `/api/${id}`
+            var r = new Regex(@"{[^}]+}", RegexOptions.Compiled);
+            var url = action.UrlTemplate.TrimEnd('/');
+            method.Body.Statements.Add("`");
+            foreach (var part in r.SplitToParts(url))
+            {
+                var name = part;
+                if (name.StartsWith("{"))
+                {
+                    name = name.Trim('{', '}');
+                    var parameter = action.Parameters.FirstOrDefault(p => p.IsUrlParam && (p.UrlName ?? p.Name) == name);
+                    if (parameter != null)
+                    {
+                        method.Body.Statements.Add("${" + parameter.Name + "}");
+                        continue;
+                    }
+                }
+                method.Body.Statements.Add(part);
+            }
+            method.Body.Statements.Add("`");
         }
 
         protected virtual void GenerateMethodParametersSignature(ActionModel action, FunctionMember method)
@@ -160,6 +190,18 @@ namespace TypeGen.Generators.WebApi
                     ParameterType = _reflectionGenerator.GenerateFromType(p.Type),
                     IsOptional = false
                 }));
+            var raw = GenerateOptionalParameters(action, method);
+            if (raw != null)
+            {
+                method.Parameters.Add(new FunctionParameter("opt")
+                {
+                    ParameterType = new TypescriptTypeReference(raw)
+                });
+            }
+        }
+
+        private RawStatements GenerateOptionalParameters(ActionModel action, FunctionMember method)
+        {
             //consider: 
             //  if there is only one optional parameter, or all opt. parameters are last (it must be in c# decl), 
             //  we can generate myMethod(p1,p2,..., po1:string? = null, po2:number? = null)
@@ -167,29 +209,35 @@ namespace TypeGen.Generators.WebApi
             //  xxx.myMethod("asd","qwe",...,null, 42)
             //compare to: call via optional properties of anonymous object
             //  xxx.myMethod("asd","qwe",..., { po2: 42} )
+
+            // this is not true for now (2024-10-24):
             // BUT, it can be called with any object, because all positional parameters are optional, so any object will match
             //  xxx.myMethod("asd","qwe",..., "nonsense" )
             // partially solved:
             //  positional parameters are unions of non-nullable parameter objects (see code)
-            //  but this approach will still validate only one of parameters, others are than ignored (because at least one matched)
-            if (action.Parameters.Any(p => p.IsOptional))
+            //  but this approach will still validate only one of parameters, others are then ignored (because at least one matched)
+            var optional = action.Parameters.Where(p => p.IsOptional).ToArray();
+            if (optional.Length == 0)
+                return null;
+
+            if (!UseOptionalRecord)
             {
-                var optParams = action.Parameters
-                    .Where(p => p.IsOptional)
+                var rawParams = optional
                     .Select(p => new RawStatements("{ ", p.Name, "?: ", _reflectionGenerator.GenerateFromType(p.Type), " }"))
                     .ToArray();
+                var raw = RawStatements.Join(rawParams, ", ");
+                return raw;
+            }
+            else
+            {
+                RawStatements createParam(ParameterModel p) => new RawStatements(p.Name, "?: ", _reflectionGenerator.GenerateFromType(p.Type));
+                var rawParams = RawStatements.Join(optional.Select(p => createParam(p)), ", ");
                 var raw = new RawStatements();
-                foreach (var item in optParams)
-                {
-                    raw.Add(item);
-                    if (item != optParams.Last())
-                    {
-                        raw.Add(" | ");
-                    }
-                    raw.Add(" ");
-                }
+                raw.Add("{ ");
+                raw.Add(rawParams.Statements);
+                raw.Add(" }");
                 raw.Add(" = {}");
-                method.Parameters.Add(new FunctionParameter("opt") { ParameterType = new TypescriptTypeReference(raw) });
+                return raw;
             }
         }
 
@@ -208,19 +256,46 @@ namespace TypeGen.Generators.WebApi
             //    return;
             //}
             var pilist = new List<string>();
-            foreach (var p in namedParameters)
+            if (!UseDirectParams)
             {
-                var uname = QuoteIdent(p.UrlName ?? p.Name);
-                var pname = p.Name;
-
-                var pinvoke = $"{uname}";
-                //optimized { ident } instead of { ident: ident }
-                if (p.IsOptional || pname != uname)
+                foreach (var p in namedParameters)
                 {
-                    pinvoke += ": ";
-                    pinvoke += p.IsOptional ? ($"opt['{pname}']") : pname;
+                    var uname = QuoteIdent(p.UrlName ?? p.Name);
+                    var pname = p.Name;
+
+                    var pinvoke = uname;
+                    //optimized { ident } instead of { ident: ident }
+                    if (p.IsOptional || pname != uname)
+                    {
+                        pinvoke += ": ";
+                        pinvoke += p.IsOptional ? ($"opt['{pname}']") : pname;
+                    }
+                    pilist.Add(pinvoke);
                 }
-                pilist.Add(pinvoke);
+            }
+            else
+            {
+                bool rename = false;
+                foreach (var p in namedParameters)
+                {
+                    var n1 = QuoteIdent(p.UrlName ?? p.Name);
+                    var n2 = p.Name;
+                    rename = rename || n1 != n2;
+                    if (p.IsOptional)
+                    {
+                        n2 = $"opt.{n2}";
+                    }
+                    if (n2 != n1)
+                    {
+                        n1 = $"{n1}: {n2}";
+                    }
+                    pilist.Add(n1);
+                }
+                if (UseOptParamsShortcut && !rename && namedParameters.All(p => p.IsOptional))
+                {
+                    method.Body.Statements.Add("opt");
+                    return;
+                }
             }
             method.Body.Statements.Add("{ ");
             method.Body.Statements.Add(String.Join(", ", pilist));
@@ -231,7 +306,7 @@ namespace TypeGen.Generators.WebApi
         {
             if (ident.All(c => Char.IsLetterOrDigit(c)))
             {
-                return ident;                
+                return ident;
             }
             return "'" + ident + "'";
         }

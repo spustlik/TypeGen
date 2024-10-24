@@ -64,6 +64,7 @@
     <Compile Include="KnockoutReflectionTests.cs" />
     <Compile Include="ReflectionTests2.cs" />
     <Compile Include="NamingTests.cs" />
+    <Compile Include="WebApiGenTests.cs" />
     <Compile Include="_Helper.cs" />
   </ItemGroup>
   <ItemGroup>
