@@ -225,7 +225,8 @@ namespace TypeGen.Generators.WebApi
                 var rawParams = optional
                     .Select(p => new RawStatements("{ ", p.Name, "?: ", _reflectionGenerator.GenerateFromType(p.Type), " }"))
                     .ToArray();
-                var raw = RawStatements.Join(rawParams, ", ");
+                var raw = RawStatements.Join(rawParams, "| ");
+                raw.Add(new RawStatementContent(" = {}"));
                 return raw;
             }
             else
