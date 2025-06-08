@@ -164,16 +164,19 @@ namespace TypeGen.Generators
 
         public static TypescriptTypeReference GenerateDictionaryType(TypescriptTypeReference keyTypeRef, TypescriptTypeReference valueTypeRef)
         {
+            var keyType = keyTypeRef.ReferencedType;
+            bool isStringOrNumber = keyType == PrimitiveType.String || keyType == PrimitiveType.Number;
             return new TypescriptTypeReference(
                 new RawStatements(
                         "{",
-                        "[ key: ",
+                        " [key",
+                        isStringOrNumber ? ": " : " in ",
                         keyTypeRef,
                         "]: ",
                         valueTypeRef,
                         "}"
                         )
-            );            
+            );
         }
 
         protected virtual DeclarationBase GenerateObjectDeclaration(Type type)
@@ -186,7 +189,7 @@ namespace TypeGen.Generators
             {
                 return GenerateInterface(type);
             }
-        } 
+        }
 
         protected virtual void GenerateMethodDeclarations(Type type, DeclarationBase declaration)
         {
@@ -341,7 +344,7 @@ namespace TypeGen.Generators
                 {
                     result.Name += "_" + String.Join("_", suffix);
                 }
-            }            
+            }
         }
 
         protected virtual void GenerateProperties(Type type, DeclarationBase result, bool skipImplementedByInterfaces)
@@ -361,7 +364,7 @@ namespace TypeGen.Generators
                     if (skipImplementedByInterfaces)
                     {
                         var intf = IsPropertyImplementedByAnyInterface(pi, type);
-                        if (intf!=null)
+                        if (intf != null)
                         {
                             if (SkipComments)
                                 result.Members.Add(new RawDeclarationMember(new RawStatements(string.Format("/* Property {0} skipped, because it is already implemented by interface {1}*/", pi.Name, intf.Name))));
@@ -381,8 +384,8 @@ namespace TypeGen.Generators
             foreach (var item in GetImplementedInterfaces(type))
             {
                 var map = type.GetInterfaceMap(item);
-                var methods = new[] { pi.GetGetMethod(), pi.GetSetMethod() }.Where(x=>x!=null).ToArray();
-                if (methods.All(m=> map.TargetMethods.Contains(m)))
+                var methods = new[] { pi.GetGetMethod(), pi.GetSetMethod() }.Where(x => x != null).ToArray();
+                if (methods.All(m => map.TargetMethods.Contains(m)))
                 {
                     return item;
                 }
