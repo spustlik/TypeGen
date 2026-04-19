@@ -202,7 +202,7 @@ namespace TypeGen.Generators.WebApi
                 a.UrlTemplate = CombinePath(controllerPath, a.UrlTemplate);
             //theoretically, DirectRouteBuilder, RouteParser, HttpParsedRoute can be used, but it is marked as internal :-(
             var parts = a.UrlTemplate.Split('/');
-
+            //TODO: this doesnt work with url template like "abc/{p1}.txt"
             foreach (var part in parts)
             {
                 if (part.StartsWith("{", StringComparison.InvariantCulture))
