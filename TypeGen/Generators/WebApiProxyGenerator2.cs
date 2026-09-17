@@ -15,6 +15,7 @@ namespace TypeGen.Generators.WebApi
         public string GeneratedClassName = "GeneratedProxy";
         public string ProxyBaseName = "base.ProxyBase";
         public string CallInstance = "this.";
+        public string CallPrefix = "call";
         public bool UseOptionalRecord = true;
         public bool UseJsTemplates = true;
         public bool UseDirectParams = true;
@@ -56,25 +57,26 @@ namespace TypeGen.Generators.WebApi
 
         protected virtual FunctionMember GenerateAction(ActionModel action)
         {
-            var fn = new FunctionMember(action.Name + "Async", null)
+            var fn = new FunctionMember(GetActionFnName(action), null)
             {
                 Accessibility = AccessibilityEnum.Public,
-                Comment = GenerateActionComment(action),
+                Comment = GenerateActionFnComment(action),
                 //arrow function is used to simplify usage of "this"
                 Style = FunctionStyle.ArrowFunction
             };
-            GenerateMethodParametersSignature(action, fn);
-            if (action.ResultType != null)
-            {
-                fn.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { _reflectionGenerator.GenerateFromType(action.ResultType) } };
-            }
-            else
-            {
-                fn.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { PrimitiveType.Void } };
-            }
+            GenerateActionFnParametersSignature(action, fn);
+            SetActionFnResultType(action, fn);
 
+            GenerateActionFnBody(action, fn);
+            //return FunctionToDelegate(method);
+            return fn;
+        }
+
+        protected virtual void GenerateActionFnBody(ActionModel action, FunctionMember fn)
+        {
             fn.Body = new RawStatements();
-            fn.Body.Statements.Add($"{CallInstance}call{action.HttpMethod}(");
+            fn.Body.Statements.AddRange(GetActionFnCallStatements(action));
+            fn.Body.Statements.Add("(");
             GenerateUrlWithParameters(action, fn);
             fn.Body.Statements.Add(", ");
             GenerateNamedParametersValue(action, fn);
@@ -88,9 +90,26 @@ namespace TypeGen.Generators.WebApi
                 }
             }
             fn.Body.Statements.Add(")");
-            //return FunctionToDelegate(method);
-            return fn;
         }
+
+        protected virtual IEnumerable<RawStatementBase> GetActionFnCallStatements(ActionModel action)
+        {
+            yield return $"{CallInstance}{CallPrefix}{action.HttpMethod}";
+        }
+
+        protected virtual void SetActionFnResultType(ActionModel action, FunctionMember fn)
+        {
+            if (action.ResultType != null)
+            {
+                fn.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { _reflectionGenerator.GenerateFromType(action.ResultType) } };
+            }
+            else
+            {
+                fn.ResultType = new TypescriptTypeReference(PromiseTypeName) { GenericParameters = { PrimitiveType.Void } };
+            }
+        }
+
+        protected virtual string GetActionFnName(ActionModel action) => $"{action.Name}Async";
 
         private RawStatements FunctionToDelegate(FunctionMember method)
         {
@@ -128,15 +147,13 @@ namespace TypeGen.Generators.WebApi
             return result;
         }
 
-        protected virtual string GenerateActionComment(ActionModel action)
+        protected virtual string GenerateActionFnComment(ActionModel action)
         {
-            var sb = new StringBuilder();
-            sb.Append("*");
-            sb.Append(action.Comment);
-            if (!sb.ToString().EndsWith("\n"))
-                sb.Append("\n");
-            sb.Append(" parameters: ").Append(String.Join(", ", action.Parameters));
-            return sb.ToString();
+            var comments = new List<string>();
+            comments.Add($"*{action.Comment}");
+            if (action.Parameters.Count > 0)
+                comments.Add($" parameters: {String.Join(", ", action.Parameters)}");
+            return String.Join("\n", comments.Select(c => c.TrimEnd()));
         }
 
         protected virtual void GenerateUrlWithParameters(ActionModel action, FunctionMember method)
@@ -181,7 +198,7 @@ namespace TypeGen.Generators.WebApi
             method.Body.Statements.Add("`");
         }
 
-        protected virtual void GenerateMethodParametersSignature(ActionModel action, FunctionMember method)
+        protected virtual void GenerateActionFnParametersSignature(ActionModel action, FunctionMember method)
         {
             method.Parameters.AddRange(action.Parameters
                 .Where(p => !p.IsOptional)

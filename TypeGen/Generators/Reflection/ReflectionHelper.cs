@@ -9,9 +9,9 @@ namespace TypeGen
 {
     public static class ReflectionHelper
     {
-        public static IEnumerable<Type> NamespaceTypes(Type type, bool childNamespaces = false)
+        public static IEnumerable<Type> NamespaceTypes(this Type type, bool childNamespaces = false)
         {
-            var types = type.Assembly.GetTypes().AsEnumerable();
+            var types = type.Assembly.GetTypes().Where(t => t.Namespace != null).AsEnumerable();
             if (!childNamespaces)
                 types = types.Where(t => t.Namespace == type.Namespace);
             else
@@ -74,7 +74,7 @@ namespace TypeGen
             //}
             //else
             //{
-                sb.Append(TypeToString(m.ReturnType, useFullTypeName));
+            sb.Append(TypeToString(m.ReturnType, useFullTypeName));
             //}
             sb.Append(" ");
             sb.Append(m.Name);

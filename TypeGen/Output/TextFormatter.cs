@@ -21,15 +21,17 @@ namespace TypeGen
         public TextFormatter() : this(new StringBuilder())
         {
         }
-        public void PushIndent()
+        public TextFormatter PushIndent()
         {
             CurrentIndentation++;
+            return this;
         }
-        public void PopIndent()
+        public TextFormatter PopIndent()
         {
             CurrentIndentation--;
+            return this;
         }
-        public void Write(string s)
+        public TextFormatter Write(string s)
         {
             var lines = s.Split(new[] { "\n" }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; i++)
@@ -42,37 +44,42 @@ namespace TypeGen
                     WriteLine();
                 }
             }
+            return this;
         }
 
-        public void WriteLine()
+        public TextFormatter WriteLine()
         {
             Output.AppendLine();
             _lineWritten = true;
+            return this;
         }
 
-        public void WriteEndOfLine()
+        public TextFormatter WriteEndOfLine()
         {
             if (!_lineWritten)
             {
                 WriteLine();
             }
+            return this;
         }
 
-        private void WriteIndentIfNeeded()
+        private TextFormatter WriteIndentIfNeeded()
         {
             if (_lineWritten)
             {
                 WriteIndent();
                 _lineWritten = false;
             }
+            return this;
         }
 
-        public void WriteIndent()
+        public TextFormatter WriteIndent()
         {
             Output.Append(new String(' ', CurrentIndentation * IndentationSize));
+            return this;
         }
 
-        public void WriteSeparated<T>(string separator, IEnumerable<T> items, Action<T> generate)
+        public TextFormatter WriteSeparated<T>(string separator, IEnumerable<T> items, Action<T> generate)
         {
             bool needSeparator = false;
             foreach (var item in items)
@@ -84,6 +91,7 @@ namespace TypeGen
                 generate(item);
                 needSeparator = true;
             }
+            return this;
         }
 
     }
