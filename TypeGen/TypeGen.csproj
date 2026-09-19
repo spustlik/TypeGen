@@ -58,6 +58,8 @@
     <Compile Include="Generators\WebApiModelReflection.NetApiReflection.cs" />
     <Compile Include="Generators\WebApiProxyGenerator2.cs" />
     <Compile Include="Generators\WebApiProxyGenerator.cs" />
+    <Compile Include="Output\AliasNameResolver.cs" />
+    <Compile Include="Output\DefaultNameResolver.cs" />
     <Compile Include="Output\INameResolver.cs" />
     <Compile Include="Output\OutputGenerator.cs" />
     <Compile Include="Output\OutputGeneratorNew.cs" />

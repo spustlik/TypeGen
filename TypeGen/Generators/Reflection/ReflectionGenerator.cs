@@ -2,17 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TypeGen.Generators
 {
     public partial class ReflectionGenerator : ReflectionGeneratorBase
     {
-        public new NamingStrategy NamingStrategy { get { return (NamingStrategy)base.NamingStrategy; } }
-        public new GenerationStrategy GenerationStrategy { get { return (GenerationStrategy)base.GenerationStrategy; } }
-        public TypescriptModule Module { get { return GenerationStrategy.TargetModule; } }
-
         public bool StringEnum_All { get; set; }
         public ReflectionGenerator(
             NamingStrategy namingStrategy = null,
@@ -42,9 +36,7 @@ namespace TypeGen.Generators
         protected override TypescriptTypeReference GenerateTypeFromProperty(PropertyInfo pi)
         {
             if (GenerationStrategy.IsStringEnum(pi))
-            {
                 return GenerateStringUnion(pi.PropertyType);
-            }
             return base.GenerateTypeFromProperty(pi);
         }
         public virtual TypescriptTypeReference GenerateStringUnion(Type type)
@@ -59,7 +51,7 @@ namespace TypeGen.Generators
             var name = NamingStrategy.GetEnumName(type);
             var strEnumType = new TypeDefType(name) { ExtraData = { { SOURCETYPE_KEY, type } } };
 
-            GenerationStrategy.TargetModule.Members.Add(strEnumType);
+            GenerationStrategy.AddModuleElement(strEnumType);
             var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public);
             strEnumType.RawStatements.Add(
                 String.Join(" | ", fields.Select(field => $"'{field.Name}'"))
@@ -75,7 +67,7 @@ namespace TypeGen.Generators
             var baseEnumType = new TypeDefType("_" + name) { ExtraData = { { SOURCETYPE_KEY, type } } };
 
             //type _{enumName} = 'val1' | 'val2' | ...
-            GenerationStrategy.TargetModule.Members.Add(baseEnumType);
+            GenerationStrategy.AddModuleElement(baseEnumType);
             baseEnumType.RawStatements.Add(
                 String.Join(" | ", fields.Select(field => $"'{field.Name}'"))
                 );
@@ -83,7 +75,7 @@ namespace TypeGen.Generators
             //[export] const {enumName}_All: _{enumName}[] = ['val1', 'val2', ...]
             var nameAll = name + "_All";
             var strAllType = new RawStatements() { ExtraData = { { SOURCETYPE_KEY, type } } };
-            GenerationStrategy.TargetModule.Members.Add(strAllType);
+            GenerationStrategy.AddModuleElement(strAllType);
             strAllType.Add("const ", nameAll, ": ");
             strAllType.Add(baseEnumType);
             strAllType.Add("[]");
@@ -94,7 +86,7 @@ namespace TypeGen.Generators
 
             //[export] type {enumName} = (typeof {enumName}_All)[number]
             var resultEnumType = new TypeDefType(name) { ExtraData = { { SOURCETYPE_KEY, type } } };
-            GenerationStrategy.TargetModule.Members.Add(resultEnumType);
+            GenerationStrategy.AddModuleElement(resultEnumType);
             resultEnumType.RawStatements.Add("(", "typeof ", nameAll, ")", "[number]");
             var tref = new TypescriptTypeReference(resultEnumType);
             AddMap(type, tref);

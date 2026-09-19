@@ -12,21 +12,21 @@ namespace TypeGen
     public class OutputGenerator
     {
         public TextFormatter Formatter { get; set; }
-        public string Output { get { return Formatter.Output.ToString(); } }
+        public string Output => Formatter.Output.ToString();
         public INameResolver NameResolver { get; set; }
         public bool GenerateComments { get; set; }
         private Stack<bool> _anonymousMembers = new Stack<bool>();
-        public OutputGenerator(INameResolver nameResolver = null)
+        [Obsolete("Use ctor with INameResolver - new AliasNameResolver()")]
+        public OutputGenerator() : this(new DefaultNameResolver())
+        {
+        }
+        public OutputGenerator(INameResolver nameResolver)
         {
             _anonymousMembers.Push(false);
             GenerateComments = true;
             Formatter = new TextFormatter();
-            if (nameResolver == null)
-                NameResolver = new DefaultNameResolver();
-            else
-                NameResolver = nameResolver;
+            NameResolver = nameResolver;
         }
-
         public void GenerateAmbient(TypescriptModule module)
         {
             Formatter.Write("declare ");
@@ -64,10 +64,10 @@ namespace TypeGen
             Formatter.Write("/*");
             for (int i = 0; i < lines.Length; i++)
             {
-                if (i != 0)               
+                if (i != 0)
                     Formatter.Write(" * ");
                 Formatter.Write(lines[i]);
-                if (lines.Length>1)
+                if (lines.Length > 1)
                     Formatter.WriteLine();
             }
             Formatter.Write(" */");
@@ -82,7 +82,7 @@ namespace TypeGen
             Formatter.Write("/*");
             for (int i = 0; i < lines.Length; i++)
             {
-                if (i!=0)
+                if (i != 0)
                     Formatter.Write("  ");
                 Formatter.Write(lines[i]);
             }
@@ -91,7 +91,7 @@ namespace TypeGen
 
         private static string[] ParseComment(string comment)
         {
-            comment = comment.Replace("\xa\xd", "\xa").Replace("\xd\xa", "\xa").Replace("\xd","\xa");
+            comment = comment.Replace("\xa\xd", "\xa").Replace("\xd\xa", "\xa").Replace("\xd", "\xa");
             if (!comment.StartsWith("*", StringComparison.Ordinal))
                 comment = " " + comment + " ";
             return comment.Split(new[] { '\xa' });
@@ -99,12 +99,9 @@ namespace TypeGen
 
         public void GenerateModuleContent(TypescriptModule module, Func<ModuleElement, bool> elementFilter)
         {
-            DefaultNameResolver.ThisModule = module;
             var members = module.Members.AsEnumerable();
-            if (elementFilter!=null)
-            {
+            if (elementFilter != null)
                 members = members.Where(elementFilter);
-            }
             var ordered = OrderByInheritance(members);
             Formatter.WriteSeparated("\n", ordered, Generate);
         }
@@ -213,7 +210,7 @@ namespace TypeGen
             Generate(element.RawStatements);
         }
         private void Generate(RawModuleElement element)
-        {            
+        {
             Generate(element.Raw);
         }
 
@@ -251,7 +248,7 @@ namespace TypeGen
             else if (decl is InterfaceType intf)
             {
                 Generate(intf);
-            }            
+            }
             else
             {
                 throw new ArgumentOutOfRangeException();
@@ -268,7 +265,7 @@ namespace TypeGen
                 Formatter.WriteSeparated(", ", cls.GenericParameters, Generate);
                 Formatter.Write(">");
             }
-            if (cls.Extends!=null)
+            if (cls.Extends != null)
             {
                 Formatter.Write(" extends ");
                 GenerateReference(cls.Extends);
@@ -283,7 +280,7 @@ namespace TypeGen
             Formatter.PushIndent();
             _anonymousMembers.Push(false);
             foreach (var m in cls.Members)
-            {                
+            {
                 Generate(m);
                 Formatter.WriteEndOfLine();
             }
@@ -294,7 +291,7 @@ namespace TypeGen
         }
 
         public void Generate(InterfaceType cls)
-        {            
+        {
             Formatter.Write("interface ");
             Formatter.Write(cls.Name);
             if (cls.IsGeneric)
@@ -328,7 +325,7 @@ namespace TypeGen
             if (m is PropertyMember prop)
             {
                 Generate(prop);
-            }   
+            }
             else if (m is FunctionMemberBase fun)
             {
                 Generate(fun);
@@ -388,7 +385,7 @@ namespace TypeGen
             {
                 Formatter.Write(": ");
                 GenerateReference(f.ResultType);
-            }            
+            }
             if (f is FunctionDeclarationMember)
             {
                 Formatter.Write(";");
@@ -529,8 +526,8 @@ namespace TypeGen
             }
             else
             {
-                throw new ArgumentOutOfRangeException("Cannot generate reference "+referencedType);
-            }            
+                throw new ArgumentOutOfRangeException("Cannot generate reference " + referencedType);
+            }
         }
 
         private void Generate(AnonymousDeclaration anonymous)
@@ -551,11 +548,11 @@ namespace TypeGen
             Formatter.Write(NameResolver.GetReferencedName(type));
         }
         private void GenerateReference(DeclarationBase type)
-        {            
+        {
             Formatter.Write(NameResolver.GetReferencedName(type));
         }
         private void GenerateReference(EnumType type)
-        {            
+        {
             Formatter.Write(NameResolver.GetReferencedName(type));
         }
 

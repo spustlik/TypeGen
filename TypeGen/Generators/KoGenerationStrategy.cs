@@ -90,6 +90,11 @@ namespace TypeGen.Generators
         {
             return NewtonsoftJsonHelper.IsNewtonsoftStringEnum(info);
         }
+
+        public void AddModuleElement(ModuleElement element)
+        {
+            TargetModule.Members.Add(element);
+        }
     }
 
 

@@ -131,6 +131,10 @@ namespace TypeGen.Generators
             return GenerateMethods;
         }
 
+        public void AddModuleElement(ModuleElement element)
+        {
+            TargetModule.Members.Add(element);
+        }
     }
 
 }

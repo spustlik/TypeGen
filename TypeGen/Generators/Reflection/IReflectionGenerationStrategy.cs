@@ -17,6 +17,7 @@ namespace TypeGen.Generators
         bool IsStringEnum(MemberInfo info);
         void AddDeclaration(EnumType decl);
         void AddDeclaration(DeclarationBase decl);
+        void AddModuleElement(ModuleElement element);
         RawStatements GenerateLiteral(object value, TypescriptTypeReference targetType);
         
     }

@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TypeGen.Generators
 {
@@ -38,8 +34,8 @@ namespace TypeGen.Generators
             return t as Type;
         }
 
-        public IReflectedNamingStrategy NamingStrategy { get; private set; }
-        public IGenerationStrategy GenerationStrategy { get; private set; }
+        public IReflectedNamingStrategy NamingStrategy { get; set; }
+        public IGenerationStrategy GenerationStrategy { get; set; }
 
         public ReflectionGeneratorBase(IReflectedNamingStrategy naming, IGenerationStrategy generation)
         {
@@ -72,9 +68,9 @@ namespace TypeGen.Generators
 
         protected virtual TypescriptTypeReference TypeGenerator(Type type)
         {
-            if (Nullable.GetUnderlyingType(type) != null)
+            if (type.IsPureNullable(out var ut))
             {
-                var r = GenerateFromType(Nullable.GetUnderlyingType(type));
+                var r = GenerateFromType(ut);
                 r.ExtraData[SOURCETYPE_KEY] = type;
                 return r;
             }
@@ -398,7 +394,7 @@ namespace TypeGen.Generators
             var pm = new PropertyMember(NamingStrategy.GetPropertyName(pi))
             {
                 ExtraData = { { SOURCEMEMBER_KEY, pi } },
-                IsOptional = Nullable.GetUnderlyingType(pi.PropertyType) != null,
+                IsOptional = pi.PropertyType.IsPureNullable(out _) || pi.HasNullability(),
                 MemberType = GenerateTypeFromProperty(pi)
             };
             return pm;

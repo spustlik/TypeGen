@@ -9,7 +9,7 @@ namespace TypeGen.Generators.WebApi
 {
     public partial class WebApiModelReflection
     {
-        public IWebApiReflection Reflection = new NetApiReflection();        
+        public IWebApiReflection Reflection = new NetApiReflection();
         public bool StripHttpMethodPrefixes { get; set; } = false;
         public bool SkipParamsCheck { get; set; } = false;
         public bool AddAsyncSuffix { get; set; } = true;
@@ -33,7 +33,7 @@ namespace TypeGen.Generators.WebApi
             var name = t.Name;
             if (name.EndsWith("Controller", StringComparison.InvariantCulture))
                 name = name.Substring(0, name.Length - 10);
-            var controllerPath = Reflection.GetRoutePrefixAttribute(t, UseControlerNameWithoutRoutePrefix  ? name.ToLower() : null);
+            var controllerPath = Reflection.GetRoutePrefixAttribute(t, UseControlerNameWithoutRoutePrefix ? name.ToLower() : null);
             var cModel = new ControllerModel
             {
                 Source = t,
@@ -179,8 +179,8 @@ namespace TypeGen.Generators.WebApi
 
         protected virtual bool CanBeInUrl(Type type)
         {
-            if (Nullable.GetUnderlyingType(type) != null)
-                return CanBeInUrl(Nullable.GetUnderlyingType(type));
+            if (type.IsPureNullable(out var ut))
+                return CanBeInUrl(ut);
             if (type.IsArray)
                 return CanBeInUrl(type.GetElementType());
             return type.IsPrimitive || type.IsEnum || type == typeof(string);
@@ -324,7 +324,7 @@ namespace TypeGen.Generators.WebApi
         {
             var sb = new StringBuilder();
             sb.Append(Name);
-            if (!String.IsNullOrEmpty(UrlName) && UrlName!=Name)
+            if (!String.IsNullOrEmpty(UrlName) && UrlName != Name)
                 sb.Append(" (" + UrlName + ")");
             if (IsUrlParam)
                 sb.Append(" [URL]");
@@ -336,5 +336,5 @@ namespace TypeGen.Generators.WebApi
         }
     }
 
-    
+
 }

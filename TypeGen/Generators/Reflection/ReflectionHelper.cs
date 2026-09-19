@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -128,6 +129,51 @@ namespace TypeGen
                 return Generators.NamingHelper.GetNonGenericTypeName(type);
             }
             return (useFullTypeName ? (type.Namespace + ".") : "") + Generators.NamingHelper.GetNonGenericTypeName(type);
+        }
+
+        public static bool IsPureNullable(this Type type, out Type underLayingType)
+        {
+            underLayingType = Nullable.GetUnderlyingType(type);
+            return underLayingType != null;
+        }
+
+        //c# 8 and higher, can be used Reflection.NullabilityContext
+        // or this is simplest code copied from .net core
+        public static bool HasNullability(this PropertyInfo pi)
+        {
+            var ctxInfo = GetNullability(pi.DeclaringType.GetCustomAttributesData(), context: true);
+            if (ctxInfo == null) return false;
+            var propInfo = GetNullability(pi.GetCustomAttributesData(), context: false);
+            if (propInfo != null) return propInfo == true;
+            var getterMi = pi.GetGetMethod(true);
+            if (getterMi == null) return false;
+            var getterInfo = GetNullability(getterMi.ReturnParameter.GetCustomAttributesData(), context: false);
+            if (getterInfo == null) return ctxInfo == true;
+            return getterInfo == true;
+        }
+
+        //values 0 - oblivious, 1-NOT nullable, 2-nullable
+        //NullableContext - default on the class
+        //Nullable - on class means something diff, use nullable at props
+        private static bool? GetNullability(IList<CustomAttributeData> attrs, bool context)
+        {
+            var atNamespace = typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute).Namespace;
+            const string NULLABLEATTRIBUTE = "NullableAttribute";
+            const string NULLABLECONTEXTATTRIBUTE = "NullableContextAttribute";
+            var atName = context ? NULLABLECONTEXTATTRIBUTE : NULLABLEATTRIBUTE;
+            var at = attrs.FirstOrDefault(a =>
+                a.AttributeType.Name == atName &&
+                a.AttributeType.Namespace == atNamespace &&
+                a.ConstructorArguments.Count == 1);
+            if (at == null) return null;
+            var arg = at.ConstructorArguments[0].Value;
+            var num = Convert.ToInt16(arg);
+            switch (num)
+            {
+                case 1: return false;
+                case 2: return true;
+                default: return null;
+            }
         }
     }
 }

@@ -231,8 +231,8 @@ namespace TypeGen.Generators
 
         private bool CanBeInUrl(Type type)
         {
-            if (Nullable.GetUnderlyingType(type) != null)
-                return CanBeInUrl(Nullable.GetUnderlyingType(type));
+            if (type.IsPureNullable(out var ut))
+                return CanBeInUrl(ut);
             if (type.IsArray)
                 return CanBeInUrl(type.GetElementType());
             return type.IsPrimitive || type.IsEnum || type == typeof(string);
