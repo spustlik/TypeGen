@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
+
 
 namespace TypeGen.Generators.WebApi
 {
@@ -13,6 +13,7 @@ namespace TypeGen.Generators.WebApi
         public bool StripHttpMethodPrefixes { get; set; } = false;
         public bool SkipParamsCheck { get; set; } = false;
         public bool AddAsyncSuffix { get; set; } = true;
+        //use name of controller as part start of url, if not specified in attributes
         public bool UseControlerNameWithoutRoutePrefix { get; set; } = true;
 
 
@@ -33,7 +34,15 @@ namespace TypeGen.Generators.WebApi
             var name = t.Name;
             if (name.EndsWith("Controller", StringComparison.InvariantCulture))
                 name = name.Substring(0, name.Length - 10);
-            var controllerPath = Reflection.GetRoutePrefixAttribute(t, UseControlerNameWithoutRoutePrefix ? name.ToLower() : null);
+            var controllerPath = Reflection.GetRoutePrefixAttribute(t);
+            if (controllerPath == null)
+            {
+                controllerPath = Reflection.GetRouteTemplateAttribute(t);
+                if (controllerPath != null)
+                    controllerPath = controllerPath.Replace("[controller]", name.ToLower());
+                if (controllerPath == null && UseControlerNameWithoutRoutePrefix)
+                    controllerPath = name.ToLower();
+            }
             var cModel = new ControllerModel
             {
                 Source = t,
@@ -66,11 +75,27 @@ namespace TypeGen.Generators.WebApi
                 Source = m,
                 Name = m.Name,
                 MethodName = GetActionMethodName(m),
-                HttpMethod = Reflection.GetHttpMethodAttribute(m) ?? "GET",
+                HttpMethod = Reflection.GetHttpMethodAttribute(m),
                 Comment = GetActionComment(m),
                 Description = Reflection.GetTypeGenDescription(m),
                 ResultType = GetActionResultType(m)
             };
+            if (aModel.HttpMethod == null)
+            {
+                var name = aModel.Name;
+                //use to strip it StripHttpMethodPrefixes
+                var known = new[] { "GET", "POST", "DELETE", "PUT" };
+                foreach (var k in known)
+                {
+                    if (name.StartsWith(k, StringComparison.OrdinalIgnoreCase))
+                    {
+                        aModel.HttpMethod = k;
+                        break;
+                    }
+                }
+                if (aModel.HttpMethod == null)
+                    aModel.HttpMethod = "GET";
+            }
             ProcessRoute(aModel, m, controllerPath);
             AddParameters(aModel, m);
             var dataParams = aModel.Parameters.Where(x => x.IsData).ToArray();
@@ -192,9 +217,9 @@ namespace TypeGen.Generators.WebApi
             if (a.UrlTemplate == null)
             {
                 var actionPath = controllerPath;
-                var actionName = GetActionName(m, a.HttpMethod);
-                if (!String.IsNullOrEmpty(actionName))
-                    actionPath = CombinePath(controllerPath, actionName);
+                var name = GetActionName(m, a.HttpMethod);
+                if (!String.IsNullOrEmpty(name))
+                    actionPath = CombinePath(controllerPath, name);
                 a.UrlTemplate = actionPath;
                 return;
             }
@@ -288,7 +313,6 @@ namespace TypeGen.Generators.WebApi
 
         public List<ActionModel> Actions = new List<ActionModel>();
     }
-
     public class ActionModel
     {
         public MethodInfo Source { get; set; }

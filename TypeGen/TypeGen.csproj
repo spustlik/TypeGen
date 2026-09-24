@@ -49,11 +49,11 @@
     <Compile Include="Generators\Reflection\IReflectedNamingStrategy.cs" />
     <Compile Include="Generators\KnockoutGenerator.cs" />
     <Compile Include="Generators\Reflection\NewtonsoftJsonHelper.cs" />
+    <Compile Include="Generators\Reflection\ReflectionAdhoc.cs" />
     <Compile Include="Generators\Reflection\ReflectionGenerator.cs" />
     <Compile Include="Generators\RegexExtensions.cs" />
     <Compile Include="Generators\WebApiModelReflection.CoreApiReflection.cs" />
     <Compile Include="Generators\WebApiModelReflection.cs" />
-    <Compile Include="Generators\WebApiControllerGenerator.cs" />
     <Compile Include="Generators\WebApiModelReflection.IWebApiReflection.cs" />
     <Compile Include="Generators\WebApiModelReflection.NetApiReflection.cs" />
     <Compile Include="Generators\WebApiProxyGenerator2.cs" />

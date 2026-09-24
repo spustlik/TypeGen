@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using TypeGen;
 
 namespace TypeGen.Generators.WebApi
 {
@@ -23,13 +24,13 @@ namespace TypeGen.Generators.WebApi
 
         public bool HasNonActionAttribute(MethodInfo m)
         {
-            var nonActionAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf(NONACTIONTYPE));
+            var nonActionAt = m.GetCustomAttributeByName(NONACTIONTYPE);
             return nonActionAt != null;
         }
 
         public bool GetFromUriAttribute(ParameterInfo p, out string name)
         {
-            var fromUriAt = p.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf(FROMURI_AT));
+            var fromUriAt = p.GetCustomAttributeByName(FROMURI_AT);
             if (fromUriAt != null)
             {
                 name = ((dynamic)fromUriAt).Name;
@@ -40,29 +41,32 @@ namespace TypeGen.Generators.WebApi
         }
         public string GetActionNameAttribute(MethodInfo m)
         {
-            var actionNameAt = m.GetCustomAttributes(true).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf(ACTIONNAME_AT));
+            var actionNameAt = m.GetCustomAttributesDataByName(ACTIONNAME_AT);
             if (actionNameAt != null)
-            {
                 return ((dynamic)actionNameAt).Name;
-            }
             return null;
         }
         public bool HasHttpBodyParamAttribute(ParameterInfo pi)
         {
-            return pi.GetCustomAttributes(false).Any(at => at.GetType().IsTypeBaseOrSelf(FROMBODY_AT));
+            return pi.GetCustomAttributeByName(FROMBODY_AT) != null;
         }
-        public string GetRoutePrefixAttribute(MemberInfo m, string defaultValue)
+        public string GetRoutePrefixAttribute(MemberInfo m)
         {
-            var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf(ROUTEPREFIX_AT));
-            if (routeAt != null)
-            {
-                return ((dynamic)routeAt).Prefix;
-            }
-            return defaultValue;
+            var routePrefixAt = m.GetCustomAttributeByName(ROUTEPREFIX_AT);
+            if (routePrefixAt != null)
+                return ((dynamic)routePrefixAt).Prefix;
+            return null;
+            ////in core, [Route("api/[controller]")] can be used
+            //var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf(ROUTE_AT));
+            //if (routePrefixAt != null)
+            //{
+            //    return ((dynamic)routePrefixAt).Prefix;
+            //}
+            //return defaultValue;
         }
-        public string GetRouteTemplateAttribute(MethodInfo m)
+        public string GetRouteTemplateAttribute(MemberInfo m)
         {
-            var routeAt = m.GetCustomAttributes(false).FirstOrDefault(at => at.GetType().IsTypeBaseOrSelf(ROUTE_AT));
+            var routeAt = m.GetCustomAttributeByName(ROUTE_AT);
             if (routeAt != null)
             {
                 return ((dynamic)routeAt).Template;

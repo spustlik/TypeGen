@@ -161,10 +161,9 @@ namespace TypeGen
             const string NULLABLEATTRIBUTE = "NullableAttribute";
             const string NULLABLECONTEXTATTRIBUTE = "NullableContextAttribute";
             var atName = context ? NULLABLECONTEXTATTRIBUTE : NULLABLEATTRIBUTE;
-            var at = attrs.FirstOrDefault(a =>
-                a.AttributeType.Name == atName &&
-                a.AttributeType.Namespace == atNamespace &&
-                a.ConstructorArguments.Count == 1);
+            var at = attrs
+                .GetCustomAttributesDataByName(atNamespace + "." + atName)
+                .FirstOrDefault(a => a.ConstructorArguments.Count == 1);
             if (at == null) return null;
             var arg = at.ConstructorArguments[0].Value;
             var num = Convert.ToInt16(arg);
@@ -175,5 +174,25 @@ namespace TypeGen
                 default: return null;
             }
         }
+
+        public static object GetCustomAttributeByName(this MemberInfo mi, string attributeTypeName)
+        {
+            var at = mi.GetCustomAttributes(true).FirstOrDefault(a => a.GetType().IsTypeBaseOrSelf(attributeTypeName));
+            return at;
+        }
+        public static object GetCustomAttributeByName(this ParameterInfo pi, string attributeTypeName)
+        {
+            var at = pi.GetCustomAttributes(true).FirstOrDefault(a => a.GetType().IsTypeBaseOrSelf(attributeTypeName));
+            return at;
+        }
+        public static IEnumerable<CustomAttributeData> GetCustomAttributesDataByName(this MemberInfo mi, string attributeTypeName)
+        {
+            return mi.GetCustomAttributesData().GetCustomAttributesDataByName(attributeTypeName);
+        }
+        public static IEnumerable<CustomAttributeData> GetCustomAttributesDataByName(this IList<CustomAttributeData> customAttributeData, string attributeTypeName)
+        {
+            return customAttributeData.Where(a => a.AttributeType.IsTypeBaseOrSelf(attributeTypeName));
+        }
+
     }
 }

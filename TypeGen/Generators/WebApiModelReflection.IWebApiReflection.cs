@@ -10,8 +10,8 @@ namespace TypeGen.Generators.WebApi
         string GetActionNameAttribute(MethodInfo m);
         bool GetFromUriAttribute(ParameterInfo p, out string name);
         string GetHttpMethodAttribute(MethodInfo m);
-        string GetRoutePrefixAttribute(MemberInfo m, string defaultValue);
-        string GetRouteTemplateAttribute(MethodInfo m);
+        string GetRoutePrefixAttribute(MemberInfo m);
+        string GetRouteTemplateAttribute(MemberInfo m);
         string GetTypeGenDescription(Type t);
         string GetTypeGenDescription(MethodInfo m);
         string GetTypeGenDescription(DescriptionAttribute at);
